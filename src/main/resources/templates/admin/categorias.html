@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'categorias')}">
+<head>
+    <title>Colecciones — Furent Admin</title>
+</head>
+<body>
+    <main>
+        <div class="px-10 py-8 max-w-[90rem] mx-auto relative">
+            
+            <!-- Header section -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Colecciones</h1>
+                    <p class="text-sm font-medium text-surface-500 mt-1">Organiza tus mobiliarios por categorías principales</p>
+                </div>
+                <button onclick="openCatModal('Nueva Colección')" class="flex items-center gap-2 px-6 py-3 bg-surface-900 text-white text-sm font-bold rounded-xl hover:bg-black transition-all shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Añadir Colección
+                </button>
+            </div>
+
+            <!-- Success Alert -->
+            <div th:if="${success}" id="successAlert" class="mb-6 p-4 glass-panel bg-green-50/80 border-green-200 text-green-800 rounded-2xl text-sm font-semibold flex items-center justify-between shadow-soft animate-[fade-in-down_0.5s_ease-out]">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <span th:text="${success}"></span>
+                </div>
+                <button onclick="this.parentElement.style.display='none'" class="text-green-600 hover:text-green-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Grid of Categories (Bento style) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Item -->
+                <div th:each="cat : ${categorias}" class="bg-white p-6 rounded-2xl shadow-sm border border-surface-200 group hover:-translate-y-1 hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                    
+                    <div class="flex items-start justify-between mb-6 relative z-10">
+                        <div class="w-14 h-14 bg-gradient-to-br from-white to-surface-50 rounded-2xl flex items-center justify-center border border-surface-100 shadow-sm text-furent-500 group-hover:text-furent-600 group-hover:scale-110 transition-all duration-300">
+                            <!-- Dynamic Icon based on the string -->
+                            <svg th:if="${cat.icono == 'chair'}" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                            <svg th:if="${cat.icono != 'chair'}" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/></svg>
+                        </div>
+                        <div class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button th:data-id="${cat.id}" th:data-nombre="${cat.nombre}" th:data-descripcion="${cat.descripcion}" th:data-icono="${cat.icono}" th:data-slug="${cat.slug}" onclick="editCat(this)" class="p-2 bg-white text-surface-500 hover:text-furent-600 rounded-xl shadow-sm border border-surface-100 hover:border-furent-200 transition-all" title="Editar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.686-10.686z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" /></svg>
+                            </button>
+                            <button th:data-id="${cat.id}" data-tipo="Colección" onclick="confirmDelete(this.getAttribute('data-id'), this.getAttribute('data-tipo'))" class="p-2 bg-white text-surface-500 hover:text-red-500 rounded-xl shadow-sm border border-surface-100 hover:border-red-200 transition-all" title="Eliminar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                            </button>
+                            <form th:id="'del-' + ${cat.id}" th:action="@{/admin/categorias/eliminar/{id}(id=${cat.id})}" method="post" class="hidden"></form>
+                        </div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-bold text-surface-900 mb-1" th:text="${cat.nombre}">Categoría</h3>
+                        <p class="text-sm font-medium text-surface-500 mb-6 line-clamp-2" th:text="${cat.descripcion}">Descripción rápida de esta colección de elementos.</p>
+                        
+                        <div class="pt-4 border-t border-surface-200/50 flex items-center justify-between">
+                            <div class="flex items-center gap-1.5 px-3 py-1 bg-surface-100 rounded-lg">
+                                <span class="text-[10px] font-bold text-surface-500 uppercase">Slug</span>
+                                <span class="w-1 h-3 bg-surface-300 rounded-full"></span>
+                                <span class="text-xs font-semibold text-surface-800" th:text="${cat.slug}">slug</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(categorias)}" class="text-center py-24 bg-surface-50 rounded-2xl border border-surface-200">
+                <div class="w-16 h-16 bg-white shadow-sm border border-surface-200 rounded-2xl flex items-center justify-center mx-auto mb-4 text-surface-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <h3 class="text-lg font-bold text-surface-900 mb-1">Sin Colecciones</h3>
+                <p class="text-sm font-medium text-surface-500">Agrega agrupaciones para organizar tus muebles.</p>
+            </div>
+            
+            <!-- Abstract background shape -->
+            <div class="absolute top-[20%] right-[10%] w-[30rem] h-[30rem] bg-furent-400/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+        </div>
+
+        <!-- Modern Modal Overlay -->
+        <div id="catModal" class="fixed inset-0 bg-surface-900/40 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none" style="display:none;">
+            <div class="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl border border-surface-100 flex flex-col transform scale-95 transition-transform duration-300 relative overflow-hidden">
+                
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br from-furent-300/20 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="flex items-center justify-between px-8 py-6 border-b border-surface-100 relative z-10">
+                    <div>
+                        <h2 id="catModalTitle" class="text-xl font-extrabold text-surface-900">Nueva Colección</h2>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-surface-400 mt-1">Configuración general</p>
+                    </div>
+                    <button onclick="closeCatModal()" class="w-10 h-10 rounded-full bg-surface-50 hover:bg-surface-100 flex items-center justify-center text-surface-500 hover:text-surface-900 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                
+                <form th:action="@{/admin/categorias/guardar}" method="post" class="p-8 space-y-6 relative z-10">
+                    <input type="hidden" id="catId" name="id">
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-surface-500 uppercase tracking-widest mb-1.5">Nombre de la colección</label>
+                        <input type="text" name="nombre" id="fc_nombre" required placeholder="Ej. Mesas Elegantes" class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm font-semibold text-surface-900 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all shadow-sm hover:border-surface-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-surface-500 uppercase tracking-widest mb-1.5">Descripción</label>
+                        <textarea name="descripcion" id="fc_descripcion" rows="3" required placeholder="Detalla esta agrupación..." class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm font-semibold text-surface-900 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all resize-none shadow-sm hover:border-surface-300"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-surface-500 uppercase tracking-widest mb-1.5">Icon ID</label>
+                            <input type="text" name="icono" id="fc_icono" required placeholder="chair, table..." class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm font-semibold text-surface-900 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-surface-500 uppercase tracking-widest mb-1.5">Slug (URL)</label>
+                            <input type="text" name="slug" id="fc_slug" required placeholder="sillas-modernas" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-semibold text-surface-900 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all shadow-inner">
+                        </div>
+                    </div>
+
+                    <div class="pt-6 mt-4 flex justify-end gap-3 border-t border-surface-100">
+                        <button type="button" onclick="closeCatModal()" class="px-6 py-3 text-sm font-bold tracking-wide text-surface-600 bg-surface-100 rounded-xl hover:bg-surface-200 transition-colors">Cancelar</button>
+                        <button type="submit" class="px-8 py-3 text-sm font-bold tracking-wide text-white bg-surface-900 rounded-xl hover:bg-black hover:shadow-lg transition-all">Guardar Colección</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+        function confirmDelete(id, tipo) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: '¿Eliminar permanentemente esta ' + tipo.toLowerCase() + '? Todos los productos asociados perderán esta categoría.',
+                icon: 'warning',
+
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#18181b',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-[2rem] shadow-2xl border border-surface-100',
+                    confirmButton: 'rounded-xl text-sm font-bold px-5 py-2.5',
+                    cancelButton: 'rounded-xl text-sm font-bold px-5 py-2.5'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('del-' + id).submit();
+                }
+            });
+        }
+
+        const catModal = document.getElementById('catModal');
+        const catModalContent = catModal.querySelector('div');
+
+        function editCat(btn) {
+            document.getElementById('catId').value = btn.dataset.id;
+            document.getElementById('fc_nombre').value = btn.dataset.nombre;
+            document.getElementById('fc_descripcion').value = btn.dataset.descripcion;
+            document.getElementById('fc_icono').value = btn.dataset.icono;
+            document.getElementById('fc_slug').value = btn.dataset.slug;
+            openCatModal('Modificar Colección');
+        }
+
+        function openCatModal(titleText = 'Nueva Colección') {
+            document.getElementById('catModalTitle').textContent = titleText;
+            catModal.style.display = 'flex';
+            setTimeout(() => {
+                catModal.classList.remove('opacity-0', 'pointer-events-none');
+                catModalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeCatModal() {
+            catModal.classList.add('opacity-0', 'pointer-events-none');
+            catModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                catModal.style.display = 'none';
+                document.getElementById('catId').value = '';
+                document.querySelectorAll('#catModal input, #catModal textarea').forEach(el => { 
+                    if (el.type !== 'hidden') el.value = ''; 
+                });
+            }, 300);
+        }
+
+        catModal.addEventListener('click', (e) => {
+            if(e.target === catModal) closeCatModal();
+        });
+    </script>
+    </main>
+</body>
+</html>

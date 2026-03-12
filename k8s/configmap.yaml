@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: furent-config
+  namespace: furent
+  labels:
+    app: furent
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_DATA_MONGODB_URI: "mongodb://mongo-service:27017/furent"
+  SERVER_PORT: "8080"
+  FURENT_EMAIL_ENABLED: "false"
+  FURENT_TENANT_DEFAULT_SLUG: "default"
+  FURENT_JWT_ACCESS_TOKEN_EXPIRATION: "3600000"
+  FURENT_JWT_REFRESH_TOKEN_EXPIRATION: "2592000000"

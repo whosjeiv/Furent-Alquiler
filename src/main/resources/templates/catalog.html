@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}">
+</head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+    <style>
+        .product-card {
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+        }
+        .product-card-actions {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .product-card:hover .product-card-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .badge-disponible::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 5px;
+            animation: pulse 2s ease infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.3); }
+        }
+    </style>
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+
+        <!-- Mini Hero Catálogo -->
+        <div class="relative overflow-hidden" style="height: 200px; background: linear-gradient(135deg, #212121, #424242);">
+            <img th:src="@{/images/hero-banner.jpg}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-20" loading="lazy">
+            <div class="relative h-full flex flex-col justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex items-center space-x-2 text-sm mb-3" aria-label="Breadcrumb">
+                    <a th:href="@{/}" class="text-furent-300 hover:text-furent-200 transition-colors">Inicio</a>
+                    <svg class="w-4 h-4 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <span class="text-white font-medium">Catálogo</span>
+                </nav>
+                <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Catálogo de Mobiliario</h1>
+                <p class="text-surface-400 text-sm mt-2">Descubre nuestra colección completa para tu próximo evento</p>
+            </div>
+        </div>
+
+        <!-- Search Bar (below mini-hero) -->
+        <div class="bg-white border-b border-surface-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="relative w-full md:w-96">
+                    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                    <input type="text" id="searchInput" placeholder="Buscar mobiliario..." th:value="${searchQuery}" class="w-full pl-11 pr-10 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                    <button id="clearSearch" class="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 transition-colors hidden">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col lg:flex-row gap-6">
+
+                <!-- SIDEBAR FILTERS -->
+                <aside class="w-full lg:w-64 shrink-0">
+                    <!-- Mobile filter toggle -->
+                    <button id="filterToggle" class="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-surface-200 shadow-soft mb-4">
+                        <span class="flex items-center gap-2 text-sm font-medium text-surface-700">
+                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                            Filtros
+                        </span>
+                        <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                    </button>
+
+                    <div id="filterSidebar" class="hidden lg:block space-y-4">
+
+                        <!-- Active filters / Clear all -->
+                        <div id="activeFiltersBar" class="hidden">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-surface-900 uppercase tracking-wider">Filtros activos</span>
+                                <button id="clearAllFilters" class="text-xs text-furent-500 hover:text-furent-600 font-medium transition-colors">Limpiar todo</button>
+                            </div>
+                        </div>
+
+                        <!-- Category filter -->
+                        <div class="bg-white rounded-2xl p-5 shadow-soft border border-surface-100">
+                            <h3 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-3">Categoría</h3>
+                            <div class="space-y-1" id="categoryFilters">
+                                <label class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all">
+                                    <input type="radio" name="category" value="Todos" class="w-4 h-4 border-surface-300 text-furent-500 focus:ring-furent-500"
+                                           th:checked="${selectedCategory == 'Todos'}">
+                                    <span class="flex-1">Todos</span>
+                                </label>
+                                <label th:each="cat : ${categories}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all">
+                                    <input type="radio" name="category" th:value="${cat.name}" class="w-4 h-4 border-surface-300 text-furent-500 focus:ring-furent-500"
+                                           th:checked="${selectedCategory == cat.name}">
+                                    <span class="flex-1" th:text="${cat.name}">Sillas</span>
+                                    <span class="text-xs text-surface-400 bg-surface-100 px-1.5 py-0.5 rounded" th:text="${cat.productCount}">24</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Price Range filter -->
+                        <div class="bg-white rounded-2xl p-5 shadow-soft border border-surface-100">
+                            <h3 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-3">Rango de precio / día</h3>
+                            <div class="space-y-3 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="relative flex-1">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-surface-400">$</span>
+                                        <input type="number" id="priceMin" placeholder="0" min="0" class="w-full pl-7 pr-2 py-2 bg-surface-50 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                    </div>
+                                    <span class="text-surface-400 text-xs">—</span>
+                                    <div class="relative flex-1">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-surface-400">$</span>
+                                        <input type="number" id="priceMax" placeholder="1.000.000" min="0" class="w-full pl-7 pr-2 py-2 bg-surface-50 border border-surface-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-1" id="pricePresets">
+                                <button data-min="0" data-max="50000" class="price-preset w-full text-left px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 transition-all">$0 — $50.000</button>
+                                <button data-min="50000" data-max="200000" class="price-preset w-full text-left px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 transition-all">$50.000 — $200.000</button>
+                                <button data-min="200000" data-max="500000" class="price-preset w-full text-left px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 transition-all">$200.000 — $500.000</button>
+                                <button data-min="500000" data-max="9999999" class="price-preset w-full text-left px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 transition-all">$500.000+</button>
+                            </div>
+                        </div>
+
+                        <!-- Material filter -->
+                        <div class="bg-white rounded-2xl p-5 shadow-soft border border-surface-100">
+                            <h3 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-3">Material</h3>
+                            <div class="space-y-1" id="materialFilters">
+                                <!-- populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Rating filter -->
+                        <div class="bg-white rounded-2xl p-5 shadow-soft border border-surface-100">
+                            <h3 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-3">Calificación mínima</h3>
+                            <div class="space-y-1" id="ratingFilter">
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all">
+                                    <input type="radio" name="rating" value="0" checked class="w-4 h-4 border-surface-300 text-furent-500 focus:ring-furent-500">
+                                    <span>Todas</span>
+                                </label>
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all">
+                                    <input type="radio" name="rating" value="4" class="w-4 h-4 border-surface-300 text-furent-500 focus:ring-furent-500">
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        4.0+
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all">
+                                    <input type="radio" name="rating" value="4.5" class="w-4 h-4 border-surface-300 text-furent-500 focus:ring-furent-500">
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        4.5+
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Availability filter -->
+                        <div class="bg-white rounded-2xl p-5 shadow-soft border border-surface-100">
+                            <h3 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-3">Disponibilidad</h3>
+                            <label class="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all">
+                                <span>Solo disponibles</span>
+                                <div class="relative">
+                                    <input type="checkbox" id="availableOnly" class="sr-only peer">
+                                    <div class="w-9 h-5 bg-surface-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-furent-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-furent-500"></div>
+                                </div>
+                            </label>
+                        </div>
+
+                    </div>
+                </aside>
+
+                <!-- PRODUCT GRID -->
+                <div class="flex-1">
+                    <!-- Sort bar + results count -->
+                    <div class="flex items-center justify-between mb-5 fade-in">
+                        <p class="text-sm text-surface-500" id="resultsCount">
+                            <span th:text="${#lists.size(products)}">9</span> productos encontrados
+                        </p>
+                        <div class="flex items-center gap-3">
+                            <select id="sortSelect" class="text-sm bg-white border border-surface-200 rounded-lg px-3 py-2 text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 cursor-pointer">
+                                <option value="relevance">Más relevantes</option>
+                                <option value="price-asc">Precio: menor a mayor</option>
+                                <option value="price-desc">Precio: mayor a menor</option>
+                                <option value="rating">Mejor valorados</option>
+                                <option value="name">Nombre A-Z</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton Loading -->
+                    <div id="skeletonGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                        <div th:each="i : ${#numbers.sequence(1,6)}" class="skeleton-card bg-white rounded-2xl overflow-hidden border border-surface-100 shadow-soft animate-pulse">
+                            <div class="h-52 bg-surface-200"></div>
+                            <div class="p-5 space-y-3">
+                                <div class="h-3 bg-surface-200 rounded-full w-1/3"></div>
+                                <div class="h-5 bg-surface-200 rounded-full w-3/4"></div>
+                                <div class="h-3 bg-surface-200 rounded-full w-full"></div>
+                                <div class="flex justify-between pt-2">
+                                    <div class="h-6 bg-surface-200 rounded-full w-1/4"></div>
+                                    <div class="h-8 bg-surface-200 rounded-xl w-1/3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid -->
+                    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 hidden">
+                        <div th:each="product, iterStat : ${products}"
+                             class="product-card group bg-white rounded-2xl overflow-hidden border border-surface-100 shadow-soft transition-all duration-300 hover:shadow-hover hover:-translate-y-1"
+                             th:data-id="${product.id}"
+                             th:data-name="${product.name}"
+                             th:data-category="${product.category}"
+                             th:data-price="${product.pricePerDay}"
+                             th:data-rating="${product.rating}"
+                             th:data-material="${product.material}"
+                             th:data-available="${product.available}"
+                             th:data-image="${product.imageUrl}"
+                             th:data-short="${product.shortDescription}"
+                             th:data-stock="${product.stock}">
+                            <!-- Image -->
+                            <a th:href="@{/producto/{id}(id=${product.id})}" class="block relative overflow-hidden aspect-[4/3]">
+                                <img th:src="${product.imageUrl}" th:alt="${product.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-3 left-3">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-surface-700 shadow-sm" th:text="${product.category}">Sillas</span>
+                                </div>
+                                <div class="absolute top-3 right-3" th:if="${product.available}">
+                                    <span class="badge-disponible inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-50/90 backdrop-blur-sm text-green-700 border border-green-200/50">
+                                        Disponible
+                                    </span>
+                                </div>
+                            </a>
+                            <!-- Info -->
+                            <div class="p-4">
+                                <div class="flex items-center gap-1.5 mb-1.5">
+                                    <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    <span class="text-xs text-surface-500" th:text="${product.rating + ' (' + product.reviewCount + ')'}" >4.8 (124)</span>
+                                </div>
+                                <a th:href="@{/producto/{id}(id=${product.id})}">
+                                    <h3 class="font-semibold text-surface-900 group-hover:text-furent-600 transition-colors mb-1 text-sm" th:text="${product.name}">Silla Chiavari</h3>
+                                </a>
+                                <p class="text-xs text-surface-500 line-clamp-2 mb-3" th:text="${product.shortDescription}">Descripción corta</p>
+                                <div class="flex items-center justify-between pt-3 border-t border-surface-100">
+                                    <div>
+                                        <span class="text-base font-bold text-surface-900" th:text="'$' + ${#numbers.formatInteger(product.pricePerDay, 1, 'POINT')}">$60.000</span>
+                                        <span class="text-xs text-surface-400">/ día</span>
+                                    </div>
+                                    <button type="button" class="add-to-bag-btn inline-flex items-center gap-1.5 px-3.5 py-2 bg-furent-500 text-white text-xs font-medium rounded-lg hover:bg-furent-600 transition-colors shadow-sm"
+                                            th:data-id="${product.id}"
+                                            th:data-name="${product.name}"
+                                            th:data-price="${product.pricePerDay}"
+                                            th:data-image="${product.imageUrl}">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                        Agregar
+                                    </button>
+                                </div>
+                                <!-- Compare checkbox -->
+                                <label class="flex items-center gap-1.5 mt-2 cursor-pointer group/cmp">
+                                    <input type="checkbox" class="compare-cb w-3.5 h-3.5 rounded border-surface-300 text-furent-500 focus:ring-furent-500"
+                                           th:data-id="${product.id}"
+                                           th:data-name="${product.name}"
+                                           th:data-price="${product.pricePerDay}"
+                                           th:data-image="${product.imageUrl}"
+                                           th:data-category="${product.category}"
+                                           th:data-material="${product.material}"
+                                           th:data-rating="${product.rating}"
+                                           th:data-stock="${product.stock}"
+                                           th:data-available="${product.available}">
+                                    <span class="text-[11px] text-surface-400 group-hover/cmp:text-furent-500 transition-colors">Comparar</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No results message -->
+                    <div id="noResults" class="hidden text-center py-16">
+                        <svg class="w-16 h-16 text-surface-300 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                        <h3 class="text-lg font-semibold text-surface-700 mb-1">No se encontraron productos</h3>
+                        <p class="text-sm text-surface-500 mb-4">Intenta ajustar los filtros o buscar con otros términos</p>
+                        <button id="resetFiltersBtn" class="px-4 py-2 bg-furent-500 text-white text-sm font-medium rounded-lg hover:bg-furent-600 transition-colors">Limpiar filtros</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        <div th:if="${productPage != null and productPage.totalPages > 1}" class="flex justify-center items-center gap-2 mt-10 mb-6">
+            <a th:if="${productPage.hasPrevious()}"
+               th:href="@{/catalogo(category=${selectedCategory != 'Todos' ? selectedCategory : null}, page=${currentPage - 1})}"
+               class="px-4 py-2 text-sm font-medium text-surface-600 bg-white border border-surface-200 rounded-lg hover:bg-surface-50 transition-colors">
+                ← Anterior
+            </a>
+            <th:block th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}">
+                <a th:href="@{/catalogo(category=${selectedCategory != 'Todos' ? selectedCategory : null}, page=${i})}"
+                   th:text="${i + 1}"
+                   th:classappend="${i == currentPage} ? 'bg-furent-500 text-white border-furent-500' : 'bg-white text-surface-600 border-surface-200 hover:bg-surface-50'"
+                   class="w-10 h-10 flex items-center justify-center text-sm font-semibold border rounded-lg transition-colors">1</a>
+            </th:block>
+            <a th:if="${productPage.hasNext()}"
+               th:href="@{/catalogo(category=${selectedCategory != 'Todos' ? selectedCategory : null}, page=${currentPage + 1})}"
+               class="px-4 py-2 text-sm font-medium text-surface-600 bg-white border border-surface-200 rounded-lg hover:bg-surface-50 transition-colors">
+                Siguiente →
+            </a>
+        </div>
+
+    </main>
+
+    <!-- FLOATING BAG / CART -->
+    <div id="floatingBag" class="fixed bottom-6 right-6 z-[60] hidden">
+        <button id="bagToggle" class="relative flex items-center gap-2 px-5 py-3.5 bg-surface-900 text-white rounded-2xl shadow-lg hover:bg-surface-800 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+            <span class="text-sm font-semibold">Mi Bolsa</span>
+            <span id="bagCount" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-furent-500 text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
+        </button>
+    </div>
+
+    <!-- BAG PANEL (Slide-in from right) -->
+    <div id="bagOverlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[70] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="bagPanel" class="fixed top-0 right-0 w-full max-w-md h-full bg-white z-[80] shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <!-- Bag Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-surface-100">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-surface-700" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+                <h2 class="text-lg font-bold text-surface-900">Mi Bolsa de Reserva</h2>
+            </div>
+            <button id="bagCloseBtn" class="p-1.5 rounded-lg text-surface-400 hover:text-surface-900 hover:bg-surface-100 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <!-- Bag Items -->
+        <div id="bagItems" class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+            <!-- Items will be rendered by JS -->
+        </div>
+        <!-- Bag Empty State -->
+        <div id="bagEmpty" class="flex-1 flex flex-col items-center justify-center px-6">
+            <svg class="w-16 h-16 text-surface-200 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+            <p class="text-surface-500 text-sm font-medium mb-1">Tu bolsa está vacía</p>
+            <p class="text-surface-400 text-xs">Agrega mobiliario desde el catálogo</p>
+        </div>
+        <!-- Bag Footer -->
+        <div id="bagFooter" class="hidden border-t border-surface-100 px-6 py-5">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm text-surface-500">Subtotal estimado <span class="text-xs">(por día)</span></span>
+                <span id="bagTotal" class="text-xl font-bold text-surface-900">$0.00</span>
+            </div>
+            <a th:href="@{/cotizacion}" class="block w-full py-3.5 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-semibold rounded-xl hover:from-furent-600 hover:to-furent-700 transition-all shadow-md hover:shadow-lg active:scale-[0.98] text-center">
+                Solicitar cotización
+            </a>
+            <p class="text-xs text-surface-400 text-center mt-2">Te enviaremos una propuesta personalizada</p>
+        </div>
+    </div>
+
+    <!-- COMPARE FLOATING BAR -->
+    <div id="compareBar" class="fixed bottom-0 left-0 right-0 z-[55] hidden">
+        <div class="max-w-4xl mx-auto px-4 pb-4">
+            <div class="bg-surface-900 text-white rounded-2xl shadow-2xl px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-furent-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+                    <span class="text-sm font-medium"><span id="compareCount">0</span> productos seleccionados</span>
+                    <div id="compareAvatars" class="flex -space-x-2"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="compareClearBtn" class="px-3 py-1.5 text-xs font-medium text-surface-400 hover:text-white transition-colors">Limpiar</button>
+                    <button id="compareOpenBtn" class="px-5 py-2 bg-furent-500 text-white text-sm font-semibold rounded-xl hover:bg-furent-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled>Comparar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARE MODAL -->
+    <div id="compareModal" class="fixed inset-0 z-[90] hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="compareModalOverlay"></div>
+        <div class="relative flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col animate-fade-in">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-surface-100">
+                    <h2 class="text-lg font-bold text-surface-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+                        Comparar Productos
+                    </h2>
+                    <button id="compareCloseBtn" class="p-2 rounded-lg text-surface-400 hover:text-surface-900 hover:bg-surface-100 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <!-- Body -->
+                <div class="overflow-auto flex-1 p-6" id="compareBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+
+    <!-- Catalog-specific JS -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // === Skeleton → Real content transition ===
+        const skeletonGrid = document.getElementById('skeletonGrid');
+        const pgGrid = document.getElementById('productGrid');
+        if (skeletonGrid && pgGrid) {
+            skeletonGrid.classList.add('hidden');
+            pgGrid.classList.remove('hidden');
+        }
+
+        // === COP Formatter ===
+        function formatCOP(n) {
+            return '$' + Math.round(n).toLocaleString('es-CO');
+        }
+
+        // ===== DATA =====
+        const productCards = document.querySelectorAll('.product-card');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const sortSelect = document.getElementById('sortSelect');
+        const resultsCount = document.getElementById('resultsCount');
+        const noResults = document.getElementById('noResults');
+        const productGrid = document.getElementById('productGrid');
+        const priceMin = document.getElementById('priceMin');
+        const priceMax = document.getElementById('priceMax');
+        const availableOnly = document.getElementById('availableOnly');
+        const activeFiltersBar = document.getElementById('activeFiltersBar');
+        const clearAllFilters = document.getElementById('clearAllFilters');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+
+        // ===== MATERIALS =====
+        const materials = new Set();
+        productCards.forEach(card => {
+            const mat = card.dataset.material;
+            if (mat) materials.add(mat.split('/')[0].trim());
+        });
+        const materialContainer = document.getElementById('materialFilters');
+        materials.forEach(mat => {
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-surface-600 hover:bg-surface-50 cursor-pointer transition-all';
+            label.innerHTML = `<input type="checkbox" value="${mat}" class="material-cb w-4 h-4 rounded border-surface-300 text-furent-500 focus:ring-furent-500"><span>${mat}</span>`;
+            materialContainer.appendChild(label);
+        });
+
+        // ===== FILTER & SORT =====
+        function applyFilters() {
+            const query = searchInput.value.toLowerCase().trim();
+            const selectedCategory = document.querySelector('input[name="category"]:checked')?.value || 'Todos';
+            const minPrice = parseFloat(priceMin.value) || 0;
+            const maxPrice = parseFloat(priceMax.value) || 99999999;
+            const minRating = parseFloat(document.querySelector('input[name="rating"]:checked')?.value) || 0;
+            const onlyAvailable = availableOnly.checked;
+            const selectedMaterials = [...document.querySelectorAll('.material-cb:checked')].map(cb => cb.value);
+
+            let visibleCount = 0;
+            const cardsArr = [...productCards];
+
+            cardsArr.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const category = card.dataset.category;
+                const price = parseFloat(card.dataset.price);
+                const rating = parseFloat(card.dataset.rating);
+                const material = card.dataset.material;
+                const available = card.dataset.available === 'true';
+                const shortDesc = (card.dataset.short || '').toLowerCase();
+
+                let visible = true;
+                if (query && !name.includes(query) && !shortDesc.includes(query) && !category.toLowerCase().includes(query)) visible = false;
+                if (selectedCategory !== 'Todos' && category !== selectedCategory) visible = false;
+                if (price < minPrice || price > maxPrice) visible = false;
+                if (rating < minRating) visible = false;
+                if (onlyAvailable && !available) visible = false;
+                if (selectedMaterials.length > 0 && !selectedMaterials.includes(material.split('/')[0].trim())) visible = false;
+
+                card.style.display = visible ? '' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            const sortVal = sortSelect.value;
+            const sortedCards = cardsArr.filter(c => c.style.display !== 'none');
+            sortedCards.sort((a, b) => {
+                switch(sortVal) {
+                    case 'price-asc': return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    case 'price-desc': return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    case 'rating': return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+                    case 'name': return a.dataset.name.localeCompare(b.dataset.name);
+                    default: return 0;
+                }
+            });
+            sortedCards.forEach(card => productGrid.appendChild(card));
+            cardsArr.filter(c => c.style.display === 'none').forEach(card => productGrid.appendChild(card));
+
+            resultsCount.textContent = visibleCount + ' producto' + (visibleCount !== 1 ? 's' : '') + ' encontrado' + (visibleCount !== 1 ? 's' : '');
+            noResults.classList.toggle('hidden', visibleCount > 0);
+            productGrid.classList.toggle('hidden', visibleCount === 0);
+
+            const hasFilters = query || selectedCategory !== 'Todos' || minPrice > 0 || maxPrice < 99999999 || minRating > 0 || onlyAvailable || selectedMaterials.length > 0;
+            activeFiltersBar.classList.toggle('hidden', !hasFilters);
+        }
+
+        // ===== EVENT LISTENERS =====
+        searchInput.addEventListener('input', () => { clearSearch.classList.toggle('hidden', !searchInput.value); applyFilters(); });
+        clearSearch.addEventListener('click', () => { searchInput.value = ''; clearSearch.classList.add('hidden'); applyFilters(); });
+        document.querySelectorAll('input[name="category"]').forEach(r => r.addEventListener('change', applyFilters));
+        priceMin.addEventListener('input', applyFilters);
+        priceMax.addEventListener('input', applyFilters);
+        document.querySelectorAll('.price-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                priceMin.value = btn.dataset.min;
+                priceMax.value = btn.dataset.max === '9999999' ? '' : btn.dataset.max;
+                document.querySelectorAll('.price-preset').forEach(b => b.classList.remove('bg-furent-50', 'text-furent-700', 'font-medium'));
+                btn.classList.add('bg-furent-50', 'text-furent-700', 'font-medium');
+                applyFilters();
+            });
+        });
+        document.querySelectorAll('input[name="rating"]').forEach(r => r.addEventListener('change', applyFilters));
+        availableOnly.addEventListener('change', applyFilters);
+        document.addEventListener('change', (e) => { if (e.target.classList.contains('material-cb')) applyFilters(); });
+        sortSelect.addEventListener('change', applyFilters);
+
+        function resetAllFilters() {
+            searchInput.value = '';
+            clearSearch.classList.add('hidden');
+            document.querySelector('input[name="category"][value="Todos"]').checked = true;
+            priceMin.value = ''; priceMax.value = '';
+            document.querySelector('input[name="rating"][value="0"]').checked = true;
+            availableOnly.checked = false;
+            document.querySelectorAll('.material-cb').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.price-preset').forEach(b => b.classList.remove('bg-furent-50', 'text-furent-700', 'font-medium'));
+            sortSelect.value = 'relevance';
+            applyFilters();
+        }
+        clearAllFilters.addEventListener('click', resetAllFilters);
+        resetFiltersBtn.addEventListener('click', resetAllFilters);
+
+        // ===== BAG / CART SYSTEM =====
+        let bag = JSON.parse(localStorage.getItem('furent_bag') || '[]');
+
+        const floatingBag = document.getElementById('floatingBag');
+        const bagToggle = document.getElementById('bagToggle');
+        const bagOverlay = document.getElementById('bagOverlay');
+        const bagPanel = document.getElementById('bagPanel');
+        const bagCloseBtn = document.getElementById('bagCloseBtn');
+        const bagItems = document.getElementById('bagItems');
+        const bagEmpty = document.getElementById('bagEmpty');
+        const bagFooter = document.getElementById('bagFooter');
+        const bagCount = document.getElementById('bagCount');
+        const bagTotal = document.getElementById('bagTotal');
+
+        function updateBagUI() {
+            const totalItems = bag.reduce((s, i) => s + i.qty, 0);
+            bagCount.textContent = totalItems;
+
+            // Animated show/hide for floating bag
+            const wasHidden = floatingBag.classList.contains('hidden');
+            if (bag.length > 0) {
+                if (wasHidden) {
+                    floatingBag.classList.remove('hidden');
+                    floatingBag.style.animation = 'bagSlideIn 0.4s cubic-bezier(.34,1.56,.64,1)';
+                    setTimeout(() => floatingBag.style.animation = '', 400);
+                }
+            } else {
+                if (!wasHidden) {
+                    floatingBag.style.animation = 'bagSlideOut 0.3s ease-in forwards';
+                    setTimeout(() => { floatingBag.classList.add('hidden'); floatingBag.style.animation = ''; }, 300);
+                }
+            }
+
+            // Update Add/Remove button states
+            document.querySelectorAll('.add-to-bag-btn').forEach(btn => {
+                const id = btn.dataset.id;
+                const inBag = bag.find(item => item.id === id);
+                if (inBag) {
+                    btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>En bolsa';
+                    btn.classList.remove('bg-furent-500', 'hover:bg-furent-600');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                } else {
+                    btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>Agregar';
+                    btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    btn.classList.add('bg-furent-500', 'hover:bg-furent-600');
+                }
+            });
+
+            // Render bag panel
+            if (bag.length === 0) {
+                bagItems.classList.add('hidden'); bagEmpty.classList.remove('hidden'); bagFooter.classList.add('hidden');
+            } else {
+                bagItems.classList.remove('hidden'); bagEmpty.classList.add('hidden'); bagFooter.classList.remove('hidden');
+                bagItems.innerHTML = bag.map(item => `
+                    <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-surface-100">
+                        <img src="${item.image}" alt="${item.name}" class="w-14 h-14 rounded-lg object-cover shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-semibold text-surface-900 truncate">${item.name}</h4>
+                            <p class="text-xs text-surface-500">${formatCOP(item.price)} / día</p>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <button class="bag-qty-btn w-6 h-6 flex items-center justify-center bg-surface-200 rounded text-surface-600 hover:bg-surface-300 text-xs font-bold transition-colors" data-id="${item.id}" data-action="decrease">−</button>
+                                <span class="text-sm font-medium text-surface-700 w-6 text-center">${item.qty}</span>
+                                <button class="bag-qty-btn w-6 h-6 flex items-center justify-center bg-surface-200 rounded text-surface-600 hover:bg-surface-300 text-xs font-bold transition-colors" data-id="${item.id}" data-action="increase">+</button>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-sm font-bold text-surface-900">${formatCOP(item.price * item.qty)}</p>
+                            <button class="bag-remove-btn text-xs text-red-500 hover:text-red-700 font-medium mt-1 transition-colors" data-id="${item.id}">Quitar</button>
+                        </div>
+                    </div>
+                `).join('');
+                const total = bag.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
+                bagTotal.textContent = formatCOP(total);
+            }
+            localStorage.setItem('furent_bag', JSON.stringify(bag));
+        }
+
+        // Add to bag with button animation
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.add-to-bag-btn');
+            if (!btn) return;
+            // Button press animation
+            btn.style.transform = 'scale(0.9)';
+            setTimeout(() => btn.style.transform = '', 150);
+
+            const id = btn.dataset.id;
+            const existing = bag.find(item => item.id === id);
+            if (existing) {
+                bag = bag.filter(item => item.id !== id);
+            } else {
+                bag.push({ id: btn.dataset.id, name: btn.dataset.name, price: btn.dataset.price, image: btn.dataset.image, qty: 1 });
+                // Counter bounce animation
+                bagCount.style.animation = 'bagBounce 0.3s ease';
+                setTimeout(() => bagCount.style.animation = '', 300);
+            }
+            updateBagUI();
+        });
+
+        // Bag qty and remove
+        document.addEventListener('click', (e) => {
+            const qtyBtn = e.target.closest('.bag-qty-btn');
+            if (qtyBtn) {
+                const id = qtyBtn.dataset.id;
+                const action = qtyBtn.dataset.action;
+                const item = bag.find(i => i.id === id);
+                if (item) {
+                    if (action === 'increase') { item.qty++; bagCount.style.animation = 'bagBounce 0.3s ease'; setTimeout(() => bagCount.style.animation = '', 300); }
+                    else if (action === 'decrease' && item.qty > 1) item.qty--;
+                    else if (action === 'decrease' && item.qty <= 1) bag = bag.filter(i => i.id !== id);
+                }
+                updateBagUI();
+            }
+            const removeBtn = e.target.closest('.bag-remove-btn');
+            if (removeBtn) { bag = bag.filter(i => i.id !== removeBtn.dataset.id); updateBagUI(); }
+        });
+
+        // Toggle bag panel
+        function openBag() {
+            bagOverlay.classList.remove('hidden');
+            requestAnimationFrame(() => { bagOverlay.style.opacity = '1'; bagPanel.style.transform = 'translateX(0)'; });
+            document.body.style.overflow = 'hidden';
+        }
+        function closeBag() {
+            bagOverlay.style.opacity = '0'; bagPanel.style.transform = 'translateX(100%)';
+            setTimeout(() => { bagOverlay.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
+        }
+        bagToggle.addEventListener('click', openBag);
+        bagCloseBtn.addEventListener('click', closeBag);
+        bagOverlay.addEventListener('click', closeBag);
+
+        // ===== PRODUCT COMPARATOR =====
+        const compareBar = document.getElementById('compareBar');
+        const compareCount = document.getElementById('compareCount');
+        const compareAvatars = document.getElementById('compareAvatars');
+        const compareOpenBtn = document.getElementById('compareOpenBtn');
+        const compareClearBtn = document.getElementById('compareClearBtn');
+        const compareModal = document.getElementById('compareModal');
+        const compareModalOverlay = document.getElementById('compareModalOverlay');
+        const compareCloseBtn = document.getElementById('compareCloseBtn');
+        const compareBody = document.getElementById('compareBody');
+        let compareList = [];
+        const MAX_COMPARE = 4;
+
+        function updateCompareUI() {
+            compareCount.textContent = compareList.length;
+            compareOpenBtn.disabled = compareList.length < 2;
+            compareBar.classList.toggle('hidden', compareList.length === 0);
+            compareAvatars.innerHTML = compareList.map(p =>
+                `<img src="${p.image}" alt="${p.name}" class="w-8 h-8 rounded-full border-2 border-surface-800 object-cover" title="${p.name}">`
+            ).join('');
+        }
+
+        document.addEventListener('change', (e) => {
+            if (!e.target.classList.contains('compare-cb')) return;
+            const cb = e.target;
+            const id = cb.dataset.id;
+            if (cb.checked) {
+                if (compareList.length >= MAX_COMPARE) {
+                    cb.checked = false;
+                    if (typeof Swal !== 'undefined') Swal.fire({icon:'info',title:'Máximo '+MAX_COMPARE,text:'Solo puedes comparar hasta '+MAX_COMPARE+' productos.',timer:2000,showConfirmButton:false});
+                    return;
+                }
+                compareList.push({ id, name: cb.dataset.name, price: parseFloat(cb.dataset.price), image: cb.dataset.image, category: cb.dataset.category, material: cb.dataset.material, rating: parseFloat(cb.dataset.rating), stock: parseInt(cb.dataset.stock), available: cb.dataset.available === 'true' });
+            } else {
+                compareList = compareList.filter(p => p.id !== id);
+            }
+            updateCompareUI();
+        });
+
+        compareClearBtn.addEventListener('click', () => {
+            compareList = [];
+            document.querySelectorAll('.compare-cb').forEach(cb => cb.checked = false);
+            updateCompareUI();
+        });
+
+        function openCompareModal() {
+            const rows = [
+                { label: 'Imagen', render: p => `<img src="${p.image}" alt="${p.name}" class="w-full h-32 object-cover rounded-xl">` },
+                { label: 'Nombre', render: p => `<span class="font-semibold text-surface-900">${p.name}</span>` },
+                { label: 'Categoría', render: p => `<span class="px-2 py-0.5 bg-furent-50 text-furent-700 rounded-full text-xs font-medium">${p.category}</span>` },
+                { label: 'Precio/día', render: p => `<span class="text-lg font-bold text-surface-900">${formatCOP(p.price)}</span>` },
+                { label: 'Material', render: p => p.material || '—' },
+                { label: 'Calificación', render: p => `<div class="flex items-center gap-1"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg><span class="font-medium">${p.rating}</span></div>` },
+                { label: 'Stock', render: p => `${p.stock} unidades` },
+                { label: 'Disponible', render: p => p.available ? '<span class="text-green-600 font-medium">✓ Sí</span>' : '<span class="text-red-500 font-medium">✗ No</span>' },
+            ];
+
+            // Find best values for highlighting
+            const maxRating = Math.max(...compareList.map(p => p.rating));
+            const minPrice = Math.min(...compareList.map(p => p.price));
+            const maxStock = Math.max(...compareList.map(p => p.stock));
+
+            const colW = Math.floor(100 / (compareList.length + 1));
+            let html = '<table class="w-full"><thead><tr>';
+            html += `<th class="text-left text-xs font-semibold text-surface-400 uppercase tracking-wider pb-4 pr-4" style="width:${colW}%">Característica</th>`;
+            compareList.forEach(p => { html += `<th class="text-center pb-4 px-2" style="width:${colW}%"><span class="text-sm font-semibold text-surface-700">${p.name}</span></th>`; });
+            html += '</tr></thead><tbody>';
+
+            rows.forEach((row, ri) => {
+                const bg = ri % 2 === 0 ? 'bg-surface-50/50' : '';
+                html += `<tr class="${bg}"><td class="py-3 pr-4 text-sm font-medium text-surface-600">${row.label}</td>`;
+                compareList.forEach(p => {
+                    let highlight = '';
+                    if (row.label === 'Precio/día' && p.price === minPrice) highlight = 'ring-2 ring-green-400 bg-green-50/50';
+                    if (row.label === 'Calificación' && p.rating === maxRating) highlight = 'ring-2 ring-amber-400 bg-amber-50/50';
+                    if (row.label === 'Stock' && p.stock === maxStock) highlight = 'ring-2 ring-blue-400 bg-blue-50/50';
+                    html += `<td class="py-3 px-2 text-center text-sm ${highlight} rounded-lg">${row.render(p)}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            compareBody.innerHTML = html;
+            compareModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        compareOpenBtn.addEventListener('click', openCompareModal);
+        compareCloseBtn.addEventListener('click', () => { compareModal.classList.add('hidden'); document.body.style.overflow = ''; });
+        compareModalOverlay.addEventListener('click', () => { compareModal.classList.add('hidden'); document.body.style.overflow = ''; });
+
+        // Initial render
+        updateBagUI();
+        applyFilters();
+    });
+    </script>
+
+    <style>
+    @keyframes bagSlideIn {
+        from { transform: translateY(20px) scale(0.8); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes bagSlideOut {
+        from { transform: translateY(0) scale(1); opacity: 1; }
+        to { transform: translateY(20px) scale(0.8); opacity: 0; }
+    }
+    @keyframes bagBounce {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.4); }
+        100% { transform: scale(1); }
+    }
+    .add-to-bag-btn { transition: transform 0.15s ease, background-color 0.2s ease; }
+    </style>
+</body>
+</html>

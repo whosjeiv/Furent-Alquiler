@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+
+        <!-- Hero -->
+        <section class="bg-white border-b border-surface-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+                <div class="max-w-3xl mx-auto text-center fade-in-up">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-furent-50 text-furent-600 border border-furent-100 mb-6">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+                        Sobre nosotros
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-bold text-surface-900 tracking-tight mb-6">Transformamos espacios en experiencias</h1>
+                    <p class="text-lg text-surface-500 leading-relaxed">Con más de 10 años de experiencia, en Furent nos dedicamos a hacer que cada evento sea especial con mobiliario de primera calidad.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Values -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="text-center mb-14 fade-in-up">
+                <h2 class="text-3xl font-bold text-surface-900 tracking-tight mb-3">Nuestros valores</h2>
+                <p class="text-surface-500">Lo que nos define como empresa</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl p-8 shadow-soft border border-surface-100 fade-in-up stagger-1 card-hover">
+                    <div class="w-12 h-12 bg-furent-50 rounded-xl flex items-center justify-center mb-5 border border-furent-100">
+                        <svg class="w-6 h-6 text-furent-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-surface-900 mb-2">Calidad premium</h3>
+                    <p class="text-sm text-surface-500 leading-relaxed">Solo trabajamos con mobiliario de primera calidad, cuidadosamente seleccionado y mantenido para garantizar la excelencia.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-soft border border-surface-100 fade-in-up stagger-2 card-hover">
+                    <div class="w-12 h-12 bg-furent-50 rounded-xl flex items-center justify-center mb-5 border border-furent-100">
+                        <svg class="w-6 h-6 text-furent-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-surface-900 mb-2">Servicio personalizado</h3>
+                    <p class="text-sm text-surface-500 leading-relaxed">Cada evento es único. Nos adaptamos a tus necesidades con atención cercana y soluciones a la medida de tu visión.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-soft border border-surface-100 fade-in-up stagger-3 card-hover">
+                    <div class="w-12 h-12 bg-furent-50 rounded-xl flex items-center justify-center mb-5 border border-furent-100">
+                        <svg class="w-6 h-6 text-furent-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-surface-900 mb-2">Puntualidad garantizada</h3>
+                    <p class="text-sm text-surface-500 leading-relaxed">Entrega, montaje y recogida en los horarios acordados. Tu tranquilidad es nuestra prioridad.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="bg-white border-y border-surface-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div class="fade-in-up stagger-1">
+                        <p class="text-3xl md:text-4xl font-bold text-surface-900 mb-1">500+</p>
+                        <p class="text-sm text-surface-500">Eventos realizados</p>
+                    </div>
+                    <div class="fade-in-up stagger-2">
+                        <p class="text-3xl md:text-4xl font-bold text-surface-900 mb-1">150+</p>
+                        <p class="text-sm text-surface-500">Productos disponibles</p>
+                    </div>
+                    <div class="fade-in-up stagger-3">
+                        <p class="text-3xl md:text-4xl font-bold text-surface-900 mb-1">10+</p>
+                        <p class="text-sm text-surface-500">Años de experiencia</p>
+                    </div>
+                    <div class="fade-in-up stagger-4">
+                        <p class="text-3xl md:text-4xl font-bold text-surface-900 mb-1">98%</p>
+                        <p class="text-sm text-surface-500">Clientes satisfechos</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team section -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="text-center mb-14 fade-in-up">
+                <h2 class="text-3xl font-bold text-surface-900 tracking-tight mb-3">Nuestro equipo</h2>
+                <p class="text-surface-500">Las personas detrás de cada evento exitoso</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-soft border border-surface-100 text-center fade-in-up stagger-1 card-hover">
+                    <div class="w-20 h-20 bg-gradient-to-br from-furent-100 to-furent-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-furent-600">ML</span>
+                    </div>
+                    <h3 class="font-semibold text-surface-900">María López</h3>
+                    <p class="text-xs text-furent-500 font-medium mt-0.5">Directora General</p>
+                    <p class="text-sm text-surface-500 mt-3 leading-relaxed">Líder visionaria con pasión por crear experiencias memorables.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-soft border border-surface-100 text-center fade-in-up stagger-2 card-hover">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-blue-600">CR</span>
+                    </div>
+                    <h3 class="font-semibold text-surface-900">Carlos Ramírez</h3>
+                    <p class="text-xs text-furent-500 font-medium mt-0.5">Director de Operaciones</p>
+                    <p class="text-sm text-surface-500 mt-3 leading-relaxed">Experto en logística y coordinación de eventos grandes.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-soft border border-surface-100 text-center fade-in-up stagger-3 card-hover">
+                    <div class="w-20 h-20 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-emerald-600">AG</span>
+                    </div>
+                    <h3 class="font-semibold text-surface-900">Ana García</h3>
+                    <p class="text-xs text-furent-500 font-medium mt-0.5">Diseñadora de eventos</p>
+                    <p class="text-sm text-surface-500 mt-3 leading-relaxed">Creatividad y estilo en cada detalle decorativo.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-soft border border-surface-100 text-center fade-in-up stagger-4 card-hover">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-600">DM</span>
+                    </div>
+                    <h3 class="font-semibold text-surface-900">Diego Martínez</h3>
+                    <p class="text-xs text-furent-500 font-medium mt-0.5">Atención al cliente</p>
+                    <p class="text-sm text-surface-500 mt-3 leading-relaxed">Comprometido con la satisfacción total del cliente.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+            <div class="bg-gradient-to-r from-surface-900 to-surface-800 rounded-3xl px-8 py-12 md:px-16 md:py-16 text-center">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">¿Listo para trabajar con nosotros?</h2>
+                <p class="text-surface-300 mb-8 max-w-lg mx-auto">Cuéntanos sobre tu evento y te ayudaremos a hacerlo realidad.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a th:href="@{/contacto}" class="inline-flex items-center justify-center px-8 py-3.5 bg-white text-surface-900 font-semibold rounded-xl hover:bg-surface-50 transition-colors shadow-lg">Contáctanos</a>
+                    <a th:href="@{/catalogo}" class="inline-flex items-center justify-center px-8 py-3.5 border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors">Ver catálogo</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: furent-service
+  namespace: furent
+  labels:
+    app: furent
+spec:
+  type: ClusterIP
+  selector:
+    app: furent
+    component: backend
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+  namespace: furent
+  labels:
+    app: furent
+    component: database
+spec:
+  type: ClusterIP
+  selector:
+    app: furent
+    component: database
+  ports:
+    - port: 27017
+      targetPort: 27017
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  namespace: furent
+  labels:
+    app: furent
+    component: database
+spec:
+  serviceName: mongo-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: furent
+      component: database
+  template:
+    metadata:
+      labels:
+        app: furent
+        component: database
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --quiet
+                - --eval
+                - "db.runCommand('ping').ok"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi

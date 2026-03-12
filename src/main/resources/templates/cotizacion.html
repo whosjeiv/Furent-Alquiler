@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<style>
+    /* Premium Flatpickr Overrides */
+    .flatpickr-calendar {
+        background: #ffffff;
+        border: none !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2) !important;
+        border-radius: 24px !important;
+        padding: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+        width: 330px !important; /* Fixed width to prevent Sunday cut-off */
+    }
+    .flatpickr-months {
+        padding: 12px 0 10px 0 !important;
+    }
+    .flatpickr-months .flatpickr-month {
+        color: #111827 !important;
+        height: 50px !important;
+    }
+    .flatpickr-current-month {
+        color: #111827 !important;
+        font-size: 115% !important;
+        font-weight: 800 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        padding: 0 !important;
+    }
+    .flatpickr-current-month .flatpickr-monthDropdown-months {
+        font-weight: 800 !important;
+        color: #111827 !important;
+        padding: 2px 4px !important;
+    }
+    .flatpickr-current-month .cur-year {
+        font-weight: 600 !important;
+        color: #4B5563 !important;
+    }
+    .flatpickr-current-month .numInputWrapper {
+        width: 65px !important;
+    }
+    .numInputWrapper span.arrowUp, .numInputWrapper span.arrowDown {
+        display: none !important;
+    }
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange,
+    .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange,
+    .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus,
+    .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover {
+        background: #E07A3A !important;
+        border-color: #E07A3A !important;
+        color: #fff !important;
+        border-radius: 12px !important;
+    }
+    .flatpickr-day.inRange {
+        background: #FFE9D1 !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        color: #C2630F !important;
+    }
+    .flatpickr-day {
+        border-radius: 12px !important;
+        transition: all 0.2s ease !important;
+        border: 1px solid transparent !important;
+        max-width: 40px !important;
+        height: 40px !important;
+        line-height: 40px !important;
+        font-weight: 500 !important;
+    }
+    .flatpickr-weekday {
+        color: #9CA3AF !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+    }
+    .flatpickr-day.flatpickr-disabled {
+        color: #E5E7EB !important;
+    }
+    .flatpickr-day.is-reserved {
+        color: #dc2626 !important; /* Red-600 */
+        background: #fef2f2 !important; /* Red-50 */
+        text-decoration: line-through;
+        opacity: 1 !important;
+        pointer-events: auto !important; /* Forces clickability even if disabled */
+        cursor: pointer !important;
+    }
+    .flatpickr-innerContainer {
+        padding: 0 10px 10px 10px !important;
+    }
+    .flatpickr-days {
+        width: 100% !important;
+    }
+    /* Navigation arrows */
+    .flatpickr-prev-month, .flatpickr-next-month {
+        padding: 10px !important;
+        color: #4B5563 !important;
+        top: 15px !important;
+    }
+    .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg {
+        fill: #E07A3A !important;
+    }
+    /* Smooth transitions */
+    .flatpickr-calendar.animate.open {
+        animation: fpFadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes fpFadeInUp {
+        from { opacity: 0; transform: translateY(10px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    /* Validation Styles */
+    .input-error {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2 !important;
+        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+</style>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+            <!-- Header -->
+            <div class="text-center mb-10 fade-in-up">
+                <div class="w-14 h-14 bg-gradient-to-br from-furent-400 to-furent-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                </div>
+                <h1 class="text-2xl font-bold text-surface-900 mb-1">Solicitar cotización</h1>
+                <p class="text-sm text-surface-500">Completa el formulario para recibir tu propuesta personalizada</p>
+            </div>
+
+            <!-- Steps indicator -->
+            <div class="flex items-center justify-center gap-0 mb-10 fade-in-up stagger-1">
+                <div class="flex items-center">
+                    <div id="step1Dot" class="w-9 h-9 rounded-full bg-furent-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">1</div>
+                    <span class="ml-2 text-sm font-medium text-surface-900">Productos</span>
+                </div>
+                <div class="w-12 h-px bg-surface-200 mx-3"></div>
+                <div class="flex items-center">
+                    <div id="step2Dot" class="w-9 h-9 rounded-full bg-surface-200 text-surface-500 flex items-center justify-center text-sm font-bold">2</div>
+                    <span class="ml-2 text-sm font-medium text-surface-400">Evento</span>
+                </div>
+                <div class="w-8 sm:w-12 h-px bg-surface-200 mx-2 sm:mx-3"></div>
+                <div class="flex items-center">
+                    <div id="step3Dot" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-200 text-surface-500 flex items-center justify-center text-xs sm:text-sm font-bold">3</div>
+                    <span class="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-surface-400">Pago</span>
+                </div>
+                <div class="w-8 sm:w-12 h-px bg-surface-200 mx-2 sm:mx-3"></div>
+                <div class="flex items-center">
+                    <div id="step4Dot" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-200 text-surface-500 flex items-center justify-center text-xs sm:text-sm font-bold">4</div>
+                    <span class="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-surface-400 hidden sm:inline">Confirmar</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Products Review -->
+            <div id="step1" class="fade-in-up stagger-2">
+                <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-surface-100">
+                        <h2 class="text-lg font-semibold text-surface-900">Productos seleccionados</h2>
+                        <p class="text-xs text-surface-500 mt-0.5">Revisa los mobiliarios que deseas cotizar</p>
+                    </div>
+                    <div id="cotizacionItems" class="px-6 py-4 space-y-3">
+                        <!-- JS will fill this -->
+                    </div>
+                    <div id="cotizacionEmpty" class="hidden px-6 py-10 text-center">
+                        <p class="text-surface-400 text-sm">No hay productos en tu bolsa</p>
+                        <a th:href="@{/catalogo}" class="inline-flex items-center gap-2 mt-3 text-furent-500 text-sm font-medium hover:text-furent-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                            Ir al catálogo
+                        </a>
+                    </div>
+                    <div class="px-6 py-4 bg-surface-50 border-t border-surface-100 flex items-center justify-between">
+                        <span class="text-sm text-surface-500">Subtotal estimado (por día)</span>
+                        <span id="cotTotal" class="text-xl font-bold text-surface-900">$0</span>
+                    </div>
+
+                    <!-- Coupon Section -->
+                    <div class="px-6 py-4 border-t border-surface-100">
+                        <button type="button" onclick="toggleCouponSection()" id="couponToggleBtn" class="flex items-center gap-2 text-sm font-medium text-furent-600 hover:text-furent-700 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
+                            ¿Tienes un cupón de descuento?
+                        </button>
+                        <div id="couponSection" class="hidden mt-3">
+                            <div class="flex gap-2">
+                                <input id="couponCodeInput" type="text" placeholder="Escribe tu código" maxlength="30"
+                                       class="flex-1 px-4 py-2.5 bg-white border border-surface-200 rounded-xl text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                <button type="button" onclick="applyCoupon()" id="couponApplyBtn"
+                                        class="px-5 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
+                                    Aplicar
+                                </button>
+                            </div>
+                            <div id="couponMessage" class="hidden mt-2 px-3 py-2 rounded-lg text-sm font-medium"></div>
+                            <div id="couponApplied" class="hidden mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span class="text-sm font-semibold text-green-700">Cupón: <span id="couponAppliedCode"></span></span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span id="couponDiscountDisplay" class="text-sm font-bold text-green-600"></span>
+                                        <button type="button" onclick="removeCoupon()" class="text-red-400 hover:text-red-600 transition-colors" title="Quitar cupón">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button onclick="goStep(2)" id="nextStep1" class="px-6 py-3 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-all shadow-sm flex items-center gap-2">
+                        Siguiente
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Event Details -->
+            <div id="step2" class="hidden">
+                <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-surface-100">
+                        <h2 class="text-lg font-semibold text-surface-900">Detalles del evento</h2>
+                        <p class="text-xs text-surface-500 mt-0.5">Cuéntanos sobre tu evento</p>
+                    </div>
+                    <div class="px-6 py-6 space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Tipo de evento</label>
+                                <select id="evtType" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                    <option value="">Selecciona...</option>
+                                    <option>Boda</option><option>Corporativo</option><option>Cumpleaños</option>
+                                    <option>Graduación</option><option>Feria</option><option>Otro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Número de invitados</label>
+                                <input id="evtGuests" type="number" placeholder="Ej: 150" min="1" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-5">
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Periodo del Alquiler (Evento & Devolución)</label>
+                                <div class="relative group">
+                                    <input id="evtDateRange" type="text" readonly placeholder="Selecciona el rango de fechas..." 
+                                           class="w-full px-12 py-4 bg-surface-50 border border-surface-200 rounded-2xl text-sm font-semibold text-surface-900 focus:outline-none focus:ring-4 focus:ring-furent-500/10 focus:border-furent-500 transition-all cursor-pointer">
+                                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-hover:text-furent-500 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-surface-400 mt-2 ml-1">* El mobiliario puede reservarse por un máximo de 7 días.</p>
+                                <p class="text-[10px] text-surface-400 mt-1 ml-1 leading-relaxed">
+                                    <span class="text-red-500 font-bold">*</span> Si el día está de color <span class="text-red-500 font-semibold">rojo</span> significa que alguno de los muebles que intentas alquilar ya está reservado para esos días. Presiona algún día que esté de color rojo para ver qué mueble ya está reservado.
+                                </p>
+                                <input type="hidden" id="evtDate">
+                                <input type="hidden" id="evtDateEnd">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Dirección del evento</label>
+                            <input id="evtAddress" type="text" placeholder="Calle, número, ciudad" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Notas adicionales <span class="text-surface-400 normal-case">(opcional)</span></label>
+                            <textarea id="evtNotes" rows="3" placeholder="Detalles adicionales sobre tu evento..." class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button onclick="goStep(1)" class="px-6 py-3 border border-surface-200 text-surface-600 font-medium rounded-xl hover:bg-surface-50 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                        Atrás
+                    </button>
+                    <button onclick="goStep(3)" class="px-6 py-3 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-all shadow-sm flex items-center gap-2">
+                        Siguiente
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment Method -->
+            <div id="step3" class="hidden">
+                <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-surface-100">
+                        <h2 class="text-lg font-semibold text-surface-900">Método de pago</h2>
+                        <p class="text-xs text-surface-500 mt-0.5">Selecciona cómo deseas pagar tu reserva</p>
+                    </div>
+                    <div class="px-6 py-6 space-y-4">
+                        
+                        <!-- Option 1: Transfer -->
+                        <label class="block cursor-pointer relative">
+                            <input type="radio" name="paymentMethod" value="Transferencia Bancaria" class="peer sr-only" checked onchange="togglePaymentOptions()">
+                            <div class="p-4 border-2 border-surface-200 rounded-xl peer-checked:border-furent-500 peer-checked:bg-furent-50 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-surface-900">Transferencia Bancaria</h3>
+                                            <p class="text-xs text-surface-500 mt-0.5">Bancolombia, Nequi o Daviplata</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-5 h-5 border-2 border-surface-300 rounded-full peer-checked:border-furent-500 peer-checked:border-4 transition-all"></div>
+                                </div>
+                                <div id="ui-transfer" class="mt-4 pt-4 border-t border-furent-200/50 space-y-3">
+                                    <p class="text-sm text-surface-600">Por favor, realiza la transferencia a una de nuestras cuentas habilitadas:</p>
+                                    <ul class="text-sm font-medium text-surface-800 space-y-1">
+                                        <li>• Bancolombia Ahorros: <span class="text-furent-600">123-456789-00</span></li>
+                                        <li>• Nequi / Daviplata: <span class="text-furent-600">300 123 4567</span></li>
+                                    </ul>
+                                    <div class="mt-3">
+                                        <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Comprobante o Detalle</label>
+                                        <input id="payReference" type="text" placeholder="Gira y pon aquí tu número de referencia/comprobante" class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Option 2: Card -->
+                        <label class="block cursor-pointer relative">
+                            <input type="radio" name="paymentMethod" value="Credit Card" class="peer sr-only" onchange="togglePaymentOptions()">
+                            <div class="p-4 border-2 border-surface-200 rounded-xl peer-checked:border-furent-500 peer-checked:bg-furent-50 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-surface-900">Tarjeta de Crédito / Débito</h3>
+                                            <p class="text-xs text-surface-500 mt-0.5">Paga seguro con pasarela de pago</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-5 h-5 border-2 border-surface-300 rounded-full peer-checked:border-furent-500 peer-checked:border-4 transition-all"></div>
+                                </div>
+                                <div id="ui-card" class="hidden mt-4 pt-4 border-t border-furent-200/50 space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Número de tarjeta</label>
+                                        <input type="text" placeholder="0000 0000 0000 0000" class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all font-mono">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Vencimiento</label>
+                                            <input type="text" placeholder="MM/YY" class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">CVC</label>
+                                            <input type="text" placeholder="123" class="w-full px-4 py-3 bg-white border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Option 3: Cash -->
+                        <label class="block cursor-pointer relative">
+                            <input type="radio" name="paymentMethod" value="Efectivo en Oficina" class="peer sr-only" onchange="togglePaymentOptions()">
+                            <div class="p-4 border-2 border-surface-200 rounded-xl peer-checked:border-furent-500 peer-checked:bg-furent-50 transition-all">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-surface-900">Efectivo (Presencial)</h3>
+                                            <p class="text-xs text-surface-500 mt-0.5">Genera un código y paga en la empresa</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-5 h-5 border-2 border-surface-300 rounded-full peer-checked:border-furent-500 peer-checked:border-4 transition-all"></div>
+                                </div>
+                                <div id="ui-cash" class="hidden mt-4 pt-4 border-t border-furent-200/50 space-y-3">
+                                    <div class="p-4 rounded-xl border border-surface-200 bg-white">
+                                        <p class="text-sm text-surface-700 leading-relaxed font-medium">
+                                            Al confirmar, generaremos un <strong class="text-surface-900">código de reserva único</strong>. 
+                                            Tendrás hasta <strong class="text-furent-600">48 horas</strong> para acercarte a nuestras instalaciones y pagar el monto total para que tu mobiliario quede 100% reservado.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button onclick="goStep(2)" class="px-6 py-3 border border-surface-200 text-surface-600 font-medium rounded-xl hover:bg-surface-50 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                        Atrás
+                    </button>
+                    <button onclick="goStep(4)" class="px-6 py-3 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-all shadow-sm flex items-center gap-2">
+                        Siguiente
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirmation -->
+            <div id="step4" class="hidden">
+                <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-surface-100">
+                        <h2 class="text-lg font-semibold text-surface-900">Resumen de cotización</h2>
+                        <p class="text-xs text-surface-500 mt-0.5">Verifica los datos antes de enviar</p>
+                    </div>
+                    <div class="px-6 py-6 space-y-5">
+                        <!-- Summary items -->
+                        <div>
+                            <h3 class="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Productos</h3>
+                            <div id="summaryItems" class="space-y-2"></div>
+                        </div>
+                        <div class="h-px bg-surface-100"></div>
+                        <div>
+                            <h3 class="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Evento</h3>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div><span class="text-surface-400">Tipo:</span> <span id="sumType" class="text-surface-900 font-medium ml-1">—</span></div>
+                                <div><span class="text-surface-400">Invitados:</span> <span id="sumGuests" class="text-surface-900 font-medium ml-1">—</span></div>
+                                <div><span class="text-surface-400">Fecha:</span> <span id="sumDate" class="text-surface-900 font-medium ml-1">—</span></div>
+                                <div><span class="text-surface-400">Devolución:</span> <span id="sumDateEnd" class="text-surface-900 font-medium ml-1">—</span></div>
+                                <div class="col-span-2"><span class="text-surface-400">Dirección:</span> <span id="sumAddress" class="text-surface-900 font-medium ml-1">—</span></div>
+                                <div class="col-span-2"><span class="text-surface-400">Método de pago:</span> <span id="sumPayment" class="text-surface-900 font-medium ml-1">—</span></div>
+                            </div>
+                        </div>
+                        <div class="h-px bg-surface-100"></div>
+                        <div id="sumCouponRow" class="hidden flex items-center justify-between text-sm">
+                            <span class="text-green-600 font-medium">Descuento cupón (<span id="sumCouponCode"></span>)</span>
+                            <span id="sumDiscount" class="font-bold text-green-600">-$0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-surface-500">Total estimado</span>
+                            <span id="sumTotal" class="text-2xl font-bold text-furent-600">$0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button onclick="goStep(2)" class="px-6 py-3 border border-surface-200 text-surface-600 font-medium rounded-xl hover:bg-surface-50 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                        Atrás
+                    </button>
+                    <button onclick="submitCotizacion()" class="px-8 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-semibold rounded-xl hover:from-furent-600 hover:to-furent-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                        Enviar cotización
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success state (hidden) -->
+            <div id="stepSuccess" class="hidden text-center py-16 fade-in-up">
+                <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-surface-900 mb-2">¡Cotización enviada!</h2>
+                <p class="text-surface-500 max-w-md mx-auto mb-8">Hemos guardado tu cotización, podrás verla en tu panel.</p>
+                <a th:href="@{/panel}" class="inline-flex items-center gap-2 px-6 py-3 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-all shadow-sm">
+                    Ver mi panel
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+    function formatCOP(n) { return '$' + Math.round(n).toLocaleString('es-CO'); }
+
+    function loadBagItems() {
+        let bag = [];
+        try { bag = JSON.parse(localStorage.getItem('furent_bag') || '[]'); } catch(e) {}
+        const container = document.getElementById('cotizacionItems');
+        const empty = document.getElementById('cotizacionEmpty');
+        const btn = document.getElementById('nextStep1');
+        if (!bag.length) { container.classList.add('hidden'); empty.classList.remove('hidden'); btn.disabled = true; btn.classList.add('opacity-50'); return; }
+        empty.classList.add('hidden'); container.classList.remove('hidden'); btn.disabled = false; btn.classList.remove('opacity-50');
+        let total = 0;
+        container.innerHTML = bag.map((item, idx) => {
+            const sub = item.price * item.qty;
+            total += sub;
+            return `<div class="flex flex-col sm:flex-row items-center gap-4 p-4 bg-surface-50/50 rounded-2xl border border-surface-200 hover:border-surface-300 transition-colors">
+                <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover border border-surface-200 shadow-sm" alt="">
+                <div class="flex-1 w-full sm:min-w-0 text-center sm:text-left">
+                    <p class="text-base font-bold text-surface-900 truncate">${item.name}</p>
+                    <p class="text-xs font-semibold text-surface-500">${formatCOP(item.price)} <span class="text-surface-400 font-medium">/día</span></p>
+                </div>
+                <div class="flex items-center justify-between w-full sm:w-auto gap-4 mt-2 sm:mt-0">
+                    <div class="flex items-center gap-1 bg-white border border-surface-200 rounded-xl p-1 shadow-inner">
+                        <button onclick="updateBagQty(${idx}, -1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-surface-600 hover:bg-surface-100 hover:text-furent-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>
+                        </button>
+                        <span class="text-sm font-bold w-6 text-center text-surface-900">${item.qty}</span>
+                        <button onclick="updateBagQty(${idx}, 1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-surface-600 hover:bg-surface-100 hover:text-furent-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-base font-extrabold text-surface-900 min-w-[5rem] text-right">${formatCOP(sub)}</span>
+                        <button onclick="removeFromBag(${idx})" class="p-2 text-surface-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('cotTotal').textContent = formatCOP(total);
+    }
+
+    function updateBagQty(idx, dir) {
+        let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
+        if(bag[idx]) {
+            bag[idx].qty += dir;
+            if(bag[idx].qty < 1) bag[idx].qty = 1;
+            // Aca deberia valer limite maximo, pero como no lo pasamos al localStorage, dejaremos que suba
+            localStorage.setItem('furent_bag', JSON.stringify(bag));
+            loadBagItems();
+            if(typeof updateBagCount === 'function') updateBagCount();
+        }
+    }
+    
+    function removeFromBag(idx) {
+        let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
+        if(bag[idx]) {
+            bag.splice(idx, 1);
+            localStorage.setItem('furent_bag', JSON.stringify(bag));
+            loadBagItems();
+            if(typeof updateBagCount === 'function') updateBagCount();
+        }
+    }
+
+    let currentStep = 1;
+    function goStep(s) {
+        // Validation logic
+        if (s > currentStep) {
+            if (currentStep === 1) {
+                let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
+                if (bag.length === 0) {
+                    Swal.fire({icon:'error', title:'Bolsa vacía', text:'Agrega productos a tu bolsa antes de continuar.'});
+                    return;
+                }
+            }
+            if (currentStep === 2) {
+                const fields = [
+                    { id: 'evtType', val: document.getElementById('evtType').value },
+                    { id: 'evtGuests', val: document.getElementById('evtGuests').value },
+                    { id: 'evtDateRange', val: document.getElementById('evtDate').value }, // Use actual date check
+                    { id: 'evtAddress', val: document.getElementById('evtAddress').value }
+                ];
+
+                let missing = false;
+                fields.forEach(f => {
+                    const el = document.getElementById(f.id);
+                    if (!f.val || f.val.trim() === '') {
+                        el.classList.add('input-error');
+                        missing = true;
+                        // Remove error style on input/change
+                        el.addEventListener('input', () => el.classList.remove('input-error'), { once: true });
+                        if (f.id === 'evtType') el.addEventListener('change', () => el.classList.remove('input-error'), { once: true });
+                    } else {
+                        el.classList.remove('input-error');
+                    }
+                });
+
+                if (missing) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Datos incompletos',
+                        text: 'Por favor, llena los campos resaltados en rojo para continuar.',
+                        confirmButtonColor: '#E07A3A'
+                    });
+                    return;
+                }
+            }
+            if (currentStep === 3) {
+                const val = document.querySelector('input[name="paymentMethod"]:checked').value;
+                if (val === 'Transferencia Bancaria') {
+                    const ref = document.getElementById('payReference').value.trim();
+                    if(!ref) {
+                        Swal.fire({icon:'error', title:'Faltan datos', text:'Ingresa el número de referencia de la transferencia.'});
+                        return;
+                    }
+                } else if (val === 'Credit Card') {
+                    Swal.fire({icon:'error', title:'Pasarela No Integrada', text:'La pasarela de pagos aún no está conectada. Selecciona transferencia o efectivo por ahora.'});
+                    return;
+                }
+            }
+        }
+
+        document.getElementById('step'+currentStep).classList.add('hidden');
+        document.getElementById('step'+s).classList.remove('hidden');
+        
+        // Update dots
+        for (let i=1;i<=4;i++) {
+            const dot = document.getElementById('step'+i+'Dot');
+            if (!dot) continue;
+            const label = dot.nextElementSibling;
+            if (i<=s) { 
+                dot.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-furent-500 text-white flex items-center justify-center text-xs sm:text-sm font-bold shadow-sm'; 
+                label.className = 'ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-surface-900 ' + (i===4 ? 'hidden sm:inline' : ''); 
+            } else { 
+                dot.className = 'w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-200 text-surface-500 flex items-center justify-center text-xs sm:text-sm font-bold'; 
+                label.className = 'ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-surface-400 ' + (i===4 ? 'hidden sm:inline' : ''); 
+            }
+        }
+        if (s===4) fillSummary();
+        currentStep = s;
+        window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function togglePaymentOptions() {
+        const val = document.querySelector('input[name="paymentMethod"]:checked').value;
+        document.getElementById('ui-transfer').classList.add('hidden');
+        document.getElementById('ui-card').classList.add('hidden');
+        document.getElementById('ui-cash').classList.add('hidden');
+
+        if (val === 'Transferencia Bancaria') {
+            document.getElementById('ui-transfer').classList.remove('hidden');
+        } else if (val === 'Credit Card') {
+            document.getElementById('ui-card').classList.remove('hidden');
+        } else if (val === 'Efectivo en Oficina') {
+            document.getElementById('ui-cash').classList.remove('hidden');
+        }
+    }
+
+    function fillSummary() {
+        document.getElementById('sumType').textContent = document.getElementById('evtType').value || '—';
+        document.getElementById('sumGuests').textContent = document.getElementById('evtGuests').value || '—';
+        document.getElementById('sumDate').textContent = document.getElementById('evtDate').value || '—';
+        document.getElementById('sumDateEnd').textContent = document.getElementById('evtDateEnd').value || '—';
+        document.getElementById('sumAddress').textContent = document.getElementById('evtAddress').value || '—';
+        document.getElementById('sumPayment').textContent = document.querySelector('input[name="paymentMethod"]:checked').value || '—';
+        
+        let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
+        let totalPerDay=0;
+        document.getElementById('summaryItems').innerHTML = bag.map(i => {
+            const sub=i.price*i.qty; totalPerDay+=sub;
+            return `<div class="flex justify-between text-sm"><span class="text-surface-600">${i.qty}x ${i.name}</span><span class="font-medium text-surface-900">${formatCOP(sub)}</span></div>`;
+        }).join('');
+        
+        const days = calcDays();
+        let totalBruto = totalPerDay * days;
+
+        // Apply coupon discount in summary
+        const couponRow = document.getElementById('sumCouponRow');
+        let totalFinal = totalBruto;
+        if (appliedCoupon) {
+            couponRow.classList.remove('hidden');
+            document.getElementById('sumCouponCode').textContent = appliedCoupon.codigo;
+            document.getElementById('sumDiscount').textContent = '-' + formatCOP(appliedCoupon.descuento);
+            totalFinal = totalBruto - appliedCoupon.descuento;
+            if (totalFinal < 0) totalFinal = 0;
+        } else {
+            couponRow.classList.add('hidden');
+        }
+
+        document.getElementById('sumTotal').textContent = formatCOP(totalFinal);
+    }
+
+    function calcDays() {
+        const d1 = document.getElementById('evtDate').value;
+        const d2 = document.getElementById('evtDateEnd').value;
+        if (!d1 || !d2) return 1;
+        
+        // Use luxon if available, or just plain JS
+        const date1 = new Date(d1 + "T00:00:00");
+        const date2 = new Date(d2 + "T00:00:00");
+        const diffTime = Math.abs(date2 - date1);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        return diffDays > 0 ? diffDays : 1;
+    }
+
+    async function submitCotizacion() {
+        const btn = document.querySelector('button[onclick="submitCotizacion()"]');
+        const ogText = btn.innerHTML;
+        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando...`;
+        btn.disabled = true;
+
+        let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
+        
+        let selectedPayment = document.querySelector('input[name="paymentMethod"]:checked').value;
+        let baseNotes = document.getElementById('evtNotes').value;
+        
+        if (selectedPayment === 'Transferencia Bancaria') {
+            let ref = document.getElementById('payReference').value.trim();
+            if (ref) baseNotes += `\n\n[Ref. Transferencia: ${ref}]`;
+        } else if (selectedPayment === 'Efectivo en Oficina') {
+            let code = "FRNT-" + Math.floor(100000 + Math.random() * 900000);
+            baseNotes += `\n\n[PAGO EN EFECTIVO] Cliente debe pagar en oficina. Referencia generada: ${code}. Tiene 48 horas.`;
+        }
+
+        const payload = {
+            tipoEvento: document.getElementById('evtType').value,
+            invitados: parseInt(document.getElementById('evtGuests').value) || 0,
+            fechaInicio: document.getElementById('evtDate').value,
+            fechaFin: document.getElementById('evtDateEnd').value,
+            direccion: document.getElementById('evtAddress').value,
+            notas: baseNotes,
+            metodoPago: selectedPayment,
+            items: bag,
+            codigoCupon: appliedCoupon ? appliedCoupon.codigo : null
+        };
+
+        try {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+            
+            const reqUrl = '/api/cotizacion';
+            const res = await fetch(reqUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfHeader && csrfToken ? {[csrfHeader]: csrfToken} : {})
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (res.ok) {
+                document.getElementById('step4').classList.add('hidden');
+                document.querySelectorAll('.flex.items-center.justify-center.gap-0').forEach(e=>e.classList.add('hidden'));
+                document.getElementById('stepSuccess').classList.remove('hidden');
+                localStorage.removeItem('furent_bag');
+                localStorage.removeItem('furent_selected_dates');
+                if (typeof window.updateBagCount === 'function') window.updateBagCount();
+                setTimeout(() => { window.location.href = '/panel'; }, 3000);
+            } else {
+                const data = await res.json();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Ocurrió un error al procesar tu cotización. Verifica estar logueado.'
+                });
+                btn.innerHTML = ogText;
+                btn.disabled = false;
+            }
+        } catch(e) {
+            console.error(e);
+            Swal.fire({icon:'error', title:'Error', text:'Error de conexión con el servidor.'});
+            btn.innerHTML = ogText;
+            btn.disabled = false;
+        }
+    }
+
+    // ——— Coupon state ———
+    let appliedCoupon = null; // { codigo, descuento, montoFinal }
+
+    function toggleCouponSection() {
+        const sec = document.getElementById('couponSection');
+        sec.classList.toggle('hidden');
+    }
+
+    async function applyCoupon() {
+        const code = document.getElementById('couponCodeInput').value.trim();
+        if (!code) return;
+        const btn = document.getElementById('couponApplyBtn');
+        btn.disabled = true; btn.textContent = '...';
+        const msgEl = document.getElementById('couponMessage');
+
+        let bag = []; try { bag = JSON.parse(localStorage.getItem('furent_bag') || '[]'); } catch(e){}
+        let totalPerDay = 0;
+        bag.forEach(i => totalPerDay += i.price * i.qty);
+        const days = calcDays();
+        const montoTotal = totalPerDay * days;
+
+        try {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+            const res = await fetch('/api/cupones/validar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfHeader && csrfToken ? {[csrfHeader]: csrfToken} : {})
+                },
+                body: JSON.stringify({ codigo: code, montoTotal: montoTotal })
+            });
+            const data = await res.json();
+
+            msgEl.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'bg-red-50', 'text-red-600');
+            if (data.valido) {
+                appliedCoupon = { codigo: code.toUpperCase(), descuento: data.descuento, montoFinal: data.montoFinal };
+                msgEl.classList.add('bg-green-50', 'text-green-700');
+                msgEl.textContent = data.mensaje;
+                document.getElementById('couponApplied').classList.remove('hidden');
+                document.getElementById('couponAppliedCode').textContent = appliedCoupon.codigo;
+                document.getElementById('couponDiscountDisplay').textContent = '-' + formatCOP(data.descuento);
+                document.getElementById('couponCodeInput').disabled = true;
+                btn.classList.add('hidden');
+            } else {
+                msgEl.classList.add('bg-red-50', 'text-red-600');
+                msgEl.textContent = data.mensaje || 'Cupón no válido';
+                appliedCoupon = null;
+            }
+        } catch(e) {
+            msgEl.classList.remove('hidden');
+            msgEl.classList.add('bg-red-50', 'text-red-600');
+            msgEl.textContent = 'Error al validar el cupón';
+            appliedCoupon = null;
+        }
+        btn.disabled = false; btn.textContent = 'Aplicar';
+    }
+
+    function removeCoupon() {
+        appliedCoupon = null;
+        document.getElementById('couponApplied').classList.add('hidden');
+        document.getElementById('couponMessage').classList.add('hidden');
+        document.getElementById('couponCodeInput').disabled = false;
+        document.getElementById('couponCodeInput').value = '';
+        document.getElementById('couponApplyBtn').classList.remove('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBagItems();
+        
+        let reservedRanges = [];
+        const bag = JSON.parse(localStorage.getItem('furent_bag') || '[]');
+        const productIds = bag.map(item => item.id);
+
+        if (productIds.length > 0) {
+            fetch(`/api/productos/availability?ids=${productIds.join(',')}`)
+                .then(res => res.json())
+                .then(data => {
+                    reservedRanges = data.map(r => ({
+                        from: r.start,
+                        to: r.end,
+                        products: r.products
+                    }));
+                    initFlatpickr(reservedRanges);
+                })
+                .catch(err => {
+                    console.error("Error fetching availability:", err);
+                    initFlatpickr([]);
+                });
+        } else {
+            initFlatpickr([]);
+        }
+
+        function initFlatpickr(disabledDates) {
+            const fp = flatpickr("#evtDateRange", {
+                locale: "es",
+                mode: "range",
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "j \\de M, Y",
+                disable: disabledDates,
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const date = dayElem.dateObj;
+                    date.setHours(0,0,0,0);
+                    
+                    const reserveInfo = disabledDates.find(range => {
+                        const from = new Date(range.from + "T00:00:00");
+                        const to = new Date(range.to + "T00:00:00");
+                        return date >= from && date <= to;
+                    });
+                    
+                    if (reserveInfo) {
+                        dayElem.classList.add("is-reserved");
+                        dayElem.setAttribute("title", "Reservado: " + (reserveInfo.products || 'Falta disponibilidad'));
+                        
+                        const overlay = document.createElement("div");
+                        overlay.style.position = "absolute";
+                        overlay.style.top = "0";
+                        overlay.style.left = "0";
+                        overlay.style.width = "100%";
+                        overlay.style.height = "100%";
+                        overlay.style.zIndex = "999";
+                        overlay.style.cursor = "pointer";
+                        
+                        overlay.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Close calendar automatically
+                            fp.close();
+                            
+                            if (window.Swal) {
+                                const prodText = reserveInfo.products || "No disponible";
+                                // Split and filter to avoid empty spaces or trailing commas resulting in empty tags
+                                const prodList = prodText.split(',').map(p => p.trim()).filter(p => p.length > 0);
+                                
+                                let prodHtml = "";
+                                if (prodList.length > 0) {
+                                    prodHtml = prodList.map(p => `
+                                        <div class="flex items-center gap-2.5 px-4 py-3 bg-red-50 text-red-700 rounded-xl border border-red-100/50 text-xs font-bold uppercase tracking-tight shadow-sm">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                                            ${p}
+                                        </div>
+                                    `).join('');
+                                } else {
+                                    prodHtml = `
+                                        <div class="px-4 py-3 bg-surface-100 text-surface-500 rounded-xl text-xs italic">
+                                            No se han especificado los mobiliarios.
+                                        </div>`;
+                                }
+
+                                Swal.fire({
+                                    title: '<p class="text-xl font-extrabold text-surface-900 tracking-tight">Mobiliario reservado</p>',
+                                    html: `
+                                        <div class="mt-4 space-y-4 text-left">
+                                            <p class="text-sm text-surface-500 leading-relaxed">
+                                                Para la fecha seleccionada, los siguientes elementos de tu bolsa <span class="text-red-600 font-bold">ya tienen una reserva confirmada</span>:
+                                            </p>
+                                            <div class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                                ${prodHtml}
+                                            </div>
+                                            <div class="pt-2">
+                                                <p class="text-xs text-surface-400 italic flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                                                    Por favor, intenta con otro rango de fechas.
+                                                </p>
+                                            </div>
+                                        </div>`,
+                                    icon: 'warning',
+                                    iconColor: '#dc2626',
+                                    confirmButtonText: 'Entendido',
+                                    confirmButtonColor: '#E07A3A',
+                                    showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
+                                    hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' },
+                                    customClass: {
+                                        popup: 'rounded-[24px] border-none shadow-2xl p-6',
+                                        confirmButton: 'rounded-xl px-10 py-3 text-sm font-bold shadow-soft hover:scale-105 transition-all duration-200'
+                                    },
+                                    backdrop: `rgba(0,0,0,0.5) backdrop-blur-sm`
+                                });
+                            }
+                        });
+                        
+                        dayElem.style.position = "relative";
+                        dayElem.appendChild(overlay);
+                    }
+                },
+                onReady: function(selectedDates, dateStr, instance) {
+                    if (instance.input) instance.input.setAttribute('autocomplete', 'off');
+                    if (instance.altInput) instance.altInput.setAttribute('autocomplete', 'off');
+                    
+                    // Pre-fill with saved dates from product-detail
+                    const saved = localStorage.getItem('furent_selected_dates');
+                    if (saved) {
+                        try {
+                            const { start, end } = JSON.parse(saved);
+                            if (start && end) {
+                                instance.setDate([start, end], true);
+                                document.getElementById('evtDate').value = start;
+                                document.getElementById('evtDateEnd').value = end;
+                            }
+                        } catch(e) { console.error("Error parsing saved dates", e); }
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 1) {
+                        // When first date is selected, set maxDate to +6 days (total 7 days including start)
+                        const maxDate = new Date(selectedDates[0]);
+                        maxDate.setDate(maxDate.getDate() + 6);
+                        instance.set('maxDate', maxDate);
+                    } else if (selectedDates.length === 2 || selectedDates.length === 0) {
+                        // When selection is complete or cleared, reset maxDate
+                        instance.set('maxDate', null);
+                        
+                        if (selectedDates.length === 2) {
+                            const d1 = new Date(selectedDates[0]); d1.setHours(0,0,0,0);
+                            const d2 = new Date(selectedDates[1]); d2.setHours(0,0,0,0);
+                            const diffDays = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
+                            
+                            if (diffDays > 7) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Límite de tiempo',
+                                    text: 'El mobiliario puede reservarse por un máximo de 7 días. Por favor, selecciona un rango menor.',
+                                    confirmButtonColor: '#E07A3A'
+                                });
+                                setTimeout(() => {
+                                    instance.clear();
+                                    document.getElementById('evtDate').value = "";
+                                    document.getElementById('evtDateEnd').value = "";
+                                }, 10);
+                                return;
+                            }
+                            document.getElementById('evtDate').value = instance.formatDate(selectedDates[0], "Y-m-d");
+                            document.getElementById('evtDateEnd').value = instance.formatDate(selectedDates[1], "Y-m-d");
+                        } else {
+                            document.getElementById('evtDate').value = "";
+                            document.getElementById('evtDateEnd').value = "";
+                        }
+                    } else {
+                        document.getElementById('evtDate').value = "";
+                        document.getElementById('evtDateEnd').value = "";
+                    }
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>

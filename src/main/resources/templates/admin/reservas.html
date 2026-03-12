@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'reservas')}">
+<head>
+    <title>Reservas — Furent Admin</title>
+</head>
+<body>
+    <main>
+        <div class="px-6 sm:px-10 py-8 max-w-[90rem] mx-auto relative fade-in-up">
+            
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Reservas y Cotizaciones</h1>
+                    <p class="text-sm font-medium text-surface-500 mt-1">Supervisa, gestiona y administra el ciclo de vida de los alquileres.</p>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative w-full md:w-64">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
+                        </div>
+                        <input type="text" id="busquedaReserva" placeholder="Buscar por cliente o ID..." class="w-full pl-9 pr-4 py-2 border border-surface-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all font-medium text-surface-700 shadow-sm" onkeyup="filtrarReservas()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Alert -->
+            <div th:if="${success}" id="successAlert" class="mb-6 p-4 bg-green-50/80 border border-green-200 text-green-800 rounded-xl text-sm font-semibold flex items-center gap-3 shadow-sm animate-fade-in-down">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <span th:text="${success}"></span>
+            </div>
+
+            <!-- Compact Status Analytics -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- Total -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-surface-200 flex items-center gap-4 hover:border-surface-300 transition-colors group">
+                    <div class="w-12 h-12 rounded-xl bg-surface-100 flex items-center justify-center text-surface-600 group-hover:bg-surface-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-surface-400 uppercase tracking-wider">Volumen Total</p>
+                        <p class="text-2xl font-black text-surface-900 leading-tight" th:text="${#lists.size(reservas)}">0</p>
+                    </div>
+                </div>
+                
+                <!-- Pending -->
+                <div class="bg-amber-50/50 p-5 rounded-2xl shadow-sm border border-amber-200/60 flex items-center gap-4 hover:border-amber-300/60 transition-colors group">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-amber-600/80 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> Por Confirmar
+                        </p>
+                        <p class="text-2xl font-black text-amber-900 leading-tight" th:text="${#lists.size(pendientes)}">0</p>
+                    </div>
+                </div>
+
+                <!-- Active -->
+                <div class="bg-green-50/50 p-5 rounded-2xl shadow-sm border border-green-200/60 flex items-center gap-4 hover:border-green-300/60 transition-colors group">
+                    <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-green-600/80 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Activas
+                        </p>
+                        <p class="text-2xl font-black text-green-900 leading-tight" th:text="${#lists.size(activas)}">0</p>
+                    </div>
+                </div>
+                
+                <!-- Completed -->
+                <div class="bg-blue-50/50 p-5 rounded-2xl shadow-sm border border-blue-200/60 flex items-center gap-4 hover:border-blue-300/60 transition-colors group">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-blue-600/80 uppercase tracking-wider">Completadas</p>
+                        <p class="text-2xl font-black text-blue-900 leading-tight" th:text="${#lists.size(completadas)}">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Order Table - Compact & Clean -->
+            <div class="bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden relative z-10">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap" id="tablaReservas">
+                        <thead class="bg-surface-50 border-b border-surface-200 text-xs font-bold text-surface-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="pl-6 py-4">ID / Detalles</th>
+                                <th class="py-4">Cliente</th>
+                                <th class="py-4">Fechas</th>
+                                <th class="py-4">Monto</th>
+                                <th class="py-4">Estado</th>
+                                <th class="pr-6 py-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-100 text-sm">
+                            <tr th:each="r : ${reservas}" th:if="${r != null}" class="group hover:bg-surface-50/50 transition-colors reserva-fila">
+                                <!-- ID / Detalles -->
+                                <td class="pl-6 py-4 align-middle">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-surface-900 truncate uppercase"
+                                                  th:text="${r.id != null and r.id.length() >= 8 ? #strings.substring(r.id, 0, 8) : (r.id ?: 'N/A')}">ID</span>
+                                            <button type="button" th:attr="onclick=|verDetallesReserva('${r.id}', '${r.notasEvento != null ? r.notasEvento : ''}', '${r.direccionEvento != null ? r.direccionEvento : ''}')|" class="text-surface-400 hover:text-furent-600 transition-colors" title="Ver Detalles">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                                            </button>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-surface-400 uppercase flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+                                            <span th:text="${r.metodoPago ?: 'Por definir'}">Pago</span>
+                                        </span>
+                                    </div>
+                                </td>
+                                
+                                <!-- Cliente -->
+                                <td class="py-4 align-middle">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-surface-600 font-bold text-xs ring-1 ring-surface-200"
+                                             th:text="${r.usuarioNombre != null and !r.usuarioNombre.isEmpty() ? #strings.substring(r.usuarioNombre,0,1) : 'U'}">U</div>
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-surface-900 cliente-nombre" th:text="${r.usuarioNombre ?: 'Cliente'}">Cliente</span>
+                                            <span class="text-xs text-surface-500" th:text="${r.usuarioEmail ?: '-'}">email</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Fechas -->
+                                <td class="py-4 align-middle">
+                                    <div class="flex items-center gap-2 text-xs font-semibold text-surface-700 bg-white border border-surface-200 rounded-lg px-2.5 py-1.5 shadow-sm w-max">
+                                        <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75" /></svg>
+                                        <span th:text="${r.fechaInicio != null ? #temporals.format(r.fechaInicio, 'dd MMM') : '-'}">inicio</span>
+                                        <span class="text-surface-300">→</span>
+                                        <span th:text="${r.fechaFin != null ? #temporals.format(r.fechaFin, 'dd MMM') : '-'}">fin</span>
+                                    </div>
+                                </td>
+                                
+                                <!-- Monto -->
+                                <td class="py-4 align-middle">
+                                    <span class="font-black text-surface-900" th:text="${'$' + #numbers.formatDecimal(r.total ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                </td>
+                                
+                                <!-- Estado Rápido -->
+                                <td class="py-4 align-middle">
+                                    <form th:if="${r.id != null}" th:action="@{/admin/reservas/estado/{id}(id=${r.id})}" method="post" class="relative group/form inline-block">
+                                        <select name="estado" onchange="confirmarCambioEstado(this)" th:class="${(r.estado == 'PENDIENTE' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 focus:border-amber-400' : 
+                                                            (r.estado == 'CONFIRMADA' ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 focus:border-blue-400' : 
+                                                            (r.estado == 'ACTIVA' ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 focus:border-green-400' : 
+                                                            (r.estado == 'COMPLETADA' ? 'bg-surface-100 text-surface-700 border-surface-200 hover:bg-surface-200 focus:border-surface-400' : 
+                                                            'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 focus:border-red-400')))) + 
+                                                            ' transition-colors border font-bold text-xs rounded-xl px-3 py-1.5 focus:ring-0 appearance-none pr-8 shadow-sm cursor-pointer outline-none'}">
+                                            <option value="PENDIENTE" th:selected="${r.estado == 'PENDIENTE'}">Pendiente</option>
+                                            <option value="CONFIRMADA" th:selected="${r.estado == 'CONFIRMADA'}">Confirmada</option>
+                                            <option value="ACTIVA" th:selected="${r.estado == 'ACTIVA'}">Activa (En curso)</option>
+                                            <option value="COMPLETADA" th:selected="${r.estado == 'COMPLETADA'}">Completada</option>
+                                            <option value="CANCELADA" th:selected="${r.estado == 'CANCELADA'}">Cancelada</option>
+                                        </select>
+                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-current opacity-70">
+                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                        </div>
+                                    </form>
+                                    <span th:if="${r.id == null}" class="text-xs font-bold text-surface-400 uppercase">Sin ID</span>
+                                </td>
+
+                                <!-- Acciones -->
+                                <td class="pr-6 py-4 align-middle text-right">
+                                    <div class="flex items-center justify-end gap-1 opacity-100 lg:opacity-60 group-hover:opacity-100 transition-opacity" th:if="${r.id != null}">
+                                        <a th:href="@{/admin/reservas/contrato/{id}(id=${r.id})}" target="_blank" class="p-2 text-surface-500 hover:text-furent-600 hover:bg-furent-50 rounded-lg transition-colors border border-transparent hover:border-furent-100" title="Ver Contrato PDF">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                        </a>
+                                        <button type="button" th:attr="onclick=|sendWhatsApp('${r.usuarioNombre ?: 'Cliente'}', '${r.total ?: 0}', '${r.id}')|" class="p-2 text-surface-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100" title="Notificar WhatsApp">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-4.721 7.454c-1.332 0-2.615-.359-3.729-1.038l-.268-.159-2.774.727.741-2.711-.174-.275A9.74 9.74 0 013.058 12.3c0-5.385 4.381-9.766 9.771-9.766 2.61 0 5.064 1.017 6.911 2.863 1.848 1.846 2.865 4.3 2.865 6.903 0 5.386-4.381 9.767-9.77 9.767m9.77-11.838c0-5.386-4.381-9.766-9.77-9.766S3.058 4.478 3.058 9.864c0 1.721.455 3.395 1.319 4.87L3 20l5.368-1.408a9.73 9.73 0 004.872 1.288c5.4 0 9.77-4.38 9.77-9.766"/></svg>
+                                        </button>
+                                        <button type="button" th:attr="onclick=|signDigital('${r.id}')|" class="p-2 text-surface-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100" title="Firma Digital">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(reservas)}" class="text-center py-24">
+                    <div class="w-20 h-20 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-surface-200 shadow-sm text-surface-400">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-surface-900 mb-1">Sin Solicitudes</h3>
+                    <p class="text-sm font-medium text-surface-500">Aún no se han generado reservas o cotizaciones.</p>
+                </div>
+            </div>
+            
+            <!-- Decorators -->
+            <div class="fixed top-0 right-0 w-[500px] h-[500px] bg-furent-300/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+        </div>
+    <script th:inline="javascript">
+        if(document.getElementById('successAlert')) {
+            setTimeout(() => document.getElementById('successAlert').style.display='none', 4000);
+        }
+
+        // Pagination + Search Filter
+        const reservaPaginator = new FurentPaginator({
+            containerId: 'tablaReservas',
+            itemSelector: '.reserva-fila',
+            perPage: 10
+        });
+
+        function filtrarReservas() {
+            const input = document.getElementById("busquedaReserva");
+            reservaPaginator.filterBySearch(input.value);
+        }
+
+        // Confirm before changing reservation status
+        function confirmarCambioEstado(selectEl) {
+            const nuevoEstado = selectEl.value;
+            const form = selectEl.closest('form');
+            Swal.fire({
+                title: 'Confirmar cambio de estado',
+                text: '¿Cambiar el estado de esta reserva a ' + nuevoEstado + '?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#18181b',
+                cancelButtonColor: '#d1d5db',
+                confirmButtonText: 'Sí, cambiar',
+                cancelButtonText: 'Cancelar',
+                customClass: { popup: 'rounded-2xl' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                } else {
+                    // Reset to original value
+                    selectEl.selectedIndex = [...selectEl.options].findIndex(o => o.defaultSelected);
+                }
+            });
+        }
+
+        // Details Modal
+        function verDetallesReserva(id, notas, direccion) {
+            Swal.fire({
+                title: 'Detalles Extra',
+                html: `
+                    <div class="text-left mt-4 mb-2 space-y-4">
+                        <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-surface-500 mb-1">ID de Reserva</h4>
+                            <p class="text-sm font-semibold text-surface-900">${id}</p>
+                        </div>
+                        <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-surface-500 mb-1">Dirección del Evento</h4>
+                            <p class="text-sm font-semibold text-surface-900">${direccion || 'No registrada'}</p>
+                        </div>
+                        <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-surface-500 mb-1">Notas del Cliente</h4>
+                            <p class="text-sm font-semibold text-surface-900">${notas || 'Sin notas adicionales'}</p>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#18181b', // surface-900
+                customClass: {
+                    popup: 'rounded-2xl',
+                    htmlContainer: 'text-left'
+                }
+            });
+        }
+
+        function sendWhatsApp(nombre, total, id) {
+            const msg = `Hola ${nombre}, te saludamos de Furent Mobiliarios. Tu reserva #${id.substring(0,8)} por un total de $${total} ha sido recibida. ¿Podemos ayudarte con algo más?`;
+            const url = `https://wa.me/573000000000?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+        }
+
+        function signDigital(id) {
+            Swal.fire({
+                title: 'Firma Digital',
+                text: '¿Estás de acuerdo con los términos y condiciones del contrato para la reserva #' + id.substring(0,8) + '?',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, Acepto',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#18181b',
+                customClass: { popup: 'rounded-2xl' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '¡Firmado!',
+                        text: 'El contrato ha sido firmado digitalmente.',
+                        icon: 'success',
+                        confirmButtonColor: '#18181b',
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                }
+            });
+        }
+    </script>
+    </main>
+</body>
+</html>

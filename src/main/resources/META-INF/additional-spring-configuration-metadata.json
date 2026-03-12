@@ -1,0 +1,80 @@
+{
+  "properties": [
+    {
+      "name": "furent.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Base64-encoded secret key for signing JWT tokens."
+    },
+    {
+      "name": "furent.jwt.access-token-expiration",
+      "type": "java.lang.Long",
+      "description": "Access token expiration time in milliseconds.",
+      "defaultValue": 3600000
+    },
+    {
+      "name": "furent.jwt.refresh-token-expiration",
+      "type": "java.lang.Long",
+      "description": "Refresh token expiration time in milliseconds.",
+      "defaultValue": 2592000000
+    },
+    {
+      "name": "furent.tenant.default-slug",
+      "type": "java.lang.String",
+      "description": "Default tenant slug used when no tenant is resolved.",
+      "defaultValue": "default"
+    },
+    {
+      "name": "furent.admin.password",
+      "type": "java.lang.String",
+      "description": "Admin user password for initial data setup."
+    },
+    {
+      "name": "furent.email.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether email sending is enabled (false = log-only mode).",
+      "defaultValue": false
+    },
+    {
+      "name": "furent.email.from",
+      "type": "java.lang.String",
+      "description": "Default 'from' email address for outgoing emails.",
+      "defaultValue": "noreply@furent.com"
+    },
+    {
+      "name": "furent.features.cache-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether Redis/simple caching is enabled.",
+      "defaultValue": true
+    },
+    {
+      "name": "furent.features.notifications-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether in-app notifications are enabled.",
+      "defaultValue": true
+    },
+    {
+      "name": "furent.features.reviews-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether the reviews feature is enabled.",
+      "defaultValue": true
+    },
+    {
+      "name": "furent.features.export-pdf-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether PDF export is enabled.",
+      "defaultValue": true
+    },
+    {
+      "name": "furent.features.analytics-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether analytics tracking is enabled.",
+      "defaultValue": true
+    },
+    {
+      "name": "furent.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether the rate limiting filter is enabled.",
+      "defaultValue": true
+    }
+  ]
+}

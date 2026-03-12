@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+
+        <div class="min-h-[calc(100vh-68px)] flex items-center justify-center px-4 py-12">
+            <div class="w-full max-w-md fade-in-up">
+                <!-- Card -->
+                <div class="bg-white rounded-2xl p-8 shadow-card border border-surface-100">
+                    <!-- Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                            <img th:src="@{/images/furent-logo.png}" alt="Furent Logo" class="w-14 h-14 object-cover">
+                        </div>
+                        <h1 class="text-2xl font-bold text-surface-900 mb-1">Bienvenido a Furent</h1>
+                        <p class="text-sm text-surface-500">Inicia sesión para acceder a tu panel</p>
+                    </div>
+
+                    <!-- Error/Success messages -->
+                    <div th:if="${param.error}" class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm mb-4">Email o contraseña incorrectos</div>
+                    <div th:if="${success}" class="p-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm mb-4" th:text="${success}"></div>
+
+                    <!-- Form -->
+                    <form th:action="@{/login}" method="post" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Email</label>
+                            <div class="relative">
+                                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                                <input type="email" name="email" placeholder="tu@email.com" required class="w-full pl-11 pr-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Contraseña</label>
+                            <div class="relative">
+                                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                <input id="loginPass" type="password" name="password" placeholder="••••••••" required class="w-full pl-11 pr-11 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                                <button type="button" onclick="togglePass('loginPass',this)" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 transition-colors" tabindex="-1">
+                                    <svg class="eye-open w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    <svg class="eye-closed w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="remember-me" class="w-4 h-4 rounded border-surface-300 text-furent-500 focus:ring-furent-500">
+                                <span class="text-xs text-surface-500">Recordarme</span>
+                            </label>
+                            <a th:href="@{/password-reset}" class="text-xs text-furent-500 hover:text-furent-600 font-medium transition-colors">¿Olvidaste tu contraseña?</a>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-colors mt-2">
+                            Iniciar sesión
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-4 my-6">
+                        <div class="flex-1 h-px bg-surface-200"></div>
+                        <span class="text-xs text-surface-400">o continúa con</span>
+                        <div class="flex-1 h-px bg-surface-200"></div>
+                    </div>
+
+                    <!-- Social login -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="flex items-center justify-center gap-2 px-4 py-2.5 border border-surface-200 rounded-xl text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                            Google
+                        </button>
+                        <button class="flex items-center justify-center gap-2 px-4 py-2.5 border border-surface-200 rounded-xl text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385h-3.047v-3.47h3.047v-2.642c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.738-.9 10.126-5.864 10.126-11.854z"/></svg>
+                            Facebook
+                        </button>
+                    </div>
+
+                    <!-- Register link -->
+                    <p class="text-center text-sm text-surface-500 mt-6">
+                        ¿No tienes cuenta?
+                        <a th:href="@{/registro}" class="text-furent-500 hover:text-furent-600 font-medium transition-colors">Crear cuenta</a>
+                    </p>
+                    <p class="text-center text-xs text-surface-400 mt-2">
+                        <a th:href="@{/inicio-rapido}" class="text-surface-500 hover:text-furent-500 font-medium transition-colors inline-flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+                            Cambiar de cuenta (inicio rápido)
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        
+        // --- Suspensión SweetAlert ---
+        if (params.has('suspended')) {
+            const reason = params.get('reason') || 'No especificado';
+            const duration = params.get('duration') || 'Indefinida';
+            
+            Swal.fire({
+                title: '<span class="text-red-600 font-extrabold text-2xl">Acceso Restringido</span>',
+                html: `
+                    <div class="mt-4 space-y-4 text-left px-2">
+                        <div class="p-4 bg-red-50 rounded-2xl border border-red-100">
+                            <p class="text-[11px] font-bold text-red-400 uppercase tracking-widest mb-1">Motivo detectado</p>
+                            <p class="text-sm font-bold text-red-900 leading-relaxed">${reason}</p>
+                        </div>
+                        
+                        <div class="p-4 bg-surface-50 rounded-2xl border border-surface-100">
+                            <p class="text-[11px] font-bold text-surface-400 uppercase tracking-widest mb-1">Periodo de Sanción</p>
+                            <p class="text-sm font-bold text-surface-900">${duration}</p>
+                        </div>
+
+                        <p class="text-xs text-surface-500 text-center px-4 leading-relaxed">Si consideras que esto es un error, puedes iniciar un proceso de apelación con nuestro equipo de soporte.</p>
+                    </div>
+                `,
+                icon: 'error',
+                confirmButtonText: '<div class="flex items-center gap-2"><span>Apelar Decisión</span><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg></div>',
+                cancelButtonText: 'Entendido',
+                showCancelButton: true,
+                confirmButtonColor: '#18181b',
+                cancelButtonColor: '#94a3b8',
+                showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
+                hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' },
+                customClass: {
+                    popup: 'rounded-[3rem] p-8 shadow-2xl border border-surface-100',
+                    confirmButton: 'rounded-2xl text-sm font-bold px-6 py-3.5 order-2',
+                    cancelButton: 'rounded-2xl text-sm font-bold px-6 py-3.5 order-1'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "mailto:soporte@furent.com?subject=Apelación de Suspensión - " + encodeURIComponent(params.get('email') || '');
+                }
+            });
+        }
+
+        if (!params.has('manual') && !params.has('error') && !params.has('logout') && !params.has('suspended')) {
+            try {
+                const accounts = JSON.parse(localStorage.getItem('furent_accounts') || '[]');
+                if (accounts.length > 0) {
+                    window.location.href = '/inicio-rapido';
+                }
+            } catch(e) {}
+        }
+    });
+
+    function togglePass(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.querySelector('.eye-open').classList.toggle('hidden', !isPassword);
+        btn.querySelector('.eye-closed').classList.toggle('hidden', isPassword);
+    }
+    </script>
+</body>
+</html>

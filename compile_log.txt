@@ -1,0 +1,23 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------------< com.example:furent >-------------------------
+[INFO] Building furent 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ furent ---
+[INFO] Deleting C:\Users\jotap\OneDrive\Escritorio\Furent - Alquiler de Mobiliarios\furent\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ furent ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 31 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ furent ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 22 source files with javac [debug parameters release 17] to target\classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.404 s
+[INFO] Finished at: 2026-03-06T11:49:28-05:00
+[INFO] ------------------------------------------------------------------------

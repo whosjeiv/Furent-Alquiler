@@ -1,0 +1,23 @@
+# ═══════════════════════════════════════════════════════
+# FURENT - Prometheus Configuration
+# ═══════════════════════════════════════════════════════
+# Scraping: Backend (actuator/prometheus) cada 15s
+# ═══════════════════════════════════════════════════════
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'furent-backend'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['app:8080']
+        labels:
+          application: furent
+          environment: production
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

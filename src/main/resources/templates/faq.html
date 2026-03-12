@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+
+        <!-- Header -->
+        <div class="bg-white border-b border-surface-100">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-surface-900 tracking-tight mb-3 fade-in-up">Preguntas frecuentes</h1>
+                <p class="text-surface-500 fade-in-up stagger-1">Encuentra respuestas a las dudas más comunes sobre nuestro servicio.</p>
+            </div>
+        </div>
+
+        <!-- FAQ Items -->
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="space-y-3">
+                <!-- Q1 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-1">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿Cómo funciona el proceso de alquiler?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">Explora nuestro catálogo, selecciona los productos que necesitas, elige las fechas de tu evento y confirma tu reserva. Nosotros nos encargamos de la entrega, montaje y recogida en la fecha acordada.</p>
+                    </div>
+                </div>
+                <!-- Q2 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-2">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿Cuánto tiempo de anticipación necesito para reservar?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">Recomendamos reservar con al menos 2 semanas de anticipación. Para eventos grandes o temporada alta (diciembre-febrero), sugerimos 1 mes o más para asegurar disponibilidad.</p>
+                    </div>
+                </div>
+                <!-- Q3 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-3">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿El precio incluye entrega y montaje?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">Sí, todos nuestros precios incluyen entrega, montaje profesional y recogida después del evento. No hay costos ocultos. Para ubicaciones fuera de la ciudad puede aplicar un costo adicional de transporte.</p>
+                    </div>
+                </div>
+                <!-- Q4 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-4">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿Cuál es la política de cancelación?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">Puedes cancelar sin costo hasta 48 horas antes del evento. Cancelaciones tardías pueden tener un cargo del 30%. En caso de fuerza mayor, evaluamos cada caso individualmente.</p>
+                    </div>
+                </div>
+                <!-- Q5 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-5">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿Qué pasa si un mueble se daña durante el evento?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">Entendemos que los accidentes pueden ocurrir. Los daños menores por uso normal están cubiertos. Para daños significativos, aplicaremos un cargo de reparación o reposición proporcional.</p>
+                    </div>
+                </div>
+                <!-- Q6 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-6">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿Ofrecen descuentos para grandes pedidos?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">Sí, ofrecemos tarifas especiales para pedidos grandes y clientes recurrentes. Contáctanos para recibir una cotización personalizada según las necesidades de tu evento.</p>
+                    </div>
+                </div>
+                <!-- Q7 -->
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-soft overflow-hidden fade-in-up stagger-6">
+                    <button class="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+                        <span class="text-sm font-semibold text-surface-900">¿Puedo ver el mobiliario antes de reservar?</span>
+                        <svg class="faq-chevron w-5 h-5 text-surface-400 shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div class="faq-answer px-6 pb-5">
+                        <p class="text-sm text-surface-500 leading-relaxed">¡Por supuesto! Puedes agendar una visita a nuestro showroom para ver todo el mobiliario disponible. Agenda tu cita a través de nuestro formulario de contacto o por WhatsApp.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="mt-16 text-center bg-white rounded-2xl p-8 md:p-12 shadow-soft border border-surface-100 fade-in-up">
+                <svg class="w-10 h-10 text-furent-400 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                <h3 class="text-xl font-semibold text-surface-900 mb-2">¿No encontraste tu respuesta?</h3>
+                <p class="text-sm text-surface-500 mb-6">Nuestro equipo estará encantado de resolver cualquier duda.</p>
+                <a th:href="@{/contacto}" class="inline-flex items-center gap-2 px-6 py-3 bg-surface-900 text-white text-sm font-semibold rounded-xl hover:bg-surface-800 transition-colors">
+                    Contactar soporte
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        function toggleFaq(btn) {
+            const answer = btn.nextElementSibling;
+            const chevron = btn.querySelector('.faq-chevron');
+            answer.classList.toggle('open');
+            chevron.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

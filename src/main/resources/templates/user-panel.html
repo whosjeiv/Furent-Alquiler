@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}">
+</head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <style>
+        /* ===== Panel page-scoped styles ===== */
+        .panel-card {
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 16px rgba(0,0,0,0.03);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .panel-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+        .stat-tile {
+            border-radius: 16px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .stat-tile:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .res-card-panel {
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+        }
+        .res-card-panel:hover {
+            border-color: #E07A3A !important;
+            box-shadow: 0 8px 30px rgba(224,122,58,0.10);
+            transform: translateY(-2px);
+        }
+        .timeline-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            position: relative; z-index: 2; flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .timeline-dot.active { border-color: #E07A3A !important; background: #E07A3A !important; }
+        .timeline-dot.active::after {
+            content: ''; position: absolute; inset: -4px;
+            border-radius: 50%; background: rgba(224,122,58,0.15);
+        }
+        .timeline-bar { height: 3px; flex: 1; border-radius: 2px; transition: background 0.3s ease; }
+        .timeline-bar.active { background: #E07A3A !important; }
+        .notif-item {
+            border-radius: 14px; padding: 16px; display: flex; align-items: flex-start; gap: 14px;
+            transition: all 0.25s ease;
+        }
+        .notif-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .notif-item.unread {
+            background: linear-gradient(135deg, #FFF7F0, #fff) !important;
+            border-color: #FED7AA !important;
+        }
+        .notif-item.unread::before {
+            content: ''; position: absolute; left: 0; top: 12px; bottom: 12px;
+            width: 3px; border-radius: 0 3px 3px 0; background: #E07A3A;
+        }
+
+        /* ===== Dark mode overrides for panel elements ===== */
+        .dark .panel-card { box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 6px 16px rgba(0,0,0,0.2); }
+        .dark .panel-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+        .dark .res-card-panel:hover { box-shadow: 0 8px 30px rgba(224,122,58,0.15); }
+        .dark .notif-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .dark .notif-item.unread {
+            background: linear-gradient(135deg, rgba(224,122,58,0.08), #1e1e1e) !important;
+            border-color: rgba(224,122,58,0.25) !important;
+        }
+        .dark .timeline-dot:not(.active) { border-color: rgba(255,255,255,0.15) !important; background: #2a2a2a !important; }
+        .dark .timeline-bar:not(.active) { background: rgba(255,255,255,0.1) !important; }
+        .dark .stat-tile:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+        /* Dark mode: Tailwind utility classes not covered by layout.html */
+        .dark .bg-surface-100 { background-color: rgba(255,255,255,0.06) !important; }
+        .dark .text-surface-400 { color: #78716c !important; }
+        .dark .text-surface-800 { color: #e2e8f0 !important; }
+        .dark .text-surface-700 { color: #cbd5e1 !important; }
+        .dark .text-surface-300 { color: #525252 !important; }
+        .dark .bg-surface-200 { background-color: rgba(255,255,255,0.08) !important; }
+        .dark .bg-green-50 { background-color: rgba(34,197,94,0.1) !important; }
+        .dark .bg-amber-50 { background-color: rgba(245,158,11,0.1) !important; }
+        .dark .bg-blue-50 { background-color: rgba(59,130,246,0.1) !important; }
+        .dark .bg-red-50 { background-color: rgba(239,68,68,0.1) !important; }
+        .dark .bg-furent-50 { background-color: rgba(224,122,58,0.1) !important; }
+        .dark .border-green-100 { border-color: rgba(34,197,94,0.15) !important; }
+        .dark .border-green-200 { border-color: rgba(34,197,94,0.25) !important; }
+        .dark .border-amber-100 { border-color: rgba(245,158,11,0.15) !important; }
+        .dark .border-amber-200 { border-color: rgba(245,158,11,0.25) !important; }
+        .dark .border-blue-100 { border-color: rgba(59,130,246,0.15) !important; }
+        .dark .border-blue-200 { border-color: rgba(59,130,246,0.25) !important; }
+        .dark .border-red-100 { border-color: rgba(239,68,68,0.15) !important; }
+        .dark .border-red-200 { border-color: rgba(239,68,68,0.25) !important; }
+        .dark .border-furent-100 { border-color: rgba(224,122,58,0.15) !important; }
+        .dark .border-furent-300 { border-color: rgba(224,122,58,0.3) !important; }
+        .dark .text-green-700 { color: #4ade80 !important; }
+        .dark .text-amber-700 { color: #fbbf24 !important; }
+        .dark .text-blue-700 { color: #60a5fa !important; }
+        .dark .text-red-700 { color: #f87171 !important; }
+        .dark .border-surface-300 { border-color: rgba(255,255,255,0.12) !important; }
+
+        /* Animations */
+        @keyframes panelSlideUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+        .panel-animate { animation: panelSlideUp 0.5s ease-out both; }
+        .panel-animate-d1 { animation-delay: 0.05s; }
+        .panel-animate-d2 { animation-delay: 0.1s; }
+        .panel-animate-d3 { animation-delay: 0.15s; }
+        .panel-animate-d4 { animation-delay: 0.2s; }
+    </style>
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px] bg-surface-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+
+            <!-- Page header -->
+            <div class="mb-8 panel-animate">
+                <h1 class="text-2xl font-bold text-surface-900 tracking-tight">Mi Panel</h1>
+                <p class="text-sm text-surface-500 mt-1">Gestiona tus reservas, favoritos y notificaciones</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+
+                <!-- ===== LEFT SIDEBAR ===== -->
+                <aside class="w-full lg:w-[300px] xl:w-[320px] space-y-5 shrink-0">
+
+                    <!-- Profile Card -->
+                    <div class="panel-card bg-white border border-surface-200 overflow-hidden panel-animate panel-animate-d1">
+                        <div class="h-20 bg-gradient-to-br from-furent-500 to-furent-600 relative">
+                            <div class="absolute inset-0 opacity-20">
+                                <svg class="w-full h-full" viewBox="0 0 400 80" fill="none"><circle cx="340" cy="10" r="60" fill="white"/><circle cx="60" cy="70" r="40" fill="white"/></svg>
+                            </div>
+                        </div>
+                        <div class="px-6 pb-6 text-center -mt-10 relative">
+                            <div class="w-20 h-20 mx-auto bg-white rounded-2xl p-1 shadow-lg border border-surface-100">
+                                <div class="w-full h-full bg-gradient-to-br from-furent-400 to-furent-600 rounded-xl flex items-center justify-center">
+                                    <span class="text-white font-bold text-2xl" th:text="${currentUser != null and currentUser.nombre != null and currentUser.nombre.length() > 0 ? #strings.substring(currentUser.nombre, 0, 1) : 'U'}">U</span>
+                                </div>
+                            </div>
+                            <h2 class="text-lg font-bold text-surface-900 mt-3" th:text="${currentUser != null ? currentUser.nombreCompleto : 'Invitado'}">Juan Pérez</h2>
+                            <p class="text-sm text-surface-500 mt-0.5" th:text="${currentUser != null ? currentUser.email : ''}">juan@correo.com</p>
+                            <a th:href="@{/configuracion}" class="mt-5 w-full inline-flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-surface-700 bg-surface-50 border border-surface-200 rounded-xl hover:bg-surface-100 hover:border-surface-300 transition-all">
+                                <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                Editar Perfil
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Stats Card -->
+                    <div class="panel-card bg-white border border-surface-200 p-5 panel-animate panel-animate-d2">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-8 h-8 rounded-lg bg-furent-50 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+                            </div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-surface-400">Resumen de Actividad</h3>
+                        </div>
+
+                        <!-- Total Gastado -->
+                        <div class="bg-gradient-to-br from-surface-900 to-surface-800 rounded-2xl p-5 text-center mb-4">
+                            <p class="text-2xl font-bold text-white tracking-tight" th:text="'$' + ${#numbers.formatDecimal(totalGastado != null ? totalGastado : 0, 1, 'POINT', 0, 'COMMA')}">$0</p>
+                            <p class="text-[11px] font-medium text-surface-400 uppercase tracking-wider mt-1">Total Invertido</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="stat-tile bg-surface-50 border border-surface-200">
+                                <p class="text-2xl font-bold text-surface-900" th:text="${#lists.size(reservations)}">0</p>
+                                <p class="text-[10px] font-semibold text-surface-400 uppercase mt-1">Total</p>
+                            </div>
+                            <div class="stat-tile bg-green-50 border border-green-200">
+                                <p class="text-2xl font-bold text-green-600" th:text="${#lists.size(activeReservations)}">0</p>
+                                <p class="text-[10px] font-semibold text-green-500 uppercase mt-1">Activas</p>
+                            </div>
+                            <div class="stat-tile bg-amber-50 border border-amber-200">
+                                <p class="text-2xl font-bold text-amber-600" th:text="${#lists.size(pendingReservations)}">0</p>
+                                <p class="text-[10px] font-semibold text-amber-500 uppercase mt-1">Pendientes</p>
+                            </div>
+                            <div class="stat-tile bg-blue-50 border border-blue-200">
+                                <p class="text-2xl font-bold text-blue-600" th:text="${#lists.size(completedReservations)}">0</p>
+                                <p class="text-[10px] font-semibold text-blue-500 uppercase mt-1">Histórico</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- ===== RIGHT MAIN CONTENT ===== -->
+                <div class="flex-1 w-full flex flex-col gap-6 min-w-0">
+
+                    <!-- Próximos Eventos Highlight -->
+                    <div th:if="${not #lists.isEmpty(activeReservations)}" class="panel-card overflow-hidden panel-animate panel-animate-d1 bg-gradient-to-br from-furent-500 to-furent-600 border border-transparent">
+                        <div class="p-6 text-white relative">
+                            <div class="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-[60px] pointer-events-none"></div>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg">Próximos Eventos</h3>
+                                        <p class="text-white/70 text-xs font-medium" th:text="${#lists.size(activeReservations)} + ' reservas activas'">0 activas</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-3">
+                                    <div th:each="ar : ${activeReservations}" th:if="${#lists.size(activeReservations) <= 3}" class="flex-1 min-w-[200px] bg-white/15 backdrop-blur-sm rounded-xl p-3.5 border border-white/20">
+                                        <p class="font-semibold text-sm truncate" th:text="${not #lists.isEmpty(ar.items) ? ar.items[0].productName : 'Reserva'}">Producto</p>
+                                        <p class="text-white/80 text-xs mt-1" th:text="${ar.startDate + ' → ' + ar.endDate}">Fechas</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reservations Section -->
+                    <div class="panel-card bg-white border border-surface-200 p-6 sm:p-8 panel-animate panel-animate-d2">
+
+                        <!-- Controls -->
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+                            <div>
+                                <h2 class="text-xl font-bold text-surface-900 tracking-tight">Mis Reservas</h2>
+                                <p class="text-sm text-surface-500 mt-1">Status y control de tus cotizaciones.</p>
+                            </div>
+                            <div class="bg-surface-100 p-1 rounded-xl flex gap-1 overflow-x-auto w-full md:w-auto">
+                                <button class="filter-btn active flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg bg-white text-surface-900 shadow-sm transition-all whitespace-nowrap" data-filter="all">Todas</button>
+                                <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="active">Activas</button>
+                                <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="pending">Pendientes</button>
+                                <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="completed">Finalizadas</button>
+                            </div>
+                        </div>
+
+                        <!-- Reservations Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" id="reservationsGrid">
+                            <div th:each="res : ${reservations}"
+                                 class="res-card res-card-panel bg-white border border-surface-200 p-5 flex flex-col group"
+                                 th:data-status="${res.estado == 'ACTIVA' or res.estado == 'CONFIRMADA' ? 'active' : (res.estado == 'PENDIENTE' ? 'pending' : (res.estado == 'COMPLETADA' ? 'completed' : 'cancelled'))}">
+
+                                <!-- Header: Badge + Price -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <!-- Activa -->
+                                    <span th:if="${res.estado == 'ACTIVA' or res.estado == 'CONFIRMADA'}"
+                                          class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-green-500/15 text-green-400 ring-1 ring-green-500/25 shadow-sm shadow-green-500/10 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                        Activa
+                                    </span>
+                                    <!-- Pendiente -->
+                                    <span th:if="${res.estado == 'PENDIENTE'}"
+                                          class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/25 shadow-sm shadow-amber-500/10 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                        Pendiente
+                                    </span>
+                                    <!-- Concluida -->
+                                    <span th:if="${res.estado == 'COMPLETADA'}"
+                                          class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/25 shadow-sm shadow-blue-500/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                        Concluida
+                                    </span>
+                                    <!-- Cancelada -->
+                                    <span th:if="${res.estado == 'CANCELADA'}"
+                                          class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-red-500/15 text-red-400 ring-1 ring-red-500/25 shadow-sm shadow-red-500/10 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        Cancelada
+                                    </span>
+                                    <p class="text-lg font-bold text-surface-900" th:text="'$' + ${#numbers.formatDecimal(res.totalPrice, 1, 'POINT', 0, 'COMMA')}">$0</p>
+                                </div>
+
+                                <!-- Product info -->
+                                <div class="flex items-center gap-3.5 mb-5">
+                                    <img th:if="${not #lists.isEmpty(res.items)}" th:src="${res.items[0].productImage}" th:alt="${res.items[0].productName}"
+                                         class="w-14 h-14 rounded-xl object-cover shrink-0 border border-surface-200 group-hover:scale-105 transition-transform duration-300">
+                                    <div class="w-14 h-14 rounded-xl bg-surface-50 flex items-center justify-center shrink-0 border border-surface-200" th:if="${#lists.isEmpty(res.items)}">
+                                        <svg class="w-6 h-6 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h4 class="font-semibold text-surface-900 text-sm line-clamp-1 group-hover:text-furent-600 transition-colors"
+                                            th:text="${not #lists.isEmpty(res.items) ? (res.items.size() > 1 ? res.items[0].productName + ' y ' + (res.items.size() - 1) + ' más' : res.items[0].productName) : 'Cotización'}">Producto</h4>
+                                        <p class="text-xs text-surface-400 mt-0.5" th:if="${res.tipoEvento != null}" th:text="'Evento: ' + ${res.tipoEvento}"></p>
+                                    </div>
+                                </div>
+
+                                <!-- Timeline -->
+                                <div class="flex items-center gap-0 mb-1.5 px-1">
+                                    <div th:classappend="${(res.estado == 'PENDIENTE' or res.estado == 'CONFIRMADA' or res.estado == 'ACTIVA' or res.estado == 'COMPLETADA') ? 'active' : ''}" class="timeline-dot border-2 border-surface-200 bg-white"></div>
+                                    <div th:classappend="${(res.estado == 'CONFIRMADA' or res.estado == 'ACTIVA' or res.estado == 'COMPLETADA') ? 'active' : ''}" class="timeline-bar bg-surface-200"></div>
+                                    <div th:classappend="${(res.estado == 'CONFIRMADA' or res.estado == 'ACTIVA' or res.estado == 'COMPLETADA') ? 'active' : ''}" class="timeline-dot border-2 border-surface-200 bg-white"></div>
+                                    <div th:classappend="${(res.estado == 'ACTIVA' or res.estado == 'COMPLETADA') ? 'active' : ''}" class="timeline-bar bg-surface-200"></div>
+                                    <div th:classappend="${(res.estado == 'ACTIVA' or res.estado == 'COMPLETADA') ? 'active' : ''}" class="timeline-dot border-2 border-surface-200 bg-white"></div>
+                                    <div th:classappend="${res.estado == 'COMPLETADA' ? 'active' : ''}" class="timeline-bar bg-surface-200"></div>
+                                    <div th:classappend="${res.estado == 'COMPLETADA' ? 'active' : ''}" class="timeline-dot border-2 border-surface-200 bg-white"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[9px] font-medium uppercase tracking-wider text-surface-400 mb-4 px-0">
+                                    <span>Pendiente</span><span>Confirmada</span><span>Activa</span><span>Completada</span>
+                                </div>
+
+                                <!-- Dates footer -->
+                                <div class="mt-auto pt-3.5 border-t border-surface-100 flex items-center text-xs text-surface-500">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75"/></svg>
+                                        <span class="font-semibold text-surface-600" th:text="${res.startDate}"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center px-3">
+                                        <div class="flex-1 h-px bg-surface-200"></div>
+                                        <svg class="w-3.5 h-3.5 text-surface-300 mx-2 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                                        <div class="flex-1 h-px bg-surface-200"></div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-surface-600" th:text="${res.endDate}"></span>
+                                        <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyState" class="hidden flex-col items-center justify-center text-center py-20">
+                            <div class="w-16 h-16 bg-surface-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-surface-200">
+                                <svg class="w-7 h-7 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-surface-900 mb-1">Sin coincidencias</h3>
+                            <p class="text-sm text-surface-500 max-w-sm mx-auto">No identificamos reservas que coincidan con este estado.</p>
+                        </div>
+                    </div>
+
+                    <!-- Favoritos Section -->
+                    <div class="panel-card bg-white border border-surface-200 p-6 sm:p-8 panel-animate panel-animate-d3" th:if="${favoritos != null and !favoritos.isEmpty()}">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
+                                    <svg class="w-4.5 h-4.5 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-surface-900">Mis Favoritos</h2>
+                                    <p class="text-xs text-surface-500 mt-0.5">Productos que has guardado</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-semibold text-furent-600 bg-furent-50 px-3 py-1.5 rounded-full border border-furent-100" th:text="${#lists.size(favoritos)} + ' productos'">0</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div th:each="fav : ${favoritos}" class="group bg-surface-50 border border-surface-100 rounded-2xl p-4 hover:border-furent-300 hover:shadow-md transition-all duration-300">
+                                <div class="flex items-center gap-3.5">
+                                    <img th:src="${fav.imagenUrl}" th:alt="${fav.nombre}" class="w-14 h-14 rounded-xl object-cover border border-surface-200 group-hover:scale-105 transition-transform duration-300">
+                                    <div class="flex-1 min-w-0">
+                                        <a th:href="@{/producto/{id}(id=${fav.id})}" class="font-semibold text-surface-900 text-sm hover:text-furent-600 transition-colors line-clamp-1" th:text="${fav.nombre}">Producto</a>
+                                        <p class="text-xs text-surface-400 mt-0.5" th:text="${fav.categoriaNombre}">Categoría</p>
+                                        <p class="text-sm font-bold text-furent-600 mt-1" th:text="'$' + ${#numbers.formatDecimal(fav.precioPorDia, 1, 'POINT', 0, 'COMMA')} + '/día'">$0/día</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notificaciones Section -->
+                    <div class="panel-card bg-white border border-surface-200 p-6 sm:p-8 panel-animate panel-animate-d4" th:if="${notificaciones != null and !notificaciones.isEmpty()}">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-furent-50 flex items-center justify-center border border-furent-100">
+                                    <svg class="w-4.5 h-4.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.75A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-surface-900">Notificaciones</h2>
+                                    <p class="text-xs text-surface-500 mt-0.5">Últimas actualizaciones de tu cuenta</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span th:if="${notificacionesNoLeidas > 0}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-furent-500 px-3 py-1.5 rounded-full shadow-sm" th:text="${notificacionesNoLeidas} + ' sin leer'">0</span>
+                                <button id="toggleNotifsBtn" onclick="toggleNotifications()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-surface-100 text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700 ring-1 ring-surface-200 dark:ring-surface-700 transition-all" title="Minimizar notificaciones">
+                                    <svg id="notifsChevronUp" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"/></svg>
+                                    <svg id="notifsChevronDown" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                    <span id="notifsToggleLabel">Minimizar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="notifsContainer" class="space-y-3">
+                            <div th:each="notif, iterStat : ${notificaciones}"
+                                 th:class="(${notif.leida} ? 'notif-item bg-white border border-surface-200 relative' : 'notif-item unread bg-white border border-surface-200 relative') + (${iterStat.index >= 3} ? ' notif-extra' : '')">
+                                <div th:switch="${notif.tipo}">
+                                    <div th:case="'SUCCESS'" class="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center shrink-0 border border-green-100">
+                                        <svg class="w-4.5 h-4.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div th:case="'WARNING'" class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100">
+                                        <svg class="w-4.5 h-4.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                                    </div>
+                                    <div th:case="'ALERT'" class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0 border border-red-100">
+                                        <svg class="w-4.5 h-4.5 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                                    </div>
+                                    <div th:case="*" class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100">
+                                        <svg class="w-4.5 h-4.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-sm text-surface-900 leading-snug" th:text="${notif.titulo}">Título</p>
+                                    <p class="text-xs text-surface-500 mt-1 leading-relaxed line-clamp-2" th:text="${notif.mensaje}">Mensaje</p>
+                                    <p class="text-[10px] text-surface-400 mt-2 font-medium flex items-center gap-1.5" th:text="${#temporals.format(notif.fecha, 'dd MMM yyyy HH:mm')}">
+                                        Fecha
+                                    </p>
+                                </div>
+                                <span th:unless="${notif.leida}" class="w-2 h-2 rounded-full bg-furent-500 shrink-0 mt-2"></span>
+                            </div>
+                        </div>
+                        <!-- Collapsed counter -->
+                        <div id="notifsCollapsedInfo" class="hidden mt-4 text-center">
+                            <span class="text-xs font-medium text-surface-400" id="notifsHiddenCount"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Notifications collapse/expand
+            var notifsExpanded = false;
+            function toggleNotifications() {
+                var extras = document.querySelectorAll('.notif-extra');
+                var chevUp = document.getElementById('notifsChevronUp');
+                var chevDown = document.getElementById('notifsChevronDown');
+                var label = document.getElementById('notifsToggleLabel');
+                var info = document.getElementById('notifsCollapsedInfo');
+                var countEl = document.getElementById('notifsHiddenCount');
+
+                if (extras.length === 0) return;
+
+                notifsExpanded = !notifsExpanded;
+                extras.forEach(function(el) {
+                    el.style.display = notifsExpanded ? '' : 'none';
+                });
+
+                if (notifsExpanded) {
+                    chevUp.classList.remove('hidden');
+                    chevDown.classList.add('hidden');
+                    label.textContent = 'Minimizar';
+                    info.classList.add('hidden');
+                } else {
+                    chevUp.classList.add('hidden');
+                    chevDown.classList.remove('hidden');
+                    label.textContent = 'Expandir';
+                    countEl.textContent = '+ ' + extras.length + ' notificaciones más';
+                    info.classList.remove('hidden');
+                }
+            }
+            // Auto-collapse on load if more than 3
+            document.addEventListener('DOMContentLoaded', function() {
+                var extras = document.querySelectorAll('.notif-extra');
+                if (extras.length > 0) {
+                    extras.forEach(function(el) { el.style.display = 'none'; });
+                    var chevUp = document.getElementById('notifsChevronUp');
+                    var chevDown = document.getElementById('notifsChevronDown');
+                    if (chevUp) chevUp.classList.add('hidden');
+                    if (chevDown) chevDown.classList.remove('hidden');
+                    var label = document.getElementById('notifsToggleLabel');
+                    if (label) label.textContent = 'Expandir';
+                    var countEl = document.getElementById('notifsHiddenCount');
+                    var info = document.getElementById('notifsCollapsedInfo');
+                    if (countEl) countEl.textContent = '+ ' + extras.length + ' notificaciones más';
+                    if (info) info.classList.remove('hidden');
+                }
+            });
+            document.addEventListener('DOMContentLoaded', () => {
+                const btns = document.querySelectorAll('.filter-btn');
+                const cards = document.querySelectorAll('.res-card');
+                const emptyState = document.getElementById('emptyState');
+                
+                // Init setup
+                if(cards.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                }
+
+                btns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Switch active class styles
+                        btns.forEach(b => {
+                            b.classList.remove('bg-white', 'text-surface-900', 'shadow-sm', 'active');
+                            b.classList.add('text-surface-500', 'hover:bg-white/50');
+                        });
+                        btn.classList.add('bg-white', 'text-surface-900', 'shadow-sm', 'active');
+                        btn.classList.remove('text-surface-500', 'hover:bg-white/50');
+
+                        const filter = btn.getAttribute('data-filter');
+                        let count = 0;
+                        
+                        cards.forEach(card => {
+                            const status = card.getAttribute('data-status');
+                            if(filter === 'all' || filter === status) {
+                                card.style.display = 'flex';
+                                card.classList.add('animate-fade-in-up');
+                                count++;
+                            } else {
+                                card.style.display = 'none';
+                                card.classList.remove('animate-fade-in-up');
+                            }
+                        });
+
+                        if(count === 0) {
+                            emptyState.classList.remove('hidden');
+                            emptyState.classList.add('flex');
+                        } else {
+                            emptyState.classList.add('hidden');
+                            emptyState.classList.remove('flex');
+                        }
+                    });
+                });
+            });
+        </script>
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

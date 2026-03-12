@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+
+        <!-- Header -->
+        <div class="bg-white border-b border-surface-100">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="flex items-center gap-4 fade-in-up">
+                    <div class="w-11 h-11 bg-gradient-to-br from-furent-400 to-furent-600 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-surface-900 tracking-tight">Configuración</h1>
+                        <p class="text-surface-500 text-sm">Personaliza tu experiencia en Furent</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <!-- Tabs Navigation -->
+            <div class="flex gap-1 bg-surface-100 rounded-xl p-1 mb-8 fade-in-up">
+                <button data-settings-tab="profile" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium bg-white shadow-sm text-surface-900 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                    Perfil
+                </button>
+                <button data-settings-tab="preferences" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-surface-500 hover:text-surface-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>
+                    Idioma y Moneda
+                </button>
+                <button data-settings-tab="security" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium text-surface-500 hover:text-surface-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    Seguridad
+                </button>
+            </div>
+
+            <!-- PROFILE TAB -->
+            <div data-settings-panel="profile" class="fade-in-up stagger-1">
+                <!-- Success/Error messages -->
+                <div th:if="${success}" class="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span th:text="${success}"></span>
+                </div>
+                <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                    <!-- Avatar Section -->
+                    <div class="px-8 py-8 border-b border-surface-100">
+                        <h2 class="text-lg font-semibold text-surface-900 mb-6">Información personal</h2>
+                        <div class="flex items-center gap-6">
+                            <div class="relative">
+                                <div class="w-20 h-20 bg-gradient-to-br from-furent-400 to-furent-600 rounded-2xl flex items-center justify-center shadow-md">
+                                    <span class="text-white font-bold text-2xl" th:text="${currentUser != null ? #strings.substring(currentUser.nombre, 0, 1) + #strings.substring(currentUser.apellido, 0, 1) : 'U'}">U</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-semibold text-surface-900" th:text="${currentUser != null ? currentUser.nombreCompleto : 'Usuario'}">Usuario</h3>
+                                <p class="text-sm text-surface-500" th:text="${currentUser != null ? currentUser.email : ''}">email</p>
+                                <p class="text-xs text-furent-500 font-medium mt-1" th:text="${currentUser != null ? (currentUser.role == 'ADMIN' ? 'Administrador' : 'Cliente') : ''}">Rol</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Fields -->
+                    <form th:action="@{/configuracion/perfil}" method="post" class="px-8 py-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Nombre</label>
+                                <input type="text" name="nombre" th:value="${currentUser != null ? currentUser.nombre : ''}" required class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Apellido</label>
+                                <input type="text" name="apellido" th:value="${currentUser != null ? currentUser.apellido : ''}" required class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Correo electrónico</label>
+                                <input type="email" th:value="${currentUser != null ? currentUser.email : ''}" disabled class="w-full px-4 py-3 bg-surface-100 border border-surface-200 rounded-xl text-sm text-surface-400 cursor-not-allowed">
+                                <p class="text-xs text-surface-400 mt-1">El email no se puede cambiar</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Teléfono</label>
+                                <input type="tel" name="telefono" th:value="${currentUser != null ? currentUser.telefono : ''}" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 mt-8">
+                            <button type="submit" class="px-6 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-semibold rounded-xl hover:from-furent-600 hover:to-furent-700 transition-all shadow-sm hover:shadow-md">
+                                Guardar cambios
+                            </button>
+                            <a th:href="@{/configuracion}" class="px-6 py-3 border border-surface-200 text-surface-600 font-medium rounded-xl hover:bg-surface-50 transition-all">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- LANGUAGE & CURRENCY TAB -->
+            <!-- LANGUAGE & CURRENCY TAB -->
+            <div data-settings-panel="preferences" class="hidden">
+                <form th:action="@{/configuracion/preferencias}" method="post" class="space-y-6 fade-in-up stagger-1">
+                    
+                    <!-- Settings Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                        <!-- Language Card -->
+                        <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden flex flex-col h-full">
+                            <div class="px-8 py-8 flex-1">
+                                <div class="flex items-start gap-4 mb-6">
+                                    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100 flex-shrink-0">
+                                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802"/></svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-lg font-semibold text-surface-900">Idioma de la página</h2>
+                                        <p class="text-sm text-surface-500 mt-0.5">Selecciona el idioma de la plataforma</p>
+                                    </div>
+                                </div>
+                                <select name="idioma" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all cursor-pointer">
+                                    <option value="es" th:selected="${currentUser != null && currentUser.idioma == 'es'}">🇪🇸 Español</option>
+                                    <option value="en" th:selected="${currentUser != null && currentUser.idioma == 'en'}">🇺🇸 English</option>
+                                    <option value="pt" th:selected="${currentUser != null && currentUser.idioma == 'pt'}">🇧🇷 Português</option>
+                                    <option value="fr" th:selected="${currentUser != null && currentUser.idioma == 'fr'}">🇫🇷 Français</option>
+                                    <option value="de" th:selected="${currentUser != null && currentUser.idioma == 'de'}">🇩🇪 Deutsch</option>
+                                    <option value="it" th:selected="${currentUser != null && currentUser.idioma == 'it'}">🇮🇹 Italiano</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Currency Card -->
+                        <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden flex flex-col h-full">
+                            <div class="px-8 py-8 flex-1">
+                                <div class="flex items-start gap-4 mb-6">
+                                    <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center border border-green-100 flex-shrink-0">
+                                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-lg font-semibold text-surface-900">Moneda</h2>
+                                        <p class="text-sm text-surface-500 mt-0.5">La moneda para ver los precios</p>
+                                    </div>
+                                </div>
+                                <select name="moneda" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all cursor-pointer">
+                                    <option value="COP" th:selected="${currentUser != null && currentUser.moneda == 'COP'}">🇨🇴 COP — Peso Colombiano</option>
+                                    <option value="USD" th:selected="${currentUser != null && currentUser.moneda == 'USD'}">🇺🇸 USD — Dólar Estadounidense</option>
+                                    <option value="EUR" th:selected="${currentUser != null && currentUser.moneda == 'EUR'}">🇪🇺 EUR — Euro</option>
+                                    <option value="MXN" th:selected="${currentUser != null && currentUser.moneda == 'MXN'}">🇲🇽 MXN — Peso Mexicano</option>
+                                    <option value="ARS" th:selected="${currentUser != null && currentUser.moneda == 'ARS'}">🇦🇷 ARS — Peso Argentino</option>
+                                    <option value="BRL" th:selected="${currentUser != null && currentUser.moneda == 'BRL'}">🇧🇷 BRL — Real Brasileño</option>
+                                    <option value="CLP" th:selected="${currentUser != null && currentUser.moneda == 'CLP'}">🇨🇱 CLP — Peso Chileno</option>
+                                    <option value="PEN" th:selected="${currentUser != null && currentUser.moneda == 'PEN'}">🇵🇪 PEN — Sol Peruano</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Appearance Card -->
+                    <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                        <div class="px-8 py-8">
+                            <div class="flex items-start gap-4 mb-6">
+                                <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center border border-indigo-100 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                                </div>
+                                <div class="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div>
+                                        <h2 class="text-lg font-semibold text-surface-900">Apariencia visual</h2>
+                                        <p class="text-sm text-surface-500 mt-0.5">Personaliza los colores de Furent en todos tus dispositivos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Visual Selection Form -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Light Option -->
+                                <label class="relative flex cursor-pointer block">
+                                    <input type="radio" name="apariencia" value="light" class="peer sr-only" th:checked="${currentUser == null || currentUser.apariencia == 'light'}">
+                                    <div class="w-full flex items-center justify-between p-5 rounded-xl border-2 border-surface-200 bg-surface-50 text-surface-600 peer-checked:border-indigo-500 peer-checked:text-indigo-900 peer-checked:bg-indigo-50/50 hover:bg-surface-100 transition-all">
+                                        <div class="flex items-center gap-4">
+                                            <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21m8.966-8.966h-2.25M4.144 12h-2.25m15.81-8.19l-1.59 1.59m-11.354 11.354l-1.59 1.59m15.81 0l-1.59-1.59m-11.354-11.354l-1.59-1.59M12 7.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9z"/></svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-sm text-surface-900">Modo Claro</p>
+                                                <p class="text-xs text-surface-500 mt-0.5">Estilo brillante y limpio</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Indicator circle -->
+                                    <div class="absolute top-1/2 -translate-y-1/2 right-5 w-5 h-5 border-2 border-surface-300 rounded-full flex items-center justify-center transition-all peer-checked:border-indigo-500">
+                                        <div class="w-2.5 h-2.5 bg-indigo-500 rounded-full opacity-0 peer-checked:opacity-100 transition-all"></div>
+                                    </div>
+                                </label>
+                                
+                                <!-- Dark Option -->
+                                <label class="relative flex cursor-pointer block">
+                                    <input type="radio" name="apariencia" value="dark" class="peer sr-only" th:checked="${currentUser != null && currentUser.apariencia == 'dark'}">
+                                    <div class="w-full flex items-center justify-between p-5 rounded-xl border-2 border-surface-200 bg-surface-50 text-surface-600 peer-checked:border-indigo-500 peer-checked:text-indigo-900 peer-checked:bg-indigo-50/50 hover:bg-surface-100 transition-all">
+                                        <div class="flex items-center gap-4">
+                                            <div class="p-2.5 bg-surface-800 rounded-lg shadow-sm border border-surface-600">
+                                                <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-sm text-surface-900">Modo Oscuro</p>
+                                                <p class="text-xs text-surface-500 mt-0.5">Ideal para poca luz</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Indicator circle -->
+                                    <div class="absolute top-1/2 -translate-y-1/2 right-5 w-5 h-5 border-2 border-surface-300 rounded-full flex items-center justify-center transition-all peer-checked:border-indigo-500">
+                                        <div class="w-2.5 h-2.5 bg-indigo-500 rounded-full opacity-0 peer-checked:opacity-100 transition-all"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <button type="submit" class="px-6 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-semibold rounded-xl hover:from-furent-600 hover:to-furent-700 transition-all shadow-sm hover:shadow-md">
+                            Guardar preferencias
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- SECURITY TAB -->
+            <div data-settings-panel="security" class="hidden">
+                <div class="space-y-6">
+                    <!-- Change Password -->
+                    <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                        <div class="px-8 py-8">
+                            <div class="flex items-start gap-4 mb-6">
+                                <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center border border-amber-100 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-surface-900">Cambiar contraseña</h2>
+                                    <p class="text-sm text-surface-500 mt-0.5">Actualiza tu contraseña periódicamente para mayor seguridad</p>
+                                </div>
+                            </div>
+                            <div th:if="${passwordError}" class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm" th:text="${passwordError}"></div>
+                            <form th:action="@{/configuracion/password}" method="post" class="space-y-4 max-w-md">
+                                <div>
+                                    <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Contraseña actual</label>
+                                    <input type="password" name="currentPassword" placeholder="••••••••" required class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Nueva contraseña</label>
+                                    <input type="password" name="newPassword" placeholder="Mínimo 6 caracteres" required class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Confirmar nueva contraseña</label>
+                                    <input type="password" name="confirmPassword" placeholder="Repite la nueva contraseña" required class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                </div>
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-semibold rounded-xl hover:from-furent-600 hover:to-furent-700 transition-all shadow-sm hover:shadow-md mt-2">
+                                    Actualizar contraseña
+                                </button>
+                            </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="bg-white rounded-2xl shadow-soft border border-surface-100 overflow-hidden">
+                        <div class="px-8 py-8">
+                            <div class="flex items-start gap-4 mb-6">
+                                <div class="w-10 h-10 bg-furent-50 rounded-xl flex items-center justify-center border border-furent-100 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-furent-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-surface-900">Notificaciones</h2>
+                                    <p class="text-sm text-surface-500 mt-0.5">Gestiona tus preferencias de notificación</p>
+                                </div>
+                            </div>
+                            <div class="space-y-4 max-w-md">
+                                <label class="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-100 cursor-pointer hover:bg-surface-100/50 transition-colors">
+                                    <div>
+                                        <p class="text-sm font-medium text-surface-900">Notificaciones por email</p>
+                                        <p class="text-xs text-surface-500 mt-0.5">Recibe actualizaciones de tus reservas</p>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-furent-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-furent-500"></div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-100 cursor-pointer hover:bg-surface-100/50 transition-colors">
+                                    <div>
+                                        <p class="text-sm font-medium text-surface-900">Notificaciones SMS</p>
+                                        <p class="text-xs text-surface-500 mt-0.5">Alertas importantes por mensaje de texto</p>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-furent-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-furent-500"></div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-100 cursor-pointer hover:bg-surface-100/50 transition-colors">
+                                    <div>
+                                        <p class="text-sm font-medium text-surface-900">Ofertas y promociones</p>
+                                        <p class="text-xs text-surface-500 mt-0.5">Recibe noticias sobre descuentos exclusivos</p>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="checkbox" checked class="sr-only peer">
+                                        <div class="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-furent-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-furent-500"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="bg-white rounded-2xl shadow-soft border border-red-100 overflow-hidden">
+                        <div class="px-8 py-8">
+                            <div class="flex items-start gap-4 mb-4">
+                                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center border border-red-100 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-red-900">Zona peligrosa</h2>
+                                    <p class="text-sm text-surface-500 mt-0.5">Acciones irreversibles para tu cuenta</p>
+                                </div>
+                            </div>
+                            <button class="px-5 py-2.5 border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors">
+                                Eliminar mi cuenta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('darkModeToggle');
+            if (toggle && document.documentElement.classList.contains('dark')) {
+                toggle.checked = true;
+            }
+
+            // Tab switching
+            const tabBtns = document.querySelectorAll('[data-settings-tab]');
+            const tabPanels = document.querySelectorAll('[data-settings-panel]');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.dataset.settingsTab;
+                    tabBtns.forEach(b => {
+                        b.classList.remove('bg-white', 'shadow-sm', 'text-surface-900');
+                        b.classList.add('text-surface-500');
+                    });
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-surface-900');
+                    btn.classList.remove('text-surface-500');
+                    tabPanels.forEach(p => {
+                        p.classList.toggle('hidden', p.dataset.settingsPanel !== target);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

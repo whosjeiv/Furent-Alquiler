@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'dashboard')}">
+<head>
+    <title>Dashboard — Furent Admin</title>
+</head>
+<body>
+    <main>
+        <div class="px-10 py-8 max-w-[90rem] mx-auto">
+            
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <h1 class="text-3xl font-extra-bold tracking-tight text-surface-900">Panel de Control</h1>
+                    <p class="text-sm text-surface-500 mt-1">Supervisión en tiempo real de operaciones y rendimiento.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="px-4 py-2 bg-white rounded-xl text-xs font-semibold text-surface-600 shadow-soft border border-surface-100 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Sistema en línea
+                    </span>
+                    <button onclick="window.print()" class="px-4 py-2 bg-white border border-surface-200 text-surface-700 rounded-xl text-xs font-bold shadow-sm hover:bg-surface-50 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.872a9.124 9.124 0 012.845-2.845m0 0a9.124 9.124 0 012.845 2.845m-2.845-2.845V19.5m0 0h-6.75m6.75 0h6.75M3.375 5.25h17.25M3.75 6v13.5A2.25 2.25 0 006 21.75h12a2.25 2.25 0 002.25-2.25V6m-18 0l1.35-2.7a2.25 2.25 0 011.83-1.05h1.14a2.25 2.25 0 011.83 1.05l1.35 2.7" /></svg>
+                        Generar Reporte
+                    </button>
+                    <div class="relative" id="exportMenuWrapper">
+                        <button onclick="document.getElementById('exportDropdown').classList.toggle('hidden')" class="px-4 py-2 bg-furent-500 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-furent-600 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                            Exportar CSV
+                        </button>
+                        <div id="exportDropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-hover border border-surface-100 py-2 z-50">
+                            <a th:href="@{/admin/exportar/productos}" class="block px-4 py-2 text-xs font-medium text-surface-600 hover:bg-surface-50">📦 Productos</a>
+                            <a th:href="@{/admin/exportar/reservas}" class="block px-4 py-2 text-xs font-medium text-surface-600 hover:bg-surface-50">📋 Reservas</a>
+                            <a th:href="@{/admin/exportar/usuarios}" class="block px-4 py-2 text-xs font-medium text-surface-600 hover:bg-surface-50">👥 Usuarios</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <!-- Revenue Card -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-surface-200 hover:border-furent-300 transition-colors group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-furent-50 flex items-center justify-center text-furent-600 group-hover:bg-furent-500 group-hover:text-white transition-all duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <span class="text-[10px] font-bold text-furent-700 bg-furent-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Ingresos Totales</span>
+                    </div>
+                    <p class="text-sm font-semibold text-surface-500">Recaudación</p>
+                    <h3 class="text-3xl font-extrabold text-surface-900 tracking-tight mt-1" th:text="'$' + ${#numbers.formatInteger(totalIngresos, 1, 'POINT')}">$0</h3>
+                </div>
+
+                <!-- Products Card -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-surface-200 group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                        </div>
+                        <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Catálogo</span>
+                    </div>
+                    <p class="text-sm font-semibold text-surface-500">Mobiliarios</p>
+                    <h3 class="text-3xl font-extrabold text-surface-900 tracking-tight mt-1" th:text="${totalProductos}">0</h3>
+                </div>
+
+                <!-- Active Reservations -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-surface-200 group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-500 group-hover:text-white transition-all duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+                        </div>
+                        <span class="text-[10px] font-bold text-green-700 bg-green-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">Eventos Activos</span>
+                    </div>
+                    <p class="text-sm font-semibold text-surface-500">Reservas en curso</p>
+                    <h3 class="text-3xl font-extrabold text-surface-900 tracking-tight mt-1" th:text="${reservasActivas}">0</h3>
+                </div>
+
+                <!-- Users -->
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-surface-200 group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-surface-100 flex items-center justify-center text-surface-600 group-hover:bg-surface-900 group-hover:text-white transition-all duration-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold text-surface-500">Usuarios Totales</p>
+                    <h3 class="text-3xl font-extrabold text-surface-900 tracking-tight mt-1" th:text="${totalUsuarios}">0</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <!-- Analytics Chart (Point 1) -->
+                <div class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-surface-200">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-lg font-bold text-surface-900">Análisis de Ingresos</h3>
+                            <p class="text-xs text-surface-500 font-medium">Volumen de ventas por día</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="flex items-center gap-1.5 text-[10px] font-bold text-furent-600 bg-furent-50 px-3 py-1.5 rounded-full border border-furent-100">
+                                <span class="w-2 h-2 rounded-full bg-furent-500"></span>
+                                Ventas Diarias
+                            </span>
+                        </div>
+                    </div>
+                    <div class="h-[300px] w-full">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Fast Ops Panel (Point 2 & 3) -->
+                <div class="space-y-6">
+                    <div class="bg-surface-900 rounded-3xl p-8 border border-surface-800 relative overflow-hidden group">
+                        <div class="relative z-10 text-white">
+                            <div class="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6">
+                                <svg class="w-6 h-6 text-furent-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Logística Hoy</h3>
+                            <p class="text-sm text-surface-400 mb-6 font-medium leading-relaxed">Verifica las entregas programadas y prepara las rutas de transporte.</p>
+                            <a href="#" class="inline-flex items-center gap-2 text-sm font-bold px-6 py-3 bg-furent-500 hover:bg-furent-600 text-white rounded-xl transition-all shadow-lg shadow-furent-500/20">
+                                Ver Calendario →
+                            </a>
+                        </div>
+                        <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-furent-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl p-6 border border-surface-200">
+                        <h3 class="text-xs font-bold text-surface-500 mb-6 uppercase tracking-widest">Alertas de Stock</h3>
+                        <div class="space-y-4">
+                            <div th:if="${totalProductos == 0}" class="text-center py-4 opacity-40">
+                                <p class="text-sm">Sin datos de inventario</p>
+                            </div>
+                            <!-- This could be improved with real low-stock data from backend later -->
+                            <div class="flex items-center justify-between p-3 rounded-2xl bg-surface-50 border border-surface-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-surface-200">
+                                        <svg class="w-5 h-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-surface-900">Salud de Inventario</p>
+                                        <p class="text-[10px] text-green-600 font-bold uppercase">Óptimo</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-extrabold text-surface-900" th:text="${totalProductos}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Double List: Recent Activity & Audit Logs (Point 6) -->
+            <!-- Status Distribution Chart + Double List -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <!-- Doughnut Chart: Status Distribution -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm border border-surface-200">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-surface-900">Distribución de Estados</h3>
+                        <span class="px-3 py-1 bg-surface-50 border border-surface-200 rounded-lg text-[10px] font-bold text-surface-500 uppercase">Reservas</span>
+                    </div>
+                    <div class="h-[220px] w-full flex items-center justify-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="mt-4 space-y-2" id="statusLegend"></div>
+                </div>
+
+                <!-- Activity List (spans 2 cols) -->
+                <div class="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Activity List -->
+                <div class="bg-white rounded-3xl p-8 shadow-sm border border-surface-200">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-xl font-bold text-surface-900">Últimas Reservas</h3>
+                        <a th:href="@{/admin/reservas}" class="text-xs font-bold text-furent-500 hover:underline">Gestionar todas</a>
+                    </div>
+                    <div class="space-y-6">
+                        <div th:each="r : ${ultimasReservas}" class="flex items-center justify-between group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-surface-100 to-surface-200 flex items-center justify-center text-surface-700 font-bold shadow-sm" th:text="${r.usuarioNombre != null ? #strings.substring(r.usuarioNombre,0,1) : 'U'}">U</div>
+                                <div>
+                                    <p class="text-sm font-bold text-surface-900" th:text="${r.usuarioNombre}">Nombre</p>
+                                    <p class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mt-0.5" th:text="${#temporals.format(r.fechaCreacion, 'dd MMM, HH:mm')}">Fecha</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-black text-surface-900" th:text="'$' + ${#numbers.formatInteger(r.total, 1, 'POINT')}">$0</p>
+                                <span th:class="${r.estado == 'PENDIENTE' ? 'text-amber-600' : r.estado == 'CONFIRMADA' ? 'text-blue-600' : r.estado == 'ACTIVA' ? 'text-green-600' : 'text-surface-400'} + ' text-[9px] font-black uppercase tracking-widest'" th:text="${r.estado}">ESTADO</span>
+                            </div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(ultimasReservas)}" class="text-center py-12 opacity-30">
+                            <p class="text-sm font-bold italic">No hay actividad reciente</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Logs (Point 6) -->
+                <div class="bg-surface-50 rounded-3xl p-8 border border-surface-200">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-xl font-bold text-surface-900">Auditoría del Sistema</h3>
+                        <span class="px-3 py-1 bg-white border border-surface-200 rounded-lg text-[10px] font-bold text-surface-500 uppercase">Seguridad</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div th:each="log : ${auditLogs}" class="bg-white p-4 rounded-2xl border border-surface-100 shadow-sm flex gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-surface-900 flex-shrink-0 flex items-center justify-center text-white">
+                                <svg th:if="${log.accion == 'CREAR'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                <svg th:if="${log.accion == 'ACTUALIZAR'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                                <svg th:if="${log.accion == 'CAMBIAR_ESTADO'}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.332.183-.582.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-bold text-white bg-surface-900 px-2 py-0.5 rounded uppercase" th:text="${log.accion}">ACCION</span>
+                                    <span class="text-[10px] font-bold text-surface-400" th:text="${#temporals.format(log.fecha, 'HH:mm')}">Time</span>
+                                </div>
+                                <p class="text-xs font-bold text-surface-900 truncate" th:text="${log.detalle}">Detalle</p>
+                                <p class="text-[10px] text-surface-500 font-medium" th:text="'Por: ' + ${log.usuario}">Usuario</p>
+                            </div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(auditLogs)}" class="text-center py-12 opacity-30">
+                            <p class="text-sm font-bold italic">Sin registros de auditoría</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                </div><!-- end lg:col-span-2 -->
+            </div><!-- end 3-col grid -->
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            $(document).ready(function() {
+                // Revenue Line Chart
+                const revenueData = /*[[${revenueData}]]*/ {};
+                const labels = Object.keys(revenueData);
+                const values = Object.values(revenueData);
+
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Ingresos ($)',
+                            data: values,
+                            borderColor: '#E07A3A',
+                            backgroundColor: 'rgba(224, 122, 58, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#E07A3A',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#18181b',
+                                titleFont: { family: 'Outfit', size: 12 },
+                                bodyFont: { family: 'Outfit', size: 14, weight: 'bold' },
+                                padding: 12,
+                                cornerRadius: 12,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return '$' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { family: 'Outfit', size: 11 }, color: '#71717a' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f4f4f5' },
+                                ticks: { 
+                                    font: { family: 'Outfit', size: 11 }, 
+                                    color: '#71717a',
+                                    callback: function(value) { return '$' + value.toLocaleString(); }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Status Distribution Doughnut Chart
+                const statusData = /*[[${statusData}]]*/ {};
+                const statusLabels = Object.keys(statusData);
+                const statusValues = Object.values(statusData);
+                const statusColors = {
+                    'PENDIENTE': '#f59e0b', 'CONFIRMADA': '#3b82f6', 'ACTIVA': '#22c55e',
+                    'EN_CURSO': '#8b5cf6', 'COMPLETADA': '#10b981', 'CANCELADA': '#ef4444'
+                };
+                const bgColors = statusLabels.map(l => statusColors[l] || '#a1a1aa');
+
+                const statusCtx = document.getElementById('statusChart');
+                if (statusCtx) {
+                    new Chart(statusCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: statusLabels,
+                            datasets: [{
+                                data: statusValues,
+                                backgroundColor: bgColors,
+                                borderWidth: 0,
+                                hoverOffset: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '65%',
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: '#18181b',
+                                    titleFont: { family: 'Outfit', size: 12 },
+                                    bodyFont: { family: 'Outfit', size: 13, weight: 'bold' },
+                                    padding: 10, cornerRadius: 10
+                                }
+                            }
+                        }
+                    });
+                    // Custom legend
+                    const legendEl = document.getElementById('statusLegend');
+                    if (legendEl) {
+                        legendEl.innerHTML = statusLabels.map((label, i) =>
+                            `<div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:${bgColors[i]}"></span><span class="text-xs font-medium text-surface-600">${label}</span></div><span class="text-xs font-bold text-surface-900">${statusValues[i]}</span></div>`
+                        ).join('');
+                    }
+                }
+            });
+            /*]]>*/
+        </script>
+    </main>
+</body>
+</html>

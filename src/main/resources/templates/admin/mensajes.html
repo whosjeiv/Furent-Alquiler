@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+<th:block th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::section}, 'mensajes')}">
+    <title>Mensajes — Admin Furent</title>
+    <section>
+        <!-- Header -->
+        <div class="px-10 pt-10 pb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-surface-900 tracking-tight">Mensajes de Contacto</h1>
+                    <p class="text-surface-500 mt-1">Gestión de mensajes recibidos desde el formulario de contacto</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-semibold text-sm"
+                          th:text="${noLeidos} + ' sin leer'">0 sin leer</span>
+                    <span class="px-4 py-2 bg-surface-100 text-surface-600 rounded-xl font-semibold text-sm"
+                          th:text="${#lists.size(mensajes)} + ' totales'">0 totales</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="px-10">
+            <div th:if="${#lists.isEmpty(mensajes)}" class="text-center py-20">
+                <svg class="w-16 h-16 text-surface-300 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                <p class="text-surface-400 text-lg">No hay mensajes todavía</p>
+            </div>
+
+            <div class="space-y-4" th:unless="${#lists.isEmpty(mensajes)}">
+                <div th:each="msg : ${mensajes}"
+                     class="bg-white rounded-2xl border p-6 transition-all duration-200 hover:shadow-soft"
+                     th:classappend="${!msg.leido ? 'border-blue-200 bg-blue-50/30' : 'border-surface-200'}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span th:if="${!msg.leido}" class="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
+                                <h3 class="font-bold text-surface-900 text-lg" th:text="${msg.asunto}">Asunto</h3>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-surface-500 mb-3">
+                                <span class="font-medium" th:text="${msg.nombre}">Nombre</span>
+                                <span th:text="${msg.email}">email@test.com</span>
+                                <span th:if="${msg.telefono != null and !msg.telefono.isEmpty()}" th:text="${msg.telefono}"></span>
+                                <span th:text="${#temporals.format(msg.fechaCreacion, 'dd/MM/yyyy HH:mm')}" th:if="${msg.fechaCreacion != null}">Fecha</span>
+                            </div>
+                            <p class="text-surface-700 leading-relaxed" th:text="${msg.mensaje}">Contenido del mensaje...</p>
+                        </div>
+                        <div class="flex items-center gap-2 ml-4">
+                            <form th:if="${!msg.leido}" th:action="@{/admin/mensajes/leer/{id}(id=${msg.id})}" method="post">
+                                <button type="submit" class="px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors" title="Marcar como leído">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                </button>
+                            </form>
+                            <form th:action="@{/admin/mensajes/eliminar/{id}(id=${msg.id})}" method="post"
+                                  onsubmit="return confirm('¿Eliminar este mensaje?')">
+                                <button type="submit" class="px-3 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors" title="Eliminar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>
