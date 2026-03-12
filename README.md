@@ -6,7 +6,11 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.3-green)](https://spring.io/projects/spring-boot)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7-brightgreen)](https://www.mongodb.com/)
 
-## 📋 Descripción
+## � Colaboradores
+
+- Luis Troconis (@Ldtro)
+
+## �📋 Descripción
 
 **Furent** es una plataforma web completa para la gestión de alquiler de mobiliarios para eventos. Permite a los clientes explorar catálogos, solicitar cotizaciones, gestionar reservas y realizar pagos; mientras que los administradores gestionan inventario, logística, usuarios, cupones y métricas de negocio.
 
