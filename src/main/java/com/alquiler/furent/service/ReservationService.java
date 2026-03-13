@@ -1,8 +1,10 @@
 package com.alquiler.furent.service;
 
 import com.alquiler.furent.enums.EstadoReserva;
+import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.StatusHistory;
+import com.alquiler.furent.repository.ProductRepository;
 import com.alquiler.furent.repository.ReservationRepository;
 import com.alquiler.furent.repository.StatusHistoryRepository;
 import com.alquiler.furent.exception.ResourceNotFoundException;
@@ -50,15 +52,18 @@ public class ReservationService {
                         EstadoReserva.CANCELADA.name(), Set.of());
 
         private final ReservationRepository reservationRepository;
+        private final ProductRepository productRepository;
         private final StatusHistoryRepository statusHistoryRepository;
         private final EventPublisher eventPublisher;
         private final MetricsConfig metricsConfig;
 
         public ReservationService(ReservationRepository reservationRepository,
+                        ProductRepository productRepository,
                         StatusHistoryRepository statusHistoryRepository,
                         EventPublisher eventPublisher,
                         MetricsConfig metricsConfig) {
                 this.reservationRepository = reservationRepository;
+                this.productRepository = productRepository;
                 this.statusHistoryRepository = statusHistoryRepository;
                 this.eventPublisher = eventPublisher;
                 this.metricsConfig = metricsConfig;
@@ -135,6 +140,70 @@ public class ReservationService {
                                 throw new InvalidOperationException("El mobiliario puede reservarse por un máximo de 7 días");
                         }
                 }
+        }
+
+        /**
+         * Validates that enough stock is available for each product in the reservation
+         * across the requested date range. Returns a map of productId -> error message
+         * for any product that would be overbooked. Empty map = all OK.
+         */
+        public java.util.Map<String, String> validateAvailability(Reservation reservation) {
+                java.util.Map<String, String> errors = new java.util.LinkedHashMap<>();
+                if (reservation.getItems() == null || reservation.getItems().isEmpty()) return errors;
+                if (reservation.getFechaInicio() == null || reservation.getFechaFin() == null) return errors;
+
+                LocalDate reqStart = reservation.getFechaInicio();
+                LocalDate reqEnd = reservation.getFechaFin();
+
+                // Collect all product IDs requested
+                List<String> productIds = reservation.getItems().stream()
+                        .map(Reservation.ItemReserva::getProductoId)
+                        .collect(Collectors.toList());
+
+                // Get all overlapping active reservations (PENDIENTE, CONFIRMADA, ACTIVA)
+                List<Reservation> overlapping = reservationRepository.findActiveByProductIds(productIds)
+                        .stream()
+                        .filter(r -> r.getFechaInicio() != null && r.getFechaFin() != null)
+                        .filter(r -> !r.getFechaFin().isBefore(reqStart) && !r.getFechaInicio().isAfter(reqEnd))
+                        .collect(Collectors.toList());
+
+                // For each product, calculate peak usage across all days in the range
+                for (Reservation.ItemReserva item : reservation.getItems()) {
+                        String pid = item.getProductoId();
+                        int requested = item.getCantidad();
+
+                        // Get total stock from DB
+                        Optional<Product> productOpt = productRepository.findById(pid);
+                        if (productOpt.isEmpty()) {
+                                errors.put(pid, "El producto '" + item.getProductoNombre() + "' ya no existe en el catálogo.");
+                                continue;
+                        }
+                        int totalStock = productOpt.get().getStock();
+
+                        // Find the day with maximum reserved units for this product
+                        int maxReserved = 0;
+                        LocalDate day = reqStart;
+                        while (!day.isAfter(reqEnd)) {
+                                final LocalDate currentDay = day;
+                                int reservedThisDay = overlapping.stream()
+                                        .filter(r -> !currentDay.isBefore(r.getFechaInicio()) && !currentDay.isAfter(r.getFechaFin()))
+                                        .flatMap(r -> r.getItems().stream())
+                                        .filter(i -> pid.equals(i.getProductoId()))
+                                        .mapToInt(Reservation.ItemReserva::getCantidad)
+                                        .sum();
+                                if (reservedThisDay > maxReserved) maxReserved = reservedThisDay;
+                                day = day.plusDays(1);
+                        }
+
+                        int available = totalStock - maxReserved;
+                        if (requested > available) {
+                                String productName = productOpt.get().getNombre();
+                                errors.put(pid, String.format(
+                                        "'%s': solicitas %d unidades pero solo hay %d disponibles para esas fechas (stock total: %d, ya reservadas: %d).",
+                                        productName, requested, Math.max(available, 0), totalStock, maxReserved));
+                        }
+                }
+                return errors;
         }
 
         public void updateStatus(String id, String newStatus) {

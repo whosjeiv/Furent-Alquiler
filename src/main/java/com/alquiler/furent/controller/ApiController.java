@@ -226,25 +226,45 @@ public class ApiController {
         }
         res.setDiasAlquiler((int) days);
 
+        // Build items with PRICES FROM DATABASE (never trust frontend prices)
         BigDecimal totalItems = BigDecimal.ZERO;
         if (req.getItems() != null) {
-            res.setItems(req.getItems().stream().map(i -> {
+            java.util.List<ItemReserva> items = new java.util.ArrayList<>();
+            for (CotizacionRequest.CartItem ci : req.getItems()) {
+                var productOpt = productService.getProductById(ci.getId());
+                if (productOpt.isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("success", false, "message",
+                            "El producto '" + ci.getName() + "' ya no existe en el catálogo."));
+                }
+                var product = productOpt.get();
                 ItemReserva item = new ItemReserva();
-                item.setProductoId(i.getId());
-                item.setProductoNombre(i.getName());
-                item.setProductoImagen(i.getImage());
-                item.setPrecioPorDia(i.getPrice());
-                item.setCantidad(i.getQty());
-                item.setSubtotal(i.getPrice().multiply(BigDecimal.valueOf(i.getQty())));
-                return item;
-            }).collect(Collectors.toList()));
-            totalItems = res.getItems().stream()
-                    .map(ItemReserva::getSubtotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                item.setProductoId(product.getId());
+                item.setProductoNombre(product.getNombre());
+                item.setProductoImagen(product.getImagenUrl());
+                // Use DB price, NOT frontend price
+                item.setPrecioPorDia(product.getPrecioPorDia());
+                item.setCantidad(ci.getQty());
+                item.setSubtotal(product.getPrecioPorDia().multiply(BigDecimal.valueOf(ci.getQty())));
+                items.add(item);
+                totalItems = totalItems.add(item.getSubtotal());
+            }
+            res.setItems(items);
         }
 
         res.setSubtotal(totalItems);
         BigDecimal totalBruto = totalItems.multiply(BigDecimal.valueOf(days));
+
+        // === ANTI-OVERBOOKING: Validate stock availability for requested dates ===
+        Map<String, String> availabilityErrors = reservationService.validateAvailability(res);
+        if (!availabilityErrors.isEmpty()) {
+            String errorMessage = String.join(" | ", availabilityErrors.values());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Stock insuficiente para las fechas seleccionadas.");
+            errorResponse.put("stockErrors", availabilityErrors);
+            errorResponse.put("details", errorMessage);
+            return ResponseEntity.status(409).body(errorResponse);
+        }
 
         // Aplicar cupón de descuento si se proporcionó
         BigDecimal descuento = BigDecimal.ZERO;
