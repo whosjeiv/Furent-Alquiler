@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'pagos-trabajadores')}">
+<head>
+    <title>Pagos a Trabajadores — Furent Admin</title>
+</head>
+<body>
+<main>
+    <div class="px-10 py-8 max-w-[90rem] mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Pagos a Trabajadores</h1>
+                <p class="text-sm text-surface-500 mt-1">
+                    Gestiona comprobantes de pago (mensuales o quincenales) y envíalos por correo.
+                </p>
+            </div>
+            <button type="button"
+                    onclick="document.getElementById('nuevoPagoModal').classList.remove('hidden')"
+                    class="px-5 py-2.5 bg-furent-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-furent-700 transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                Nuevo pago
+            </button>
+        </div>
+
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-surface-200">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[11px] text-surface-500 font-medium">
+                        Después de crear un pago, usa los botones <strong>PDF</strong> y <strong>Enviar</strong> en la tabla para generar el comprobante y enviarlo por correo.
+                    </span>
+                </div>
+            <table id="tablaPagosTrabajadores" class="premium-table display">
+                <thead>
+                <tr>
+                    <th>Trabajador</th>
+                    <th>Período</th>
+                    <th>Actividad</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${pagos}">
+                    <td th:text="${p.trabajadorNombre}">Nombre</td>
+                    <td>
+                        <span class="block text-xs text-surface-700" th:if="${p.horasTrabajadas != null}">
+                            <strong th:text="${p.horasTrabajadas}">0</strong> h trabajadas
+                        </span>
+                        <span class="block text-xs text-surface-500" th:if="${p.eventosAtendidos != null}">
+                            <strong th:text="${p.eventosAtendidos}">0</strong> eventos atendidos
+                        </span>
+                    </td>
+                    <td>
+                        <span class="block text-xs font-semibold text-surface-900"
+                              th:text="${p.periodoInicio} + ' a ' + ${p.periodoFin}">Periodo</span>
+                        <span class="block text-[10px] font-bold text-surface-400 uppercase tracking-widest"
+                              th:text="${p.periodoTipo}">MENSUAL</span>
+                    </td>
+                    <td th:text="'$' + ${#numbers.formatInteger(p.monto, 1, 'POINT')}">$0</td>
+                    <td>
+                        <span th:text="${p.estado}"
+                              th:class="${p.estado == 'ENVIADO' ? 'px-2 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-widest' :
+                                         'px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-widest'}">
+                            GENERADO
+                        </span>
+                    </td>
+                    <td th:text="${#temporals.format(p.fechaCreacion, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <a th:href="@{'/admin/pagos-trabajadores/' + ${p.id} + '/pdf'}"
+                               class="text-xs font-bold text-surface-700 bg-surface-100 px-3 py-1.5 rounded-lg border border-surface-200 hover:bg-surface-200 transition">
+                                PDF
+                            </a>
+                            <button type="button"
+                                    th:attr="data-id=${p.id}"
+                                    onclick="enviarPagoTrabajador(this)"
+                                    class="text-xs font-bold text-furent-600 bg-furent-50 px-3 py-1.5 rounded-lg border border-furent-200 hover:bg-furent-100 transition">
+                                Enviar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal nuevo pago -->
+        <div id="nuevoPagoModal"
+             class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-surface-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-surface-900">Nuevo pago a trabajador</h2>
+                    <button type="button" class="text-surface-400 hover:text-surface-600"
+                            onclick="document.getElementById('nuevoPagoModal').classList.add('hidden')">
+                        ✕
+                    </button>
+                </div>
+                <form th:action="@{/admin/pagos-trabajadores}" method="post" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Nombre completo</label>
+                            <input name="trabajadorNombre" type="text" required
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Correo</label>
+                            <input name="trabajadorEmail" type="email" required
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Tipo de período</label>
+                            <select name="periodoTipo" class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                                <option value="MENSUAL">Mensual</option>
+                                <option value="QUINCENAL">Quincenal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Desde</label>
+                            <input name="periodoInicio" type="date" required
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Hasta</label>
+                            <input name="periodoFin" type="date" required
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Rol / cargo</label>
+                            <input name="trabajadorRol" type="text"
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Horas trabajadas</label>
+                            <input name="horasTrabajadas" type="number" min="0"
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Eventos atendidos</label>
+                            <input name="eventosAtendidos" type="number" min="0"
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Tarifa por hora (opcional)</label>
+                            <input name="tarifaHora" type="number" step="0.01" min="0"
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-surface-600 mb-1">Monto total pagado</label>
+                            <input name="monto" type="number" step="0.01" min="0" required
+                                   class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-surface-600 mb-1">Notas (opcional)</label>
+                        <textarea name="notas" rows="3"
+                                  class="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <button type="button"
+                                class="px-4 py-2 text-xs font-semibold text-surface-500 bg-surface-100 rounded-lg hover:bg-surface-200"
+                                onclick="document.getElementById('nuevoPagoModal').classList.add('hidden')">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2 text-xs font-bold text-white bg-furent-600 rounded-lg hover:bg-furent-700">
+                            Guardar y generar PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                var defaultOrder = [4, 'desc'];
+                $('#tablaPagosTrabajadores').DataTable({
+                    order: [defaultOrder],
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                    }
+                });
+            });
+
+            function enviarPagoTrabajador(btn) {
+                var id = btn.getAttribute('data-id');
+                if (!id) return;
+
+                var csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+                var csrfToken = $('meta[name="_csrf"]').attr('content');
+
+                $.ajax({
+                    url: '/admin/pagos-trabajadores/' + id + '/enviar',
+                    method: 'POST',
+                    beforeSend: function (xhr) {
+                        if (csrfHeader && csrfToken) {
+                            xhr.setRequestHeader(csrfHeader, csrfToken);
+                        }
+                    },
+                    success: function (resp) {
+                        Swal.fire({
+                            icon: resp.success ? 'success' : 'error',
+                            title: resp.success ? 'Enviado' : 'Error',
+                            text: resp.message,
+                            timer: 2500,
+                            showConfirmButton: false
+                        });
+                        if (resp.success) {
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1200);
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'No se pudo enviar el correo.',
+                            timer: 2500,
+                            showConfirmButton: false
+                        });
+                    }
+                });
+            }
+        </script>
+    </div>
+</main>
+</body>
+</html>
+

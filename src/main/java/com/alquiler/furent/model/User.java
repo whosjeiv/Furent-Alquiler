@@ -40,6 +40,7 @@ public class User {
     private String idioma = "es";
     private String moneda = "COP";
     private String apariencia = "light";
+    private boolean notificacionesEmail = true;
 
     public User() {
         this.fechaCreacion = LocalDateTime.now();
@@ -204,5 +205,13 @@ public class User {
 
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    public boolean isNotificacionesEmail() {
+        return notificacionesEmail;
+    }
+
+    public void setNotificacionesEmail(boolean notificacionesEmail) {
+        this.notificacionesEmail = notificacionesEmail;
     }
 }

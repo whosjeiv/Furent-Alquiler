@@ -342,6 +342,21 @@ public class PageController {
         return "redirect:/configuracion";
     }
 
+    @PostMapping("/configuracion/notificaciones")
+    public String updateNotificaciones(@RequestParam(required = false) String notificacionesEmail,
+            Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            if (optUser.isPresent()) {
+                User user = optUser.get();
+                user.setNotificacionesEmail("on".equals(notificacionesEmail));
+                userService.save(user);
+                redirectAttributes.addFlashAttribute("success", "Preferencias de notificación actualizadas");
+            }
+        }
+        return "redirect:/configuracion";
+    }
+
     // === Password Reset ===
 
     @GetMapping("/password-reset")

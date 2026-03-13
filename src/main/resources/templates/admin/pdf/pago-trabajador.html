@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Comprobante de Pago Trabajador</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; margin: 0; padding: 0; color: #111827; }
+        .page { padding: 32px; }
+        .header { text-align: center; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 3px solid #7c3aed; }
+        .header h1 { margin: 0; font-size: 22px; color: #7c3aed; letter-spacing: 1px; }
+        .header p { margin: 4px 0 0; font-size: 11px; color: #6b7280; }
+        .section { margin-bottom: 20px; }
+        .section-title {
+            font-size: 11px; font-weight: bold; margin-bottom: 8px;
+            text-transform: uppercase; color: #7c3aed; letter-spacing: 1px;
+            padding-bottom: 4px; border-bottom: 1px solid #e5e7eb;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 7px 10px; border: 1px solid #e5e7eb; font-size: 11px; }
+        th { background-color: #f5f3ff; text-align: left; color: #4b5563; font-weight: bold; width: 35%; }
+        td { color: #111827; }
+        .amount { font-size: 15px; font-weight: bold; color: #7c3aed; }
+        .muted { color: #6b7280; font-size: 10px; }
+        .footer { text-align: center; margin-top: 32px; padding-top: 14px; border-top: 1px solid #e5e7eb; }
+        .footer p { font-size: 10px; color: #9ca3af; margin: 2px 0; }
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 10px;
+            font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-generado { background-color: #fef3c7; color: #92400e; }
+        .badge-enviado { background-color: #d1fae5; color: #065f46; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="header">
+        <h1>COMPROBANTE DE PAGO</h1>
+        <p>Furent — Alquiler de Mobiliarios para Eventos</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Datos del trabajador</div>
+        <table>
+            <tr>
+                <th>Nombre</th>
+                <td th:text="${pago.trabajadorNombre}">Nombre Apellido</td>
+            </tr>
+            <tr>
+                <th>Correo</th>
+                <td th:text="${pago.trabajadorEmail}">correo@ejemplo.com</td>
+            </tr>
+            <tr th:if="${pago.trabajadorRol != null and !pago.trabajadorRol.isEmpty()}">
+                <th>Rol / cargo</th>
+                <td th:text="${pago.trabajadorRol}">Montajista</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Período de pago</div>
+        <table>
+            <tr>
+                <th>Tipo</th>
+                <td th:text="${pago.periodoTipo}">MENSUAL</td>
+            </tr>
+            <tr>
+                <th>Desde</th>
+                <td th:text="${periodoInicioStr}">2025-01-01</td>
+            </tr>
+            <tr>
+                <th>Hasta</th>
+                <td th:text="${periodoFinStr}">2025-01-31</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Resumen económico</div>
+        <table>
+            <tr>
+                <th>Monto</th>
+                <td class="amount" th:text="${montoStr}">$0</td>
+            </tr>
+            <tr th:if="${pago.tarifaHora != null}">
+                <th>Tarifa por hora</th>
+                <td th:text="${tarifaHoraStr}">$0</td>
+            </tr>
+            <tr>
+                <th>Moneda</th>
+                <td th:text="${pago.moneda != null ? pago.moneda : 'USD'}">USD</td>
+            </tr>
+            <tr>
+                <th>Estado</th>
+                <td>
+                    <span class="badge"
+                          th:classappend="${pago.estado == 'ENVIADO' ? 'badge-enviado' : 'badge-generado'}"
+                          th:text="${pago.estado}">GENERADO</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Fecha emisión</th>
+                <td th:text="${fechaCreacionStr}">01/01/2025 10:00</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section" th:if="${pago.horasTrabajadas != null or pago.eventosAtendidos != null}">
+        <div class="section-title">Detalle de actividad</div>
+        <table>
+            <tr th:if="${pago.horasTrabajadas != null}">
+                <th>Horas trabajadas</th>
+                <td th:text="${pago.horasTrabajadas}">0</td>
+            </tr>
+            <tr th:if="${pago.eventosAtendidos != null}">
+                <th>Eventos atendidos</th>
+                <td th:text="${pago.eventosAtendidos}">0</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section" th:if="${pago.notas != null and !pago.notas.isEmpty()}">
+        <div class="section-title">Notas</div>
+        <p class="muted" th:text="${pago.notas}">Notas adicionales sobre el pago.</p>
+    </div>
+
+    <div class="footer">
+        <p>Este documento ha sido generado automáticamente desde el panel de administración de Furent.</p>
+        <p>Para cualquier consulta, comunícate con tu supervisor o al correo de administración.</p>
+    </div>
+</div>
+</body>
+</html>

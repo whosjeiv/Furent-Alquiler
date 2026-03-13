@@ -37,16 +37,19 @@ public class ApiController {
     private final ProductService productService;
     private final NotificationService notificationService;
     private final CouponService couponService;
+    private final EmailService emailService;
 
     public ApiController(ReservationService reservationService, UserService userService,
             AuditLogService auditLogService, ProductService productService,
-            NotificationService notificationService, CouponService couponService) {
+            NotificationService notificationService, CouponService couponService,
+            EmailService emailService) {
         this.reservationService = reservationService;
         this.userService = userService;
         this.auditLogService = auditLogService;
         this.productService = productService;
         this.notificationService = notificationService;
         this.couponService = couponService;
+        this.emailService = emailService;
     }
 
     // === BÚSQUEDA DE PRODUCTOS ===
@@ -295,6 +298,10 @@ public class ApiController {
         notificationService.notify(user.getId(), "Cotización Creada",
                 "Tu cotización ha sido enviada exitosamente y está pendiente de revisión.",
                 "SUCCESS", "/panel");
+
+        if (user.isNotificacionesEmail()) {
+            emailService.sendReservationConfirmation(user.getEmail(), res.getId(), res.getTotal());
+        }
 
         log.info("Cotización creada por {} - Total: ${}", user.getEmail(), String.format("%,.0f", res.getTotal()));
 

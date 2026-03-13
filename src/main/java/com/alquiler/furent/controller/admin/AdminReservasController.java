@@ -23,13 +23,18 @@ public class AdminReservasController {
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final PdfService pdfService;
+    private final UserService userService;
+    private final EmailService emailService;
 
     public AdminReservasController(ReservationService reservationService, AuditLogService auditLogService,
-            NotificationService notificationService, PdfService pdfService) {
+            NotificationService notificationService, PdfService pdfService,
+            UserService userService, EmailService emailService) {
         this.reservationService = reservationService;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
         this.pdfService = pdfService;
+        this.userService = userService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/reservas")
@@ -81,6 +86,12 @@ public class AdminReservasController {
             if (res != null) {
                 notificationService.notify(res.getUsuarioId(), "Reserva Actualizada",
                         "Tu reserva ha cambiado a estado: " + estado, "INFO", "/panel");
+
+                userService.findById(res.getUsuarioId()).ifPresent(user -> {
+                    if (user.isNotificacionesEmail()) {
+                        emailService.sendStatusChange(user.getEmail(), res.getId(), estado);
+                    }
+                });
             }
             redirectAttributes.addFlashAttribute("success", "Estado de reserva actualizado a " + estado);
         } catch (com.alquiler.furent.exception.InvalidOperationException e) {

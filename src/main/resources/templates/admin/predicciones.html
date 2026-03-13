@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'predicciones')}">
+<head>
+    <title>Predicciones — Furent Admin</title>
+</head>
+<body>
+<main>
+    <div class="px-10 py-8 max-w-[90rem] mx-auto">
+        <div class="flex items-center justify-between mb-10">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Modelo Predictivo de Demanda</h1>
+                <p class="text-sm text-surface-500 mt-1">
+                    Proyección sencilla de demanda de mobiliario (unidades reservadas) basada en los últimos 60 días de reservas.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div class="lg:col-span-2 bg-white rounded-3xl p-8 shadow-sm border border-surface-200">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-surface-900">Demanda histórica vs proyección</h2>
+                        <p class="text-xs text-surface-500 font-medium">
+                            Serie diaria agregada; la línea punteada representa la estimación.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest">
+                        <span class="flex items-center gap-1 text-furent-600">
+                            <span class="w-3 h-0.5 bg-furent-500 rounded-full"></span> Histórico
+                        </span>
+                        <span class="flex items-center gap-1 text-surface-500">
+                            <span class="w-3 h-0.5 border border-dashed border-surface-400 rounded-full"></span> Proyección
+                        </span>
+                    </div>
+                </div>
+                <div class="h-[320px] w-full">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-surface-200">
+                    <h3 class="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">
+                        Resumen de proyección (14 días)
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-surface-500 font-medium">Unidades esperadas</span>
+                            <span class="text-base font-extrabold text-furent-600"
+                                  th:text="${#numbers.formatInteger(#aggregates.sum(forecastData.values()), 1, 'POINT')}">
+                                0
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-surface-500 font-medium">Promedio diario estimado</span>
+                            <span class="text-sm font-bold text-surface-900"
+                                  th:text="${#numbers.formatInteger(#aggregates.sum(forecastData.values()) / (forecastData.size() == 0 ? 1 : forecastData.size()), 1, 'POINT')}">
+                                0
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-surface-900 rounded-3xl p-6 border border-surface-800 text-white">
+                    <h3 class="text-xs font-bold text-surface-400 uppercase tracking-widest mb-3">
+                        Notas del modelo
+                    </h3>
+                    <p class="text-xs text-surface-300 leading-relaxed">
+                        Este modelo usa una media móvil simple sobre los últimos 7 días de unidades reservadas
+                        para estimar la demanda de los siguientes 14 días. Es una guía rápida para logística y stock,
+                        no una predicción estadística avanzada.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener('DOMContentLoaded', function () {
+                const historyData = /*[[${historyData}]]*/ {};
+                const forecastData = /*[[${forecastData}]]*/ {};
+
+                const historyLabels = Object.keys(historyData);
+                const historyValues = Object.values(historyData);
+
+                const forecastLabels = Object.keys(forecastData);
+                const forecastValues = Object.values(forecastData);
+
+                const labels = historyLabels.concat(forecastLabels);
+                const historyLength = historyLabels.length;
+
+                const historyDataset = {
+                    label: 'Histórico',
+                    data: historyValues,
+                    borderColor: '#E07A3A',
+                    backgroundColor: 'rgba(224, 122, 58, 0.08)',
+                    borderWidth: 3,
+                    tension: 0.35,
+                    pointRadius: 0,
+                    fill: true
+                };
+
+                const forecastDataset = {
+                    label: 'Proyección',
+                    data: new Array(historyLength).fill(null).concat(forecastValues),
+                    borderColor: '#6b7280',
+                    borderDash: [6, 4],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    pointRadius: 0
+                };
+
+                const ctx = document.getElementById('forecastChart');
+                if (!ctx) return;
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [historyDataset, forecastDataset]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#18181b',
+                                titleFont: {family: 'Outfit', size: 12},
+                                bodyFont: {family: 'Outfit', size: 13, weight: 'bold'},
+                                padding: 10,
+                                cornerRadius: 10,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function (ctx) {
+                                        if (ctx.parsed.y == null) return '';
+                                        return ctx.parsed.y.toLocaleString() + ' unidades';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    font: {family: 'Outfit', size: 10},
+                                    color: '#9ca3af',
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                },
+                                grid: {display: false}
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    font: {family: 'Outfit', size: 11},
+                                    color: '#9ca3af',
+                                    callback: function (value) {
+                                        return value.toLocaleString();
+                                    }
+                                },
+                                grid: {color: '#e5e7eb'}
+                            }
+                        }
+                    }
+                });
+            });
+            /*]]>*/
+        </script>
+    </div>
+</main>
+</body>
+</html>
+

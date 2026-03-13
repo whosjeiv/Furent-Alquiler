@@ -245,6 +245,13 @@
                 <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008z" /></svg>
                 Logística
             </a>
+            <a th:href="@{/admin/predicciones}" class="nav-link flex items-center gap-3 mx-4 px-4 py-3 rounded-xl transition-all duration-300 group" th:classappend="${activeMenu == 'predicciones' ? 'active' : ''}">
+                <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 17.25l6.75-6.75 4.5 4.5L21 8.25" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18v15H3z" />
+                </svg>
+                Predicciones
+            </a>
             
             <p class="px-5 text-[10px] font-semibold text-surface-500 uppercase tracking-widest mt-6 mb-2">Comunidad</p>
             <a th:href="@{/admin/usuarios}" class="nav-link flex items-center gap-3 mx-4 px-4 py-3 rounded-xl transition-all duration-300 group" th:classappend="${activeMenu == 'usuarios' ? 'active' : ''}">
@@ -261,6 +268,13 @@
             <a th:href="@{/admin/cupones}" class="nav-link flex items-center gap-3 mx-4 px-4 py-3 rounded-xl transition-all duration-300 group" th:classappend="${activeMenu == 'cupones' ? 'active' : ''}">
                 <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
                 Cupones
+            </a>
+            <a th:href="@{/admin/pagos-trabajadores}" class="nav-link flex items-center gap-3 mx-4 px-4 py-3 rounded-xl transition-all duration-300 group" th:classappend="${activeMenu == 'pagos-trabajadores' ? 'active' : ''}">
+                <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 1.343-3 3v5h6v-5c0-1.657-1.343-3-3-3z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 11h14M7 21h10a2 2 0 0 0 2-2v-1H5v1a2 2 0 0 0 2 2zM9 5h6m-5-2h4"/>
+                </svg>
+                Pagos Trabajadores
             </a>
         </nav>
 
