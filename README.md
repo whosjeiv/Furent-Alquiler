@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🪑 Furent — Plataforma de Alquiler de Mobiliarios
 
 [![CI](https://github.com/tu-usuario/furent/actions/workflows/ci.yml/badge.svg)](https://github.com/tu-usuario/furent/actions/workflows/ci.yml)
@@ -257,7 +256,3 @@ Activar perfil: `SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run`
 ## 📜 Licencia
 
 MIT © Furent
-=======
-# FURENT
-Programacion del proyecto FURENT - Alquiler de Mobiliarios
->>>>>>> abb589d02aa02c624115b133507a2c1ebb6fba25
