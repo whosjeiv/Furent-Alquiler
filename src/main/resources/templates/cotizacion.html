@@ -424,6 +424,7 @@
                                 <div><span class="text-surface-400">Invitados:</span> <span id="sumGuests" class="text-surface-900 font-medium ml-1">—</span></div>
                                 <div><span class="text-surface-400">Fecha:</span> <span id="sumDate" class="text-surface-900 font-medium ml-1">—</span></div>
                                 <div><span class="text-surface-400">Devolución:</span> <span id="sumDateEnd" class="text-surface-900 font-medium ml-1">—</span></div>
+                                <div><span class="text-surface-400">Hora entrega:</span> <span id="sumTime" class="text-surface-900 font-medium ml-1">—</span></div>
                                 <div class="col-span-2"><span class="text-surface-400">Dirección:</span> <span id="sumAddress" class="text-surface-900 font-medium ml-1">—</span></div>
                                 <div class="col-span-2"><span class="text-surface-400">Método de pago:</span> <span id="sumPayment" class="text-surface-900 font-medium ml-1">—</span></div>
                             </div>
@@ -561,6 +562,27 @@
                     Swal.fire({icon:'error', title:'Bolsa vacía', text:'Agrega productos a tu bolsa antes de continuar.'});
                     return;
                 }
+                
+                // VALIDACIÓN DE STOCK: No dejar pasar si hay items que exceden el maxStock
+                let stockError = false;
+                let errorMsg = '';
+                bag.forEach(item => {
+                    if (item.maxStock && item.qty > item.maxStock) {
+                        stockError = true;
+                        errorMsg += `<li>"${item.name}" (Pedido: ${item.qty}, Disponible: ${item.maxStock})</li>`;
+                    }
+                });
+                
+                if (stockError) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Stock insuficiente detectado',
+                        html: `<div class="text-left mt-2"><p class="text-sm mb-3">Los siguientes productos exceden el inventario disponible:</p><ul class="text-xs list-disc pl-5 space-y-1 font-bold text-red-600">${errorMsg}</ul><p class="text-xs text-surface-500 mt-4">Por favor, ajusta las cantidades antes de continuar.</p></div>`,
+                        confirmButtonColor: '#E07A3A',
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                    return;
+                }
             }
             if (currentStep === 2) {
                 const fields = [
@@ -647,13 +669,20 @@
     }
 
     function fillSummary() {
-        document.getElementById('sumType').textContent = document.getElementById('evtType').value || '—';
-        document.getElementById('sumGuests').textContent = document.getElementById('evtGuests').value || '—';
-        document.getElementById('sumDate').textContent = document.getElementById('evtDate').value || '—';
-        document.getElementById('sumDateEnd').textContent = document.getElementById('evtDateEnd').value || '—';
-        document.getElementById('sumTime').textContent = document.getElementById('evtTime').value || '—';
-        document.getElementById('sumAddress').textContent = document.getElementById('evtAddress').value || '—';
-        document.getElementById('sumPayment').textContent = document.querySelector('input[name="paymentMethod"]:checked').value || '—';
+        const setSafeText = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val || '—';
+        };
+
+        setSafeText('sumType', document.getElementById('evtType').value);
+        setSafeText('sumGuests', document.getElementById('evtGuests').value);
+        setSafeText('sumDate', document.getElementById('evtDate').value);
+        setSafeText('sumDateEnd', document.getElementById('evtDateEnd').value);
+        setSafeText('sumTime', document.getElementById('evtTime').value);
+        setSafeText('sumAddress', document.getElementById('evtAddress').value);
+        
+        const paymentInput = document.querySelector('input[name="paymentMethod"]:checked');
+        setSafeText('sumPayment', paymentInput ? paymentInput.value : '');
         
         let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
         let totalPerDay=0;

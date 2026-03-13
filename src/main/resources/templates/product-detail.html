@@ -790,7 +790,7 @@
                                                 <span class="text-[10px] font-black text-surface-300 uppercase tracking-[0.2em] leading-none qty-label">CANTIDAD</span>
                                                 <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm rounded-2xl p-1 border border-surface-100 shadow-sm">
                                                     <button type="button" id="qtyDecrease" class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-surface-600 hover:text-furent-600 hover:bg-furent-50 transition-all text-xl shadow-sm">−</button>
-                                                    <input type="number" id="quantity" value="1" th:min="${product.minQuantity}" th:max="${product.maxQuantity}" class="w-14 text-center bg-transparent border-none text-base font-black text-surface-800 outline-none focus:ring-0">
+                                                    <input type="number" id="quantity" value="1" th:min="${product.minQuantity}" th:max="${product.stock}" class="w-14 text-center bg-transparent border-none text-base font-black text-surface-800 outline-none focus:ring-0">
                                                     <button type="button" id="qtyIncrease" class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-surface-600 hover:text-furent-600 hover:bg-furent-50 transition-all text-xl shadow-sm">+</button>
                                                 </div>
                                             </div>
@@ -1162,7 +1162,21 @@
                 updateTotal();
             }
         });
-        qtyInput.addEventListener('input', updateTotal);
+        qtyInput.addEventListener('input', () => {
+            const max = parseInt(qtyInput.max) || 999;
+            if (parseInt(qtyInput.value) > max) {
+                qtyInput.value = max;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Stock limitado',
+                    text: `La cantidad máxima disponible es ${max}`,
+                    confirmButtonColor: '#E07A3A',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+            updateTotal();
+        });
         startDate.addEventListener('change', () => {
             if (startDate.value) endDate.min = startDate.value;
             updateTotal();
@@ -1239,7 +1253,22 @@
                 const action = qtyBtn.dataset.action;
                 const item = bag.find(i => i.id == id);
                 if (item) {
-                    if (action === 'increase') { item.qty++; bagCount.style.animation = 'bagBounce 0.3s ease'; setTimeout(() => bagCount.style.animation = '', 300); }
+                    if (action === 'increase') { 
+                        if (item.maxStock && item.qty >= item.maxStock) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Límite de stock',
+                                text: `Solo hay ${item.maxStock} unidades disponibles de "${item.name}".`,
+                                confirmButtonColor: '#E07A3A',
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        } else {
+                            item.qty++; 
+                            bagCount.style.animation = 'bagBounce 0.3s ease'; 
+                            setTimeout(() => bagCount.style.animation = '', 300); 
+                        }
+                    }
                     else if (action === 'decrease' && item.qty > 1) item.qty--;
                     else if (action === 'decrease' && item.qty <= 1) bag = bag.filter(i => i.id != id);
                 }
@@ -1266,10 +1295,21 @@
         // === Reserve Now Button ===
         document.getElementById('reserveNowBtn').addEventListener('click', () => {
             const qty = parseInt(qtyInput.value) || 1;
+            
+            if (qty > productData.maxStock) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Stock insuficiente',
+                    text: `Lo sentimos, solo contamos con ${productData.maxStock} unidades de este producto.`,
+                    confirmButtonColor: '#E07A3A'
+                });
+                return;
+            }
+
             const existing = bag.find(i => i.id == productData.id);
             if (existing) {
                 existing.qty = qty;
-                existing.maxStock = productData.maxStock; // Ensure updated max stock
+                existing.maxStock = productData.maxStock; 
             } else {
                 bag.push({ 
                     id: String(productData.id), 

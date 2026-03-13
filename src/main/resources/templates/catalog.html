@@ -654,7 +654,22 @@
                 const action = qtyBtn.dataset.action;
                 const item = bag.find(i => i.id === id);
                 if (item) {
-                    if (action === 'increase') { item.qty++; bagCount.style.animation = 'bagBounce 0.3s ease'; setTimeout(() => bagCount.style.animation = '', 300); }
+                    if (action === 'increase') { 
+                        if (item.maxStock && item.qty >= item.maxStock) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Límite de stock',
+                                text: `Solo hay ${item.maxStock} unidades disponibles de "${item.name}".`,
+                                confirmButtonColor: '#E07A3A',
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        } else {
+                            item.qty++; 
+                            bagCount.style.animation = 'bagBounce 0.3s ease'; 
+                            setTimeout(() => bagCount.style.animation = '', 300); 
+                        }
+                    }
                     else if (action === 'decrease' && item.qty > 1) item.qty--;
                     else if (action === 'decrease' && item.qty <= 1) bag = bag.filter(i => i.id !== id);
                 }
