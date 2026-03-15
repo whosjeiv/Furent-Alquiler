@@ -45,6 +45,8 @@ public class Reservation {
     private String notasEvento;
     private String tipoEvento;
     private String horaEntrega; // HH:mm — hora preferida de entrega logística
+    /** Código único para pago en efectivo en oficina (ej. FRNT-A1B2C3D4). Se envía por correo. */
+    private String codigoPagoEfectivo;
     @Indexed
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
@@ -330,5 +332,13 @@ public class Reservation {
 
     public void setHoraEntrega(String horaEntrega) {
         this.horaEntrega = horaEntrega;
+    }
+
+    public String getCodigoPagoEfectivo() {
+        return codigoPagoEfectivo;
+    }
+
+    public void setCodigoPagoEfectivo(String codigoPagoEfectivo) {
+        this.codigoPagoEfectivo = codigoPagoEfectivo;
     }
 }

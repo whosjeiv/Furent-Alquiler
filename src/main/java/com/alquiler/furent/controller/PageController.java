@@ -4,6 +4,8 @@ import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.User;
 import com.alquiler.furent.model.Review;
+import com.alquiler.furent.repository.PendingCardPaymentRepository;
+import com.alquiler.furent.config.PayUProperties;
 import com.alquiler.furent.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +40,15 @@ public class PageController {
     private final ContactService contactService;
     private final NotificationService notificationService;
     private final PasswordResetService passwordResetService;
+    private final PendingCardPaymentRepository pendingCardPaymentRepository;
+    private final PayUService payUService;
+    private final PayUProperties payUProperties;
 
     public PageController(ProductService productService, ReservationService reservationService,
             UserService userService, PasswordEncoder passwordEncoder, ReviewService reviewService,
             ContactService contactService, NotificationService notificationService,
-            PasswordResetService passwordResetService) {
+            PasswordResetService passwordResetService, PendingCardPaymentRepository pendingCardPaymentRepository,
+            PayUService payUService, PayUProperties payUProperties) {
         this.productService = productService;
         this.reservationService = reservationService;
         this.userService = userService;
@@ -51,6 +57,9 @@ public class PageController {
         this.contactService = contactService;
         this.notificationService = notificationService;
         this.passwordResetService = passwordResetService;
+        this.pendingCardPaymentRepository = pendingCardPaymentRepository;
+        this.payUService = payUService;
+        this.payUProperties = payUProperties;
     }
 
     @GetMapping("/")
@@ -189,6 +198,62 @@ public class PageController {
         model.addAttribute("completedCount", completed.size());
 
         return "user-panel";
+    }
+
+    @GetMapping("/pago/tarjeta")
+    public String pagoTarjeta(@RequestParam(required = false) String reservaId,
+                              @RequestParam(required = false) String pendingId,
+                              Model model, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            String q = pendingId != null ? "pendingId=" + pendingId : (reservaId != null ? "reservaId=" + reservaId : "");
+            return "redirect:/login?redirect=/pago/tarjeta" + (q.isEmpty() ? "" : "?" + q);
+        }
+        Optional<User> userOpt = userService.findByEmail(auth.getName());
+        if (userOpt.isEmpty()) return "redirect:/login";
+
+        if (pendingId != null && (reservaId == null || reservaId.isBlank())) {
+            var pendingOpt = pendingCardPaymentRepository.findById(pendingId);
+            if (pendingOpt.isEmpty() || !pendingOpt.get().getUsuarioId().equals(userOpt.get().getId())) {
+                return "redirect:/panel";
+            }
+            var pending = pendingOpt.get();
+            model.addAttribute("pendingId", pendingId);
+            model.addAttribute("total", pending.getTotal());
+            model.addAttribute("reservaId", null);
+            model.addAttribute("reserva", null);
+        } else if (reservaId != null && !reservaId.isBlank()) {
+            Optional<Reservation> resOpt = reservationService.getById(reservaId);
+            if (resOpt.isEmpty() || !resOpt.get().getUsuarioId().equals(userOpt.get().getId())) {
+                return "redirect:/panel";
+            }
+            model.addAttribute("reservaId", reservaId);
+            model.addAttribute("reserva", resOpt.get());
+            model.addAttribute("pendingId", null);
+            model.addAttribute("total", resOpt.get().getTotal());
+        } else {
+            return "redirect:/panel";
+        }
+
+        // Configuración para PayU
+        String referenceCode = pendingId != null ? pendingId : reservaId;
+        BigDecimal total = (BigDecimal) model.getAttribute("total");
+        String signature = payUService.generateSignature(referenceCode, total, payUProperties.getCurrency());
+        String amountFormatted = payUService.getAmountFormatted(total);
+        
+        model.addAttribute("payuUrl", payUProperties.getUrl());
+        model.addAttribute("payuApiKey", payUProperties.getApiKey());
+        model.addAttribute("payuMerchantId", payUProperties.getMerchantId());
+        model.addAttribute("payuAccountId", payUProperties.getAccountId());
+        model.addAttribute("payuCurrency", payUProperties.getCurrency());
+        model.addAttribute("payuReferenceCode", referenceCode);
+        model.addAttribute("payuAmount", amountFormatted);
+        model.addAttribute("payuSignature", signature);
+        model.addAttribute("payuTest", payUProperties.getTest());
+        model.addAttribute("payuBuyerEmail", userOpt.get().getEmail());
+        model.addAttribute("payuBuyerFullName", userOpt.get().getNombreCompleto());
+
+        model.addAttribute("pageTitle", "Pago con tarjeta");
+        return "pago-tarjeta";
     }
 
     @GetMapping("/nosotros")

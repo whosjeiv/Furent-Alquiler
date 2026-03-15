@@ -23,6 +23,15 @@ public class FeatureFlags {
     private boolean reviewsEnabled = true;
     private boolean exportPdfEnabled = true;
     private boolean analyticsEnabled = true;
+    private boolean payuEnabled = true;
+
+    public boolean isPayuEnabled() {
+        return payuEnabled;
+    }
+
+    public void setPayuEnabled(boolean payuEnabled) {
+        this.payuEnabled = payuEnabled;
+    }
 
     public boolean isCacheEnabled() {
         return cacheEnabled;

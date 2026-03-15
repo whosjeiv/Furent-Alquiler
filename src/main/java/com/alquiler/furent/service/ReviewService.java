@@ -4,7 +4,6 @@ import com.alquiler.furent.config.TenantContext;
 import com.alquiler.furent.config.MetricsConfig;
 import com.alquiler.furent.event.EventPublisher;
 import com.alquiler.furent.event.ReviewCreatedEvent;
-import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Review;
 import com.alquiler.furent.repository.ProductRepository;
 import com.alquiler.furent.repository.ReviewRepository;

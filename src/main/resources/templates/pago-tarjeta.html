@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+        <div class="max-w-lg mx-auto px-4 py-12">
+            <div class="bg-white rounded-2xl shadow-soft border border-surface-100 p-6 sm:p-8">
+                <h1 class="text-xl font-bold text-surface-900 mb-1">Pago con tarjeta</h1>
+                <p class="text-sm text-surface-500 mb-6">
+                    <span th:if="${reservaId != null}">Reserva <span th:text="${reservaId}">—</span> · </span>
+                    Total: <span id="amount-display" th:text="'$' + ${#numbers.formatDecimal(total != null ? total : 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                </p>
+
+                <div id="payu-loading" class="text-center py-8 text-surface-500">
+                    <p class="mb-4">Serás redirigido a la pasarela segura de PayU para completar tu pago.</p>
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-furent-600 mx-auto"></div>
+                </div>
+
+                <form id="payu-form" th:action="${payuUrl}" method="post" class="hidden space-y-5">
+                    <!-- Parámetros requeridos por PayU Checkout Web -->
+                    <input name="merchantId"    type="hidden" th:value="${payuMerchantId}">
+                    <input name="accountId"     type="hidden" th:value="${payuAccountId}">
+                    <input name="description"   type="hidden" th:value="'Alquiler de Mobiliario Furent - Ref: ' + ${payuReferenceCode}">
+                    <input name="referenceCode" type="hidden" th:value="${payuReferenceCode}">
+                    <input name="amount"        type="hidden" th:value="${payuAmount}">
+                    <input name="tax"           type="hidden" value="0">
+                    <input name="taxReturnBase" type="hidden" value="0">
+                    <input name="currency"      type="hidden" th:value="${payuCurrency}">
+                    <input name="signature"     type="hidden" th:value="${payuSignature}">
+                    <input name="test"          type="hidden" th:value="${payuTest}">
+                    <input name="buyerEmail"    type="hidden" th:value="${payuBuyerEmail}">
+                    <input name="buyerFullName" type="hidden" th:value="${payuBuyerFullName}">
+                    
+                    <!-- URLs Dinámicas -->
+                    <input name="responseUrl"    type="hidden" th:value="${#request.requestURL.toString().replace('/pago/tarjeta', '/panel?pago=confirmado')}">
+                    <input name="confirmationUrl" type="hidden" th:value="${#request.requestURL.toString().replace('/pago/tarjeta', '/api/pagos/payu/confirmacion')}">
+
+                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-sm mb-4">
+                        <p>Al hacer clic en el botón, viajarás al sitio seguro de PayU.</p>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-semibold rounded-xl hover:from-furent-600 hover:to-furent-700 transition-all shadow-md">
+                        Pagar con PayU <span id="btn-amount" th:text="'$' + ${#numbers.formatDecimal(total != null ? total : 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                    </button>
+                </form>
+
+                <p class="text-xs text-surface-400 mt-4 text-center">Pago seguro procesado por PayU Latam.</p>
+                <a th:href="@{/panel}" class="block text-center text-sm text-furent-600 hover:text-furent-700 font-medium mt-4">Volver al panel</a>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+    <script>
+        (function() {
+            const form = document.getElementById('payu-form');
+            const loadingEl = document.getElementById('payu-loading');
+            
+            // Auto-submit para mejorar la UX (estilo redirección total)
+            setTimeout(() => {
+                loadingEl.innerHTML = '<p class="text-green-600 font-medium">Redirigiendo...</p>';
+                form.submit();
+            }, 1500);
+        })();
+    </script>
+</body>
+</html>

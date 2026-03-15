@@ -109,6 +109,22 @@ public class EmailService {
         sendHtmlEmail(adminEmail, "Nuevo mensaje de contacto: " + subject, html);
     }
 
+    /**
+     * Envía al cliente el código único para pagar en efectivo en oficina.
+     */
+    public void sendCashPaymentCodeEmail(String toEmail, String nombre, String codigoPago, BigDecimal total, String reservaId) {
+        String totalStr = total != null ? "$" + String.format("%,.0f", total) : "$0";
+        String subject = "Tu código de pago en efectivo — Furent";
+        String body = "Hola, <strong>" + nombre + "</strong>.<br><br>" +
+                "Tu reserva <strong>#" + reservaId + "</strong> está registrada con pago en efectivo.<br><br>" +
+                "Código para pagar en oficina: <strong style=\"font-size:1.2em;letter-spacing:2px;background:#f0fdf4;padding:8px 16px;border-radius:8px;\">" + codigoPago + "</strong><br><br>" +
+                "Total a pagar: <strong>" + totalStr + "</strong><br><br>" +
+                "Tienes <strong>48 horas</strong> para acercarte a nuestras instalaciones y realizar el pago con este código. " +
+                "Consérvalo y preséntalo al momento de pagar.";
+        String html = buildGenericHtmlEmail("Código de pago en efectivo", body);
+        sendHtmlEmail(toEmail, subject, html);
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     // Private helpers
     // ─────────────────────────────────────────────────────────────────────

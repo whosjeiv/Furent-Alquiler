@@ -6,7 +6,6 @@ import com.alquiler.furent.model.Payment;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.repository.PaymentRepository;
 import com.alquiler.furent.exception.ResourceNotFoundException;
-import com.alquiler.furent.exception.InvalidOperationException;
 import com.alquiler.furent.config.TenantContext;
 import com.alquiler.furent.config.MetricsConfig;
 import com.alquiler.furent.event.EventPublisher;
@@ -74,9 +73,26 @@ public class PaymentService {
     public Payment confirmPayment(String paymentId, String referencia, String adminUser) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago", paymentId));
+        return confirmPaymentInternal(payment, referencia, adminUser);
+    }
 
+    public void confirmPaymentByReference(String reservaId, String referencia, String adminUser) {
+        Optional<Payment> paymentOpt = getPaymentByReserva(reservaId);
+        if (paymentOpt.isPresent()) {
+            confirmPaymentInternal(paymentOpt.get(), referencia, adminUser);
+        } else {
+            // Si no existe el pago, lo inicializamos y confirmamos
+            Reservation res = reservationService.getById(reservaId).orElse(null);
+            if (res != null) {
+                Payment p = initPayment(reservaId, res.getUsuarioId(), "TARJETA");
+                confirmPaymentInternal(p, referencia, adminUser);
+            }
+        }
+    }
+
+    private Payment confirmPaymentInternal(Payment payment, String referencia, String adminUser) {
         if (!EstadoPago.PENDIENTE.name().equals(payment.getEstado())) {
-            throw new InvalidOperationException("Solo se pueden confirmar pagos pendientes");
+            return payment;
         }
 
         payment.setEstado(EstadoPago.PAGADO.name());
@@ -85,27 +101,25 @@ public class PaymentService {
 
         long start = System.nanoTime();
         Payment saved = paymentRepository.save(payment);
-        metricsConfig.getPaymentProcessingTime()
+        if (metricsConfig != null) {
+             metricsConfig.getPaymentProcessingTime()
                 .record(java.time.Duration.ofNanos(System.nanoTime() - start));
+             metricsConfig.getPaymentsCompleted().increment();
+             if (saved.getMonto() != null) {
+                 metricsConfig.addRevenue(saved.getMonto());
+             }
+        }
 
         // Actualizar estado de reserva
-        reservationService.updateStatus(payment.getReservaId(), EstadoReserva.ENTREGADA.name());
-
-        // Métricas: pago confirmado + ingresos
-        metricsConfig.getPaymentsCompleted().increment();
-        if (saved.getMonto() != null) {
-            metricsConfig.addRevenue(saved.getMonto());
-        }
+        reservationService.updateStatus(payment.getReservaId(), EstadoReserva.CONFIRMADA.name());
 
         // Notificar al usuario
         notificationService.notify(payment.getUsuarioId(), "Pago Confirmado",
                 "Tu pago ha sido confirmado exitosamente. Tu reserva está activa.",
                 "SUCCESS", "/panel");
 
-        auditLogService.log(adminUser, "CONFIRMAR_PAGO", "PAGO", paymentId,
+        auditLogService.log(adminUser, "CONFIRMAR_PAGO", "PAGO", payment.getId(),
                 "Pago confirmado. Ref: " + referencia);
-
-        log.info("Pago confirmado: {} por admin: {}", paymentId, adminUser);
 
         // Publicar evento
         String tenantId = TenantContext.getCurrentTenant() != null ? TenantContext.getCurrentTenant() : "default";

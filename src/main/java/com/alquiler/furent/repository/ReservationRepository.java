@@ -19,4 +19,6 @@ public interface ReservationRepository extends MongoRepository<Reservation, Stri
     long countByEstado(String estado);
 
     List<Reservation> findByUsuarioIdAndEstado(String usuarioId, String estado);
+
+    java.util.Optional<Reservation> findByCodigoPagoEfectivo(String codigoPagoEfectivo);
 }

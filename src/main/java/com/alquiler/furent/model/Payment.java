@@ -21,6 +21,8 @@ public class Payment {
     private String estado;
     private String referencia;
     private String comprobante;
+    /** ID del PaymentIntent de Stripe cuando el pago es con tarjeta. */
+    private String stripePaymentIntentId;
     private LocalDateTime fechaPago;
     private LocalDateTime fechaCreacion;
 
@@ -115,5 +117,13 @@ public class Payment {
 
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
     }
 }
