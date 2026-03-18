@@ -4,474 +4,476 @@
     <title>Logística Operativa — Furent Admin</title>
 </head>
 <body>
-    <main>
-        <div class="px-6 sm:px-10 py-8 max-w-[90rem] mx-auto opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
-            
-            <!-- Dashboard Header -->
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 border-b border-surface-200 pb-6">
+<main>
+    <div class="px-4 sm:px-6 lg:px-8 py-6 max-w-[92rem] mx-auto opacity-0 animate-[fadeIn_0.45s_ease-out_forwards]">
+        <div class="bg-white border border-surface-200 rounded-3xl p-5 sm:p-6 shadow-sm mb-5">
+            <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
                 <div>
-                    <h1 class="text-3xl font-black text-surface-900 tracking-tight">Centro de Logística</h1>
-                    <p class="text-sm text-surface-500 font-medium mt-1">Planificación corporativa de entregas y retornos de mobiliario</p>
+                    <h1 class="text-2xl sm:text-3xl font-black text-surface-900 tracking-tight">Centro de Logística</h1>
+                    <p class="text-sm font-medium text-surface-500 mt-1">Vista operativa compacta para entregas, retornos y seguimiento diario</p>
                 </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <!-- View toggles with very rounded styling -->
-                    <div class="hidden md:flex bg-surface-100 p-1.5 rounded-full gap-1 border border-surface-200 shadow-sm">
-                         <button id="viewList" onclick="toggleView('list')" class="px-5 py-2 text-xs font-bold rounded-full text-surface-600 hover:text-surface-900 hover:bg-surface-200 transition-colors duration-300 focus:outline-none flex gap-2 items-center">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
-                            Lista Diaria
-                        </button>
-                        <button id="viewCal" onclick="toggleView('cal')" class="bg-white text-surface-900 shadow-sm border border-surface-200/60 px-5 py-2 text-xs font-bold rounded-full transition-colors duration-300 focus:outline-none flex gap-2 items-center">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-                            Calendario Mensual
-                        </button>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <div class="inline-flex items-center p-1 rounded-full border border-surface-200 bg-surface-100">
+                        <button id="viewCal" type="button" onclick="toggleView('cal')" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide bg-white text-surface-900 border border-surface-200">Calendario</button>
+                        <button id="viewList" type="button" onclick="toggleView('list')" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide text-surface-600 hover:text-surface-900">Lista mes</button>
                     </div>
-                
-                    <button onclick="window.print()" class="px-6 py-2.5 bg-white border border-surface-300 text-surface-800 rounded-full font-bold text-xs hover:bg-surface-50 hover:border-surface-400 transition-colors duration-300 flex items-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.821l.823-7.408a2.25 2.25 0 012.24-2.003h4.435a2.25 2.25 0 012.24 2.003l.823 7.408m-12.156 0h12.156m-12.156 0a2.25 2.25 0 00-2.25 2.25v.441c0 .194.013.388.04.58l1.01 7.203a2.25 2.25 0 002.24 1.936h10.83a2.25 2.25 0 002.24-1.936l1.01-7.203a2.25 2.25 0 00.04-.58v-.441a2.25 2.25 0 00-2.25-2.25m-12.156 0h12.156" /></svg>
-                        Plano Físico
+                    <button type="button" onclick="refreshToday(this)" id="btnRefresh" class="px-4 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-full text-[11px] font-black tracking-wide hover:bg-surface-50 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                        Actualizar
                     </button>
-                    <button type="button" onclick="generateRouteSheet()" class="px-6 py-2.5 bg-surface-900 border border-surface-900 text-white rounded-full font-bold text-xs hover:bg-surface-800 transition-colors duration-300 flex items-center gap-2 shadow-md">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
-                        Exportar Hoja de Ruta
+                    <button type="button" onclick="window.print()" class="px-4 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-full text-[11px] font-black tracking-wide hover:bg-surface-50 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 8.25V6A2.25 2.25 0 019 3.75h6A2.25 2.25 0 0117.25 6v2.25M6.75 15.75h10.5M6.75 12h10.5M5.25 8.25h13.5A2.25 2.25 0 0121 10.5v6A2.25 2.25 0 0118.75 18.75H5.25A2.25 2.25 0 013 16.5v-6a2.25 2.25 0 012.25-2.25Z"/></svg>
+                        Imprimir
+                    </button>
+                    <button type="button" onclick="generateRouteSheet()" class="px-4 py-2.5 bg-surface-900 border border-surface-900 text-white rounded-full text-[11px] font-black tracking-wide hover:bg-surface-800 transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5A3.375 3.375 0 0010.125 2.25H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625A1.125 1.125 0 004.5 3.375v17.25a1.125 1.125 0 001.125 1.125h12.75a1.125 1.125 0 001.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
+                        Exportar hoja de ruta
                     </button>
                 </div>
-            </div>
-
-            <!-- Main Layout Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 h-full">
-                
-                <!-- Left Column: KPIs & Agenda -->
-                <div class="lg:col-span-1 space-y-6 flex flex-col h-full shrink-0">
-                    
-                    <!-- Solid KPIs with deeply rounded corners -->
-                    <div class="flex flex-col sm:flex-row lg:flex-col gap-4">
-                        <div class="bg-blue-600 p-7 rounded-[2.5rem] shadow-sm flex-1 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
-                            <div class="absolute right-0 top-0 opacity-10">
-                                <svg class="w-32 h-32 -mt-4 -mr-4 text-white" fill="none" stroke="currentColor" stroke-width="4" viewBox="0 0 24 24"><path d="M8.25 18.75a1.5 1.5 0 01-3 0M11.25 18.75a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375M17.25 23.25a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0M5.625 2.25c-.621 0-1.125.504-1.125 1.125" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </div>
-                            <div class="relative z-10 flex items-center justify-between mb-6">
-                                <div class="w-12 h-12 rounded-[1.25rem] bg-blue-500 flex items-center justify-center text-white shrink-0 shadow-inner">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
-                                </div>
-                                <span class="bg-blue-800 text-blue-100 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Pendientes</span>
-                            </div>
-                            <div class="relative z-10">
-                                <h3 class="text-5xl font-black text-white leading-none mb-1 tracking-tight" id="entregasHoyCount">0</h3>
-                                <p class="text-xs font-bold text-blue-200 uppercase tracking-widest pl-1">Entregas</p>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-amber-500 p-7 rounded-[2.5rem] shadow-sm flex-1 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden">
-                            <div class="absolute right-0 top-0 opacity-10">
-                                <svg class="w-32 h-32 -mt-4 -mr-4 text-white" fill="none" stroke="currentColor" stroke-width="4" viewBox="0 0 24 24"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992M4.031 9.865a8.25 8.25 0 0113.803-3.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </div>
-                            <div class="relative z-10 flex items-center justify-between mb-6">
-                                <div class="w-12 h-12 rounded-[1.25rem] bg-amber-400 flex items-center justify-center text-white shrink-0 shadow-inner">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-                                </div>
-                                <span class="bg-amber-700 text-amber-100 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Pendientes</span>
-                            </div>
-                            <div class="relative z-10">
-                                <h3 class="text-5xl font-black text-white leading-none mb-1 tracking-tight" id="retornosHoyCount">0</h3>
-                                <p class="text-xs font-bold text-amber-100 uppercase tracking-widest pl-1">Retornos</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Clean Agenda List deeply rounded -->
-                    <div class="bg-white rounded-[2rem] shadow-sm border border-surface-200 flex flex-col flex-1 min-h-[500px] overflow-hidden">
-                        <div class="bg-surface-50 px-8 py-6 border-b border-surface-200 flex flex-col gap-4">
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-xs font-black text-surface-900 uppercase tracking-widest flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-surface-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    Operaciones Activas
-                                </h2>
-                                <button onclick="refreshToday(this)" class="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-surface-900 transition-colors bg-white border border-surface-200 rounded-full shadow-sm focus:outline-none" title="Actualizar">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-                                </button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <input id="logisticaDate" type="date" class="border border-surface-200 shadow-inner rounded-full text-xs px-4 py-2.5 font-bold bg-white text-surface-900 focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 w-full transition-colors" />
-                                <select id="logisticaTipoFiltro" class="border border-surface-200 shadow-inner rounded-full text-xs px-4 py-2.5 font-bold bg-white text-surface-900 focus:outline-none focus:ring-2 focus:ring-surface-900 focus:border-surface-900 w-full transition-colors appearance-none">
-                                    <option value="todos">Cualquier tipo</option>
-                                    <option value="entregas">Sólo Entregas</option>
-                                    <option value="retornos">Sólo Retornos</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- List Container -->
-                        <div class="flex-1 overflow-y-auto bg-surface-50/50 p-5 space-y-4 custom-scrollbar" id="todayOperations">
-                            <!-- Populated by JS -->
-                            <div class="text-center py-10 opacity-70">
-                                <div class="w-8 h-8 rounded-full border-2 border-surface-300 border-t-surface-900 animate-spin mx-auto mb-3"></div>
-                                <p class="text-[10px] font-black text-surface-500 uppercase tracking-widest">Sincronizando Agenda...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column: Calendar deeply rounded -->
-                <div class="lg:col-span-3 h-full">
-                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-surface-200 p-8 flex flex-col h-full min-h-[600px] overflow-hidden">
-                        <div class="flex items-center justify-between mb-8 border-b border-surface-200 pb-5">
-                            <h2 class="text-lg font-black text-surface-900 uppercase tracking-widest flex items-center gap-2">
-                                Panel de Despliegue Físico Mensual
-                            </h2>
-                            <div class="flex items-center gap-5 text-[11px] font-black text-surface-500 uppercase tracking-wider bg-surface-50 px-5 py-2.5 border border-surface-200 rounded-full">
-                                <div class="flex items-center gap-2"><span class="w-3.5 h-3.5 bg-blue-600 rounded-full"></span> Entregas</div>
-                                <div class="flex items-center gap-2"><span class="w-3.5 h-3.5 bg-amber-500 rounded-full"></span> Retornos</div>
-                            </div>
-                        </div>
-                        
-                        <!-- FullCalendar Container -->
-                        <div id="calendar" class="custom-calendar rounded-[1.5rem] overflow-hidden border border-surface-100 flex-1 font-sans"></div>
-                    </div>
-                </div>
-
             </div>
         </div>
 
-        <!-- FullCalendar & Dependencies -->
-        <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-        <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
-        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+            <section class="xl:col-span-4 space-y-5">
+                <div class="grid grid-cols-3 gap-3">
+                    <article class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                        <p class="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-2">Entregas</p>
+                        <p id="entregasHoyCount" class="text-3xl font-black text-blue-900 leading-none">0</p>
+                    </article>
+                    <article class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                        <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">Retornos</p>
+                        <p id="retornosHoyCount" class="text-3xl font-black text-amber-900 leading-none">0</p>
+                    </article>
+                    <article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                        <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-2">Total</p>
+                        <p id="totalHoyCount" class="text-3xl font-black text-emerald-900 leading-none">0</p>
+                    </article>
+                </div>
 
-        <style>
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-            
-            /* Professional Solid Scrollbar */
-            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-            /* Calendar Customization deeply rounded */
-            .custom-calendar { font-family: 'Outfit', sans-serif !important; border: none !important; }
-            .custom-calendar .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 900 !important; color: #18181b; text-transform: uppercase; letter-spacing: 0.02em; padding: 0 1rem; }
-            
-            .custom-calendar .fc-button-primary { background: #fff !important; color: #18181b !important; border: 1px solid #e4e4e7 !important; border-radius: 9999px !important; font-weight: 800 !important; text-transform: uppercase !important; letter-spacing: 0.05em; padding: 0.5rem 1.2rem !important; font-size: 0.7rem !important; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important; transition: all 0.2s ease-in-out; }
-            .custom-calendar .fc-button-primary:hover { background: #f4f4f5 !important; border-color: #d4d4d8 !important; transform: scale(1.02); }
-            .custom-calendar .fc-button-active { background: #18181b !important; color: #fff !important; border-color: #18181b !important; box-shadow: none !important;}
-            
-            .custom-calendar .fc-col-header-cell { padding: 0.75rem 0 !important; background: #fafafa; border-color: #e4e4e7 !important; }
-            .custom-calendar .fc-col-header-cell-cushion { font-size: 0.7rem !important; font-weight: 900 !important; color: #71717a !important; text-transform: uppercase !important; letter-spacing: 0.05em; }
-            
-            .custom-calendar .fc-daygrid-day { border-color: #e4e4e7 !important; transition: background 0.2s; }
-            .custom-calendar .fc-daygrid-day:hover { background: #fafafa !important; }
-            .custom-calendar .fc-daygrid-day-top { flex-direction: row; justify-content: flex-end; padding: 10px; }
-            .custom-calendar .fc-daygrid-day-number { font-size: 0.85rem; font-weight: 800; color: #18181b; padding: 4px 8px; border-radius: 9999px; }
-            
-            .custom-calendar .fc-day-today { background: white !important; }
-            .custom-calendar .fc-day-today .fc-daygrid-day-number { background: #18181b; color: #fff; }
-
-            /* Event Pills fully rounded */
-            .custom-calendar .fc-event { border: none !important; margin: 3px 6px !important; padding: 5px 10px !important; border-radius: 9999px !important; font-size: 0.7rem !important; font-weight: 800 !important; cursor: pointer; transition: transform 0.2s ease, filter 0.2s; }
-            .custom-calendar .fc-event:hover { transform: translateY(-2px); filter: brightness(1.1); }
-
-            .custom-calendar .fc-scroller { overflow-y: hidden !important; }
-            
-            /* SWAL Professional Customization fully rounded */
-            .swal-pro-popup { padding: 0 !important; border-radius: 2rem !important; border: 1px solid #e4e4e7 !important; overflow: hidden; font-family: 'Outfit', sans-serif !important;}
-            .swal-pro-title { font-weight: 900; color: #18181b; text-transform: uppercase; letter-spacing: 0.02em; text-align: left;}
-        </style>
-
-        <script th:inline="javascript">
-            let calendar;
-            let allCalendarEvents = [];
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const reservas = /*[[${reservas}]]*/ [];
-                const calendarEl = document.getElementById('calendar');
-                
-                const events = [];
-                reservas.forEach(r => {
-                    if (r.fechaInicio) {
-                        events.push({
-                            id: r.id + '_delivery',
-                            title: r.usuarioNombre,
-                            start: r.fechaInicio,
-                            backgroundColor: '#2563eb', // solid blue-600
-                            textColor: '#ffffff',
-                            extendedProps: { type: 'entrega', reservation: r }
-                        });
-                    }
-                    if (r.fechaFin) {
-                        events.push({
-                            id: r.id + '_return',
-                            title: r.usuarioNombre,
-                            start: r.fechaFin,
-                            backgroundColor: '#f59e0b', // solid amber-500
-                            textColor: '#ffffff',
-                            extendedProps: { type: 'recogida', reservation: r }
-                        });
-                    }
-                });
-
-                calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    locale: 'es',
-                    height: "100%",
-                    contentHeight: "auto",
-                    headerToolbar: {
-                        left: 'title',
-                        center: '',
-                        right: 'prev,today,next' 
-                    },
-                    events: events,
-                    dayMaxEvents: 3, 
-                    moreLinkContent:function(args){
-                        return '+' + args.num + ' citas';
-                    },
-                    eventContent: function(arg) {
-                        return { html: `<div class="truncate px-1 uppercase tracking-wider">${arg.event.title}</div>` };
-                    },
-                    eventClick: function(info) {
-                        const r = info.event.extendedProps.reservation;
-                        const isEntrega = info.event.extendedProps.type === 'entrega';
-                        
-                        const mapsUrl = r.direccionEvento ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.direccionEvento) : null;
-                        const waUrl = r.usuarioTelefono ? 'https://wa.me/' + encodeURIComponent(r.usuarioTelefono.replace(/[^0-9+]/g, '')) + '?text=' + encodeURIComponent('Hola ' + (r.usuarioNombre || '') + ', te contactamos de logística Furent respecto a tu reserva.') : null;
-                        
-                        const typeHeaderBg = isEntrega ? 'bg-blue-600 border-blue-700' : 'bg-amber-500 border-amber-600';
-                        const typeLabel = isEntrega ? 'ORDEN DE ENTREGA' : 'ORDEN DE RETORNO';
-                        const typeIcon = isEntrega 
-                            ? `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>` 
-                            : `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>`;
-
-                        Swal.fire({
-                            title: '',
-                            html: `
-                                <div class="m-0 p-0 text-left font-sans text-surface-900">
-                                    <!-- Header -->
-                                    <div class="${typeHeaderBg} px-8 py-6 flex items-center justify-between">
-                                        <div class="flex items-center gap-4">
-                                            <div class="bg-white/20 p-2.5 rounded-[1.25rem]">
-                                                ${typeIcon}
-                                            </div>
-                                            <h2 class="text-white font-black text-2xl m-0 p-0 tracking-wide">${typeLabel}</h2>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="block text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1">Fecha Programada</span>
-                                            <span class="text-white text-base font-black uppercase tracking-widest bg-black/20 px-3 py-1.5 rounded-full">${info.event.start.toLocaleDateString()}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="p-8 bg-white min-h-[300px]">
-                                        <!-- Cliente Info -->
-                                        <div class="flex items-start justify-between mb-8 pb-8 border-b border-surface-200 border-dashed">
-                                            <div>
-                                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">Receptor / Cliente</p>
-                                                <h3 class="text-3xl font-black text-surface-900 leading-none mb-3">${r.usuarioNombre}</h3>
-                                                <div class="flex gap-4">
-                                                    <p class="text-xs font-bold text-surface-600 flex items-center gap-1.5"><svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> ${r.usuarioTelefono || 'N/A'}</p>
-                                                    <p class="text-xs font-bold text-surface-600 flex items-center gap-1.5"><svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> ${r.usuarioEmail || 'N/A'}</p>
-                                                </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-1.5">Reserva Hash</p>
-                                                <p class="text-xs bg-surface-100 border border-surface-200 text-surface-600 font-mono py-1.5 px-3 rounded-full font-bold mb-3 uppercase">${r.id}</p>
-                                                <span class="inline-block bg-surface-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">ESTATUS: ${r.estado}</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Ubicación & Notas -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-surface-200 border-dashed">
-                                            <div>
-                                                <div class="flex items-center justify-between mb-3">
-                                                    <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest flex items-center gap-1.5"><svg class="w-4 h-4 text-furent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg> Dirección Operativa</p>
-                                                    ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors uppercase flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-full">Abrir Mapa <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a>` : ''}
-                                                </div>
-                                                <p class="text-base font-black text-surface-900 border-l-4 border-furent-500 pl-4 py-2 bg-surface-50 rounded-r-2xl">${r.direccionEvento || '<span class="text-surface-400 font-medium">No definida en sistema.</span>'}</p>
-                                                
-                                                ${isEntrega && r.horaEntrega ? `
-                                                <div class="mt-4 flex items-center justify-between bg-surface-100 p-4 rounded-2xl">
-                                                    <p class="text-[10px] font-black text-surface-500 uppercase tracking-widest">Hora Preferida</p>
-                                                    <p class="text-sm font-black text-surface-900 tracking-wider">${r.horaEntrega}</p>
-                                                </div>
-                                                ` : ''}
-                                            </div>
-                                            
-                                            <div>
-                                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Instrucciones / Notas</p>
-                                                <p class="text-sm font-bold text-surface-600 bg-amber-50 p-4 rounded-2xl min-h-[5rem] whitespace-pre-line">${r.notasEvento || 'Sin notas especiales generadas por el cliente.'}</p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Inventario -->
-                                        <div>
-                                            <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4 flex items-center gap-2"><svg class="w-4 h-4 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg> Inventario Designado</p>
-                                            <div class="border border-surface-200 rounded-[1.5rem] overflow-hidden">
-                                                <table class="w-full text-left border-collapse">
-                                                    <thead>
-                                                        <tr class="bg-surface-50 border-b border-surface-200">
-                                                            <th class="py-3 px-6 text-[10px] font-black text-surface-500 uppercase tracking-widest w-full">Producto</th>
-                                                            <th class="py-3 px-6 text-[10px] font-black text-surface-500 uppercase tracking-widest text-center border-l border-surface-200">Cant.</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="divide-y divide-surface-100 bg-white">
-                                                        ${r.items && r.items.length > 0 ? r.items.map(i => `
-                                                            <tr class="hover:bg-surface-50/50 transition-colors">
-                                                                <td class="py-3 px-6 text-sm font-bold text-surface-800">${i.productoNombre}</td>
-                                                                <td class="py-3 px-6 text-sm font-black text-surface-900 text-center border-l border-surface-100 bg-surface-50/50">${i.cantidad}</td>
-                                                            </tr>
-                                                        `).join('') : '<tr><td colspan="2" class="py-6 px-6 text-center text-sm font-bold text-surface-400">Inventario no disponible.</td></tr>'}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    ${waUrl ? `
-                                    <div class="px-8 py-5 bg-surface-50 border-t border-surface-200 flex justify-end gap-3 rounded-b-[2rem]">
-                                        <button class="px-6 py-3 text-xs font-bold text-surface-600 bg-white border border-surface-200 rounded-full hover:bg-surface-100 hover:text-surface-900 transition-colors" onclick="Swal.close()">Cerrar Pestaña</button>
-                                        <a href="${waUrl}" target="_blank" class="px-6 py-3 bg-[#1fa952] text-white rounded-full font-black text-xs hover:bg-[#128c3e] transition-colors flex items-center gap-2 shadow-sm uppercase tracking-widest">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-4.721 7.454c-1.332 0-2.615-.359-3.729-1.038l-.268-.159-2.774.727.741-2.711-.174-.275A9.74 9.74 0 013.058 12.3c0-5.385 4.381-9.766 9.771-9.766 2.61 0 5.064 1.017 6.911 2.863 1.848 1.846 2.865 4.3 2.865 6.903 0 5.386-4.381 9.767-9.77 9.767m9.77-11.838c0-5.386-4.381-9.766-9.77-9.766S3.058 4.478 3.058 9.864c0 1.721.455 3.395 1.319 4.87L3 20l5.368-1.408a9.73 9.73 0 004.872 1.288c5.4 0 9.77-4.38 9.77-9.766"/></svg>
-                                        </a>
-                                    </div>` : `
-                                    <div class="px-8 py-5 bg-surface-50 border-t border-surface-200 flex justify-end rounded-b-[2rem]">
-                                        <button class="px-6 py-3 text-xs font-bold text-surface-600 bg-white border border-surface-200 rounded-full hover:bg-surface-100 hover:text-surface-900 transition-colors" onclick="Swal.close()">Cerrar Pestaña</button>
-                                    </div>
-                                    `}
-                                </div>
-                            `,
-                            showCloseButton: true,
-                            showConfirmButton: false,
-                            width: 700,
-                            padding: '0',
-                            customClass: { popup: 'swal-pro-popup', htmlContainer: 'm-0 p-0', closeButton: 'text-white hover:text-surface-200 transition-colors focus:outline-none z-50 mt-2 mr-2 scale-125' }
-                        });
-                    }
-                });
-                calendar.render();
-
-                allCalendarEvents = calendar.getEvents();
-
-                const dateInput = document.getElementById('logisticaDate');
-                if (dateInput) {
-                    dateInput.value = new Date().toISOString().split('T')[0];
-                    dateInput.addEventListener('change', () => updateTodayList(allCalendarEvents));
-                }
-                const tipoSelect = document.getElementById('logisticaTipoFiltro');
-                if (tipoSelect) {
-                    tipoSelect.addEventListener('change', () => updateTodayList(allCalendarEvents));
-                }
-
-                updateTodayList(allCalendarEvents);
-            });
-
-            function updateTodayList(allEvents) {
-                const dateInput = document.getElementById('logisticaDate');
-                const filtroTipo = document.getElementById('logisticaTipoFiltro');
-                const targetDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString().split('T')[0];
-                const tipo = filtroTipo ? filtroTipo.value : 'todos';
-
-                const todayOps = allEvents.filter(e => {
-                    const eventDate = e.start.toISOString().split('T')[0];
-                    if (eventDate !== targetDate) return false;
-                    if (tipo === 'entregas') return e.extendedProps.type === 'entrega';
-                    if (tipo === 'retornos') return e.extendedProps.type === 'recogida';
-                    return true;
-                });
-                const container = document.getElementById('todayOperations');
-                
-                let entregas = 0;
-                let retornos = 0;
-                
-                if (todayOps.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-12">
-                            <svg class="w-8 h-8 text-surface-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest">Sin Operaciones Registradas</p>
+                <div class="bg-white border border-surface-200 rounded-3xl shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-surface-200 bg-surface-50">
+                        <h2 class="text-sm font-black text-surface-900 tracking-wide">Operaciones del día</h2>
+                        <p class="text-xs font-semibold text-surface-500 mt-1">Filtra por fecha, tipo y cliente para reducir tiempos de búsqueda</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
+                            <input id="logisticaDate" type="date" class="h-10 rounded-xl border border-surface-300 px-3 text-xs font-bold text-surface-800 bg-white focus:outline-none focus:ring-2 focus:ring-surface-300" />
+                            <select id="logisticaTipoFiltro" class="h-10 rounded-xl border border-surface-300 px-3 text-xs font-bold text-surface-800 bg-white focus:outline-none focus:ring-2 focus:ring-surface-300">
+                                <option value="todos">Todos los tipos</option>
+                                <option value="entregas">Solo entregas</option>
+                                <option value="retornos">Solo retornos</option>
+                            </select>
                         </div>
-                    `;
-                } else {
-                    container.innerHTML = '';
-                    todayOps.forEach(e => {
-                        if (e.extendedProps.type === 'entrega') entregas++;
-                        else retornos++;
-                        
-                        const r = e.extendedProps.reservation;
-                        const isEntrega = e.extendedProps.type === 'entrega';
-                        
-                        const bdColor = isEntrega ? 'border-blue-200/50' : 'border-amber-200/50';
-                        const badgeBg = isEntrega ? 'bg-blue-600' : 'bg-amber-500';
-                        const textC = isEntrega ? 'text-blue-700' : 'text-amber-700';
-                        const typeTag = isEntrega ? 'Entr' : 'Rtrn';
-                        
-                        const timeBadge = (isEntrega && r.horaEntrega) ? `<span class="bg-surface-100 px-2.5 py-1 rounded-full text-[10px] font-black text-surface-600 inline-block ml-3"><svg class="w-3 h-3 inline pb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${r.horaEntrega}</span>` : '';
-                        
-                        const card = `
-                            <div class="bg-white p-4 rounded-[1.25rem] border ${bdColor} shadow-sm flex items-start gap-4 hover:-translate-y-1 hover:shadow-md transition-all duration-300 cursor-pointer mb-2" onclick="openEventDetails('${e.id}')">
-                                <div class="w-1.5 h-auto self-stretch ${badgeBg} rounded-full shrink-0"></div>
-                                <div class="flex-1 min-w-0 py-0.5">
-                                    <div class="flex items-center gap-2 mb-2 line-clamp-1">
-                                        <span class="bg-surface-100 text-[9px] font-black ${textC} px-2 py-0.5 rounded-full uppercase tracking-widest">${typeTag}</span>
-                                        <h4 class="text-xs font-black text-surface-900 truncate">${r.usuarioNombre}</h4>
-                                    </div>
-                                    <p class="text-[10px] text-surface-500 font-bold truncate tracking-wide flex items-center gap-1.5" title="${r.direccionEvento || ''}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg> ${r.direccionEvento || 'Verificar'}${timeBadge}</p>
+                        <div class="mt-2.5">
+                            <input id="logisticaSearch" type="text" placeholder="Buscar por cliente, dirección o código..." class="h-10 w-full rounded-xl border border-surface-300 px-3 text-xs font-semibold text-surface-700 bg-white focus:outline-none focus:ring-2 focus:ring-surface-300" />
+                        </div>
+                    </div>
+                    <div id="todayOperations" class="max-h-[58vh] overflow-y-auto p-4 space-y-3 custom-scrollbar bg-surface-50/60">
+                        <div class="text-center py-12">
+                            <div class="w-8 h-8 rounded-full border-2 border-surface-300 border-t-surface-800 animate-spin mx-auto mb-3"></div>
+                            <p class="text-[11px] font-black text-surface-500 uppercase tracking-widest">Cargando agenda...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="xl:col-span-8">
+                <div class="bg-white border border-surface-200 rounded-3xl shadow-sm p-4 sm:p-5 h-full min-h-[42rem] flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-surface-200">
+                        <h2 class="text-base sm:text-lg font-black text-surface-900 tracking-tight">Calendario de despliegue operativo</h2>
+                        <div class="inline-flex items-center gap-4 rounded-full border border-surface-200 bg-surface-50 px-4 py-2 text-[11px] font-black tracking-wide text-surface-600">
+                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>Entrega</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Retorno</span>
+                        </div>
+                    </div>
+                    <div id="calendar" class="custom-calendar mt-4 rounded-2xl border border-surface-100 overflow-hidden flex-1"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 7px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-calendar { font-family: 'Outfit', sans-serif !important; }
+        .custom-calendar .fc-toolbar { margin-bottom: .85rem !important; }
+        .custom-calendar .fc-toolbar-title { font-size: 1.05rem !important; font-weight: 900 !important; color: #18181b !important; letter-spacing: .02em; text-transform: capitalize !important; }
+        .custom-calendar .fc-button-primary { background: #fff !important; color: #27272a !important; border: 1px solid #d4d4d8 !important; border-radius: 9999px !important; text-transform: uppercase !important; font-weight: 800 !important; font-size: .68rem !important; letter-spacing: .06em !important; padding: .45rem .95rem !important; box-shadow: none !important; }
+        .custom-calendar .fc-button-primary:hover { background: #f4f4f5 !important; border-color: #a1a1aa !important; }
+        .custom-calendar .fc-button-primary:disabled { opacity: .45 !important; }
+        .custom-calendar .fc-button-active { background: #18181b !important; border-color: #18181b !important; color: #fff !important; }
+        .custom-calendar .fc-col-header-cell { background: #fafafa !important; border-color: #e4e4e7 !important; }
+        .custom-calendar .fc-col-header-cell-cushion { color: #71717a !important; font-size: .67rem !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: .08em !important; padding: .6rem 0 !important; }
+        .custom-calendar .fc-daygrid-day, .custom-calendar .fc-scrollgrid td, .custom-calendar .fc-scrollgrid th { border-color: #e4e4e7 !important; }
+        .custom-calendar .fc-daygrid-day-top { justify-content: flex-end; }
+        .custom-calendar .fc-daygrid-day-number { color: #18181b !important; font-weight: 800 !important; font-size: .8rem !important; padding: .25rem .45rem !important; border-radius: 9999px !important; }
+        .custom-calendar .fc-day-today { background: #f8fafc !important; }
+        .custom-calendar .fc-day-today .fc-daygrid-day-number { background: #18181b !important; color: #fff !important; }
+        .custom-calendar .fc-event { border: none !important; border-radius: 9999px !important; padding: 3px 8px !important; margin: 2px 6px !important; font-size: .68rem !important; font-weight: 800 !important; letter-spacing: .02em; }
+        .custom-calendar .fc-list-day-cushion { background: #fafafa !important; }
+        .custom-calendar .fc-list-event-title { font-weight: 700 !important; }
+        .custom-calendar .fc-list-event-time { color: #71717a !important; font-size: .74rem !important; }
+        .swal-logistica-popup { border-radius: 1.5rem !important; border: 1px solid #e4e4e7 !important; overflow: hidden !important; padding: 0 !important; }
+        .swal-logistica-plain { border-radius: 1rem !important; }
+    </style>
+
+    <script th:inline="javascript">
+        let calendar;
+        let allCalendarEvents = [];
+
+        function toDateKey(date) {
+            const d = new Date(date);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, function(char) {
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                return map[char];
+            });
+        }
+
+        function normalizeText(value) {
+            return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function getLocalToday() {
+            const now = new Date();
+            return toDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+        }
+
+        function buildEventDetailsModal(event) {
+            const r = event.extendedProps.reservation || {};
+            const isEntrega = event.extendedProps.type === 'entrega';
+            const typeClass = isEntrega ? 'bg-blue-600' : 'bg-amber-500';
+            const typeName = isEntrega ? 'Entrega' : 'Retorno';
+            const date = event.start ? event.start.toLocaleDateString('es-CO', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+            const mapsUrl = r.direccionEvento ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.direccionEvento)}` : null;
+            const waPhone = r.usuarioTelefono ? r.usuarioTelefono.replace(/[^0-9+]/g, '') : '';
+            const waUrl = waPhone ? `https://wa.me/${encodeURIComponent(waPhone)}?text=${encodeURIComponent(`Hola ${r.usuarioNombre || ''}, te contactamos de logística Furent respecto a tu reserva.`)}` : null;
+            const items = Array.isArray(r.items) ? r.items : [];
+            const itemsRows = items.length > 0
+                ? items.map(i => `
+                    <tr class="border-b last:border-b-0 border-surface-100">
+                        <td class="px-4 py-2.5 text-xs font-bold text-surface-800">${escapeHtml(i.productoNombre || 'Producto')}</td>
+                        <td class="px-4 py-2.5 text-center text-xs font-black text-surface-900">${escapeHtml(i.cantidad || 0)}</td>
+                    </tr>
+                `).join('')
+                : `<tr><td colspan="2" class="px-4 py-5 text-center text-xs font-bold text-surface-400">Sin inventario registrado</td></tr>`;
+
+            Swal.fire({
+                title: '',
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: 760,
+                padding: 0,
+                customClass: {
+                    popup: 'swal-logistica-popup',
+                    closeButton: 'text-white/90 hover:text-white mt-2 mr-2'
+                },
+                html: `
+                    <div class="text-left bg-white">
+                        <div class="${typeClass} px-5 py-4 flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/80">Operación logística</p>
+                                <h3 class="text-xl font-black text-white mt-1">${typeName}</h3>
+                                <p class="text-xs text-white/90 font-semibold mt-1">${escapeHtml(r.usuarioNombre || 'Cliente no identificado')}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/75">Fecha</p>
+                                <p class="text-sm font-black text-white mt-1">${escapeHtml(date)}</p>
+                            </div>
+                        </div>
+
+                        <div class="p-5 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="rounded-xl border border-surface-200 p-3 bg-surface-50">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Cliente</p>
+                                    <p class="text-sm font-black text-surface-900 mt-1">${escapeHtml(r.usuarioNombre || 'Sin nombre')}</p>
+                                    <p class="text-xs font-semibold text-surface-600 mt-1">${escapeHtml(r.usuarioEmail || 'Sin email')}</p>
+                                    <p class="text-xs font-semibold text-surface-600">${escapeHtml(r.usuarioTelefono || 'Sin teléfono')}</p>
+                                </div>
+                                <div class="rounded-xl border border-surface-200 p-3 bg-surface-50">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Reserva</p>
+                                    <p class="text-xs font-black text-surface-900 mt-1">${escapeHtml(r.id || '-')}</p>
+                                    <p class="text-xs font-semibold text-surface-600 mt-1">Estado: <span class="font-black">${escapeHtml(r.estado || '-')}</span></p>
+                                    ${isEntrega && r.horaEntrega ? `<p class="text-xs font-semibold text-surface-600">Hora preferida: <span class="font-black">${escapeHtml(r.horaEntrega)}</span></p>` : ''}
                                 </div>
                             </div>
-                        `;
-                        container.insertAdjacentHTML('beforeend', card);
+
+                            <div class="rounded-xl border border-surface-200 p-3">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Dirección</p>
+                                    ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" class="text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900">Abrir mapa</a>` : ''}
+                                </div>
+                                <p class="text-sm font-bold text-surface-800 mt-1">${escapeHtml(r.direccionEvento || 'Dirección no disponible')}</p>
+                            </div>
+
+                            <div class="rounded-xl border border-surface-200 p-3">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Notas</p>
+                                <p class="text-sm font-semibold text-surface-700 mt-1 whitespace-pre-line">${escapeHtml(r.notasEvento || 'Sin notas operativas')}</p>
+                            </div>
+
+                            <div class="rounded-xl border border-surface-200 overflow-hidden">
+                                <table class="w-full">
+                                    <thead class="bg-surface-50">
+                                        <tr>
+                                            <th class="px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-surface-500">Producto</th>
+                                            <th class="px-4 py-2.5 text-center text-[10px] font-black uppercase tracking-widest text-surface-500">Cant.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${itemsRows}</tbody>
+                                </table>
+                            </div>
+
+                            <div class="flex justify-end gap-2.5 pt-1">
+                                <button type="button" onclick="Swal.close()" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide bg-white border border-surface-300 text-surface-700 hover:bg-surface-50">Cerrar</button>
+                                ${waUrl ? `<a href="${waUrl}" target="_blank" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide bg-[#1fa952] text-white hover:bg-[#15803d]">WhatsApp</a>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `
+            });
+        }
+
+        function getFilteredEvents(events, dateKey, filterType, searchTerm) {
+            return events.filter(function(event) {
+                const eventDate = event.start ? toDateKey(event.start) : '';
+                if (eventDate !== dateKey) return false;
+                if (filterType === 'entregas' && event.extendedProps.type !== 'entrega') return false;
+                if (filterType === 'retornos' && event.extendedProps.type !== 'recogida') return false;
+                if (!searchTerm) return true;
+                const r = event.extendedProps.reservation || {};
+                const searchText = [
+                    r.usuarioNombre || '',
+                    r.direccionEvento || '',
+                    r.id || '',
+                    r.usuarioTelefono || ''
+                ].map(normalizeText).join(' ');
+                return searchText.includes(searchTerm);
+            });
+        }
+
+        function renderTodayOperations(events) {
+            const container = document.getElementById('todayOperations');
+            const dateInput = document.getElementById('logisticaDate');
+            const tipoSelect = document.getElementById('logisticaTipoFiltro');
+            const searchInput = document.getElementById('logisticaSearch');
+            const targetDate = dateInput && dateInput.value ? dateInput.value : getLocalToday();
+            const type = tipoSelect ? tipoSelect.value : 'todos';
+            const search = normalizeText(searchInput ? searchInput.value : '');
+            const filtered = getFilteredEvents(events, targetDate, type, search);
+            const baseOfDay = events.filter(function(event) {
+                return event.start && toDateKey(event.start) === targetDate;
+            });
+            const entregas = baseOfDay.filter(function(event) { return event.extendedProps.type === 'entrega'; }).length;
+            const retornos = baseOfDay.filter(function(event) { return event.extendedProps.type === 'recogida'; }).length;
+            const total = baseOfDay.length;
+
+            document.getElementById('entregasHoyCount').textContent = entregas;
+            document.getElementById('retornosHoyCount').textContent = retornos;
+            document.getElementById('totalHoyCount').textContent = total;
+
+            if (!container) return;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="w-9 h-9 text-surface-300 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5m-7.5 4.5h7.5m-10.5 9h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12A2.25 2.25 0 005.25 20.25z"/></svg>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-surface-500">Sin operaciones para este filtro</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(function(event) {
+                const r = event.extendedProps.reservation || {};
+                const isEntrega = event.extendedProps.type === 'entrega';
+                const colorBlock = isEntrega ? 'bg-blue-600' : 'bg-amber-500';
+                const typeText = isEntrega ? 'Entrega' : 'Retorno';
+                const typeStyle = isEntrega ? 'text-blue-700 bg-blue-50 border-blue-200' : 'text-amber-700 bg-amber-50 border-amber-200';
+                const dateText = event.start ? event.start.toLocaleDateString('es-CO', { weekday: 'short', day: '2-digit', month: 'short' }) : '';
+                const timeBadge = isEntrega && r.horaEntrega
+                    ? `<span class="inline-flex items-center rounded-full bg-surface-100 px-2 py-1 text-[10px] font-black text-surface-600">${escapeHtml(r.horaEntrega)}</span>`
+                    : '';
+
+                const card = `
+                    <button type="button" onclick="openEventDetails('${escapeHtml(event.id)}')" class="w-full text-left rounded-2xl border border-surface-200 bg-white p-3 hover:shadow-md hover:border-surface-300 transition-all">
+                        <div class="flex items-start gap-3">
+                            <span class="w-1.5 self-stretch rounded-full ${colorBlock}"></span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-widest ${typeStyle}">${typeText}</span>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-surface-400">${escapeHtml(dateText)}</span>
+                                </div>
+                                <h3 class="text-sm font-black text-surface-900 truncate mt-2">${escapeHtml(r.usuarioNombre || 'Cliente')}</h3>
+                                <p class="text-xs font-semibold text-surface-500 truncate mt-1" title="${escapeHtml(r.direccionEvento || '')}">${escapeHtml(r.direccionEvento || 'Dirección pendiente')}</p>
+                                <div class="flex items-center justify-between mt-2">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-400">${escapeHtml(r.id || '-')}</p>
+                                    ${timeBadge}
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                `;
+                container.insertAdjacentHTML('beforeend', card);
+            });
+        }
+
+        function toggleView(viewType) {
+            if (!calendar) return;
+            const btnList = document.getElementById('viewList');
+            const btnCal = document.getElementById('viewCal');
+
+            if (viewType === 'list') {
+                calendar.changeView('listMonth');
+                btnList.classList.add('bg-white', 'text-surface-900', 'border', 'border-surface-200');
+                btnList.classList.remove('text-surface-600');
+                btnCal.classList.remove('bg-white', 'text-surface-900', 'border', 'border-surface-200');
+                btnCal.classList.add('text-surface-600');
+            } else {
+                calendar.changeView('dayGridMonth');
+                btnCal.classList.add('bg-white', 'text-surface-900', 'border', 'border-surface-200');
+                btnCal.classList.remove('text-surface-600');
+                btnList.classList.remove('bg-white', 'text-surface-900', 'border', 'border-surface-200');
+                btnList.classList.add('text-surface-600');
+            }
+        }
+
+        function openEventDetails(eventId) {
+            if (!calendar) return;
+            const event = calendar.getEventById(eventId);
+            if (!event) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Operación no encontrada',
+                    text: 'No fue posible cargar el detalle de la operación seleccionada.',
+                    customClass: { popup: 'swal-logistica-plain' }
+                });
+                return;
+            }
+            buildEventDetailsModal(event);
+        }
+
+        function refreshToday(btn) {
+            if (btn) btn.classList.add('animate-spin');
+            setTimeout(function() {
+                renderTodayOperations(allCalendarEvents);
+                if (btn) btn.classList.remove('animate-spin');
+            }, 280);
+        }
+
+        function generateRouteSheet() {
+            Swal.fire({
+                title: 'Exportar hoja de ruta',
+                text: 'Selecciona la fecha operativa',
+                input: 'date',
+                inputValue: getLocalToday(),
+                showCancelButton: true,
+                confirmButtonText: 'Exportar PDF',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#18181b',
+                customClass: {
+                    popup: 'swal-logistica-plain',
+                    confirmButton: 'rounded-full font-black text-xs px-5 py-2.5',
+                    cancelButton: 'rounded-full font-black text-xs px-5 py-2.5'
+                },
+                inputValidator: function(value) {
+                    if (!value) return 'Debes seleccionar una fecha válida';
+                    return null;
+                }
+            }).then(function(result) {
+                if (result.isConfirmed && result.value) {
+                    window.location.href = '/admin/logistica/hoja-ruta?fecha=' + encodeURIComponent(result.value);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const reservas = /*[[${reservas}]]*/ [];
+            const calendarEl = document.getElementById('calendar');
+            const dateInput = document.getElementById('logisticaDate');
+            const typeInput = document.getElementById('logisticaTipoFiltro');
+            const searchInput = document.getElementById('logisticaSearch');
+
+            if (!Array.isArray(reservas) || !calendarEl) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo cargar logística',
+                    text: 'Faltan datos para renderizar el calendario de operaciones.',
+                    customClass: { popup: 'swal-logistica-plain' }
+                });
+                return;
+            }
+
+            const events = [];
+            reservas.forEach(function(r) {
+                const title = r && r.usuarioNombre ? r.usuarioNombre : 'Reserva';
+                if (r && r.fechaInicio) {
+                    events.push({
+                        id: `${r.id || Math.random().toString(36).slice(2)}_delivery`,
+                        title: title,
+                        start: r.fechaInicio,
+                        backgroundColor: '#2563eb',
+                        textColor: '#ffffff',
+                        extendedProps: { type: 'entrega', reservation: r }
                     });
                 }
-                
-                document.getElementById('entregasHoyCount').textContent = entregas;
-                document.getElementById('retornosHoyCount').textContent = retornos;
-            }
-
-            function refreshToday(btn) {
-                if (!btn) return;
-                btn.classList.add('animate-spin');
-                setTimeout(() => {
-                    updateTodayList(allCalendarEvents);
-                    btn.classList.remove('animate-spin');
-                }, 400);
-            }
-
-            function openEventDetails(eventId) {
-                const ev = calendar.getEventById(eventId);
-                if(ev) calendar.trigger('eventClick', { event: ev });
-            }
-
-            function toggleView(viewType) {
-                const btnList = document.getElementById('viewList');
-                const btnCal = document.getElementById('viewCal');
-                
-                if (viewType === 'list') {
-                    calendar.changeView('listMonth');
-                    btnList.classList.add('bg-white', 'text-surface-900', 'shadow-sm', 'border');
-                    btnList.classList.remove('text-surface-600', 'hover:bg-surface-200');
-                    btnCal.classList.remove('bg-white', 'text-surface-900', 'shadow-sm', 'border');
-                    btnCal.classList.add('text-surface-600', 'hover:bg-surface-200', 'border-transparent');
-                } else {
-                    calendar.changeView('dayGridMonth');
-                    btnCal.classList.add('bg-white', 'text-surface-900', 'shadow-sm', 'border');
-                    btnCal.classList.remove('text-surface-600', 'hover:bg-surface-200');
-                    btnList.classList.remove('bg-white', 'text-surface-900', 'shadow-sm', 'border');
-                    btnList.classList.add('text-surface-600', 'hover:bg-surface-200', 'border-transparent');
+                if (r && r.fechaFin) {
+                    events.push({
+                        id: `${r.id || Math.random().toString(36).slice(2)}_return`,
+                        title: title,
+                        start: r.fechaFin,
+                        backgroundColor: '#f59e0b',
+                        textColor: '#ffffff',
+                        extendedProps: { type: 'recogida', reservation: r }
+                    });
                 }
-            }
+            });
 
-            function generateRouteSheet() {
-                Swal.fire({
-                    title: 'Generar Documento PDF',
-                    text: 'Configurar Hoja de Ruta Operativa:',
-                    input: 'date',
-                    inputValue: new Date().toISOString().split('T')[0],
-                    showCancelButton: true,
-                    confirmButtonText: 'Exportar PDF',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#18181b', 
-                    customClass: { popup: 'swal-pro-popup p-8', title: 'font-black text-2xl text-surface-900 uppercase tracking-tight', htmlContainer: 'text-left text-sm font-bold text-surface-500 mt-2 mb-6', input: 'border border-surface-300 text-sm font-bold focus:ring-1 focus:ring-surface-900 focus:border-surface-900 rounded-full w-full mb-6 px-4', confirmButton: 'rounded-full font-black uppercase tracking-widest text-xs px-6 py-3', cancelButton: 'rounded-full font-black uppercase tracking-widest text-xs px-6 py-3 text-surface-600 hover:bg-surface-100' }
-                }).then((result) => {
-                    if (result.isConfirmed && result.value) {
-                        window.location.href = '/admin/logistica/hoja-ruta?fecha=' + result.value;
-                    }
-                });
-            }
-        </script>
-    </main>
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                height: '100%',
+                contentHeight: 'auto',
+                headerToolbar: { left: 'title', center: '', right: 'prev,today,next' },
+                buttonText: { today: 'Hoy' },
+                events: events,
+                dayMaxEvents: 3,
+                moreLinkContent: function(args) {
+                    return '+' + args.num + ' más';
+                },
+                eventContent: function(arg) {
+                    return { html: `<div class="truncate px-1">${escapeHtml(arg.event.title)}</div>` };
+                },
+                eventDidMount: function(info) {
+                    const type = info.event.extendedProps.type === 'entrega' ? 'Entrega' : 'Retorno';
+                    info.el.setAttribute('title', `${type}: ${info.event.title}`);
+                },
+                eventClick: function(info) {
+                    buildEventDetailsModal(info.event);
+                }
+            });
+            calendar.render();
+            allCalendarEvents = calendar.getEvents();
+
+            if (dateInput) dateInput.value = getLocalToday();
+            if (dateInput) dateInput.addEventListener('change', function() { renderTodayOperations(allCalendarEvents); });
+            if (typeInput) typeInput.addEventListener('change', function() { renderTodayOperations(allCalendarEvents); });
+            if (searchInput) searchInput.addEventListener('input', function() { renderTodayOperations(allCalendarEvents); });
+
+            renderTodayOperations(allCalendarEvents);
+        });
+    </script>
+</main>
 </body>
 </html>
