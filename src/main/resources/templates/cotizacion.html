@@ -1,6 +1,9 @@
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
-<head th:replace="~{fragments/layout :: head}"></head>
+<head>
+    <th:block th:replace="~{fragments/layout :: head}"></th:block>
+    <!-- Tailwind Plus Elements for Modals -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
+</head>
 <style>
     /* Premium Flatpickr Overrides */
     .flatpickr-calendar {
@@ -120,6 +123,19 @@
         30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
         40%, 60% { transform: translate3d(4px, 0, 0); }
     }
+    /* Hide native time picker icon to avoid overlap with custom SVG */
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        background: transparent;
+        bottom: 0;
+        color: transparent;
+        cursor: pointer;
+        height: auto;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: auto;
+    }
 </style>
 <body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
 
@@ -232,17 +248,70 @@
                     </div>
                     <div class="px-6 py-6 space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div>
+                            <div class="relative dropdown-parent">
                                 <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Tipo de evento</label>
-                                <select id="evtType" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
-                                    <option value="">Selecciona...</option>
-                                    <option>Boda</option><option>Corporativo</option><option>Cumpleaños</option>
-                                    <option>Graduación</option><option>Feria</option><option>Otro</option>
-                                </select>
+                                <input type="hidden" id="evtType" value="">
+                                <button type="button" onclick="toggleEventTypeDropdown(this)" id="evtTypeBtn"
+                                        class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-semibold text-surface-700 flex items-center justify-between hover:border-furent-300 transition-all focus:ring-2 focus:ring-furent-500/20">
+                                    <span id="evtTypeText" class="flex items-center gap-2 text-surface-400">Selecciona...</span>
+                                    <svg class="w-4 h-4 text-surface-400 transition-transform duration-200 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                </button>
+                                
+                                <div id="evtTypeMenu" class="hidden absolute left-0 mt-2 w-full bg-white border border-surface-200 rounded-2xl shadow-2xl z-[50] overflow-hidden py-1.5 animate-in fade-in zoom-in duration-200 origin-top dropdown-menu">
+                                    <button type="button" onclick="selectEventType(this, 'Boda')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-furent-50 hover:text-furent-700 transition-colors text-left group">
+                                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                                            <svg class="w-4 h-4 text-surface-500 group-hover:text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                                        </div>
+                                        Boda
+                                    </button>
+                                    <button type="button" onclick="selectEventType(this, 'Corporativo')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-furent-50 hover:text-furent-700 transition-colors text-left group">
+                                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                                            <svg class="w-4 h-4 text-surface-500 group-hover:text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                                        </div>
+                                        Corporativo
+                                    </button>
+                                    <button type="button" onclick="selectEventType(this, 'Cumpleaños')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-furent-50 hover:text-furent-700 transition-colors text-left group">
+                                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                                            <svg class="w-4 h-4 text-surface-500 group-hover:text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>
+                                        </div>
+                                        Cumpleaños
+                                    </button>
+                                    <button type="button" onclick="selectEventType(this, 'Graduación')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-furent-50 hover:text-furent-700 transition-colors text-left group">
+                                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                                            <svg class="w-4 h-4 text-surface-500 group-hover:text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84a51.39 51.39 0 00-2.658.814m-15.482 0l4.41 1.092m11.072-1.092l-4.41 1.092m0 0a51.236 51.236 0 00-2.12 4.414" /></svg>
+                                        </div>
+                                        Graduación
+                                    </button>
+                                    <button type="button" onclick="selectEventType(this, 'Feria')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-furent-50 hover:text-furent-700 transition-colors text-left group">
+                                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                                            <svg class="w-4 h-4 text-surface-500 group-hover:text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5l-3-3H6.75l-4.5 4.5" /></svg>
+                                        </div>
+                                        Feria
+                                    </button>
+                                    <button type="button" onclick="selectEventType(this, 'Otro')" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-furent-50 hover:text-furent-700 transition-colors text-left group">
+                                        <div class="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center group-hover:bg-white transition-colors">
+                                            <svg class="w-4 h-4 text-surface-500 group-hover:text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                                        </div>
+                                        Otro
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Número de invitados</label>
-                                <input id="evtGuests" type="number" placeholder="Ej: 150" min="1" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                                <div class="relative flex items-center max-w-[12rem]">
+                                    <button type="button" onclick="changeGuests(-5)" 
+                                            class="flex-shrink-0 bg-surface-100 hover:bg-surface-200 border border-surface-200 rounded-l-xl h-12 w-12 flex items-center justify-center transition-colors focus:ring-2 focus:ring-furent-500/20 focus:outline-none">
+                                        <svg class="w-3.5 h-3.5 text-surface-700" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg>
+                                    </button>
+                                    <input type="number" id="evtGuests" value="50" min="1" max="9999" step="1"
+                                           class="bg-surface-50 border-x-0 border-y border-surface-200 h-12 text-center text-surface-900 text-sm font-bold block w-full focus:ring-0 focus:border-surface-200 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                           placeholder="150" required>
+                                    <button type="button" onclick="changeGuests(5)"
+                                            class="flex-shrink-0 bg-surface-100 hover:bg-surface-200 border border-surface-200 rounded-r-xl h-12 w-12 flex items-center justify-center transition-colors focus:ring-2 focus:ring-furent-500/20 focus:outline-none">
+                                        <svg class="w-3.5 h-3.5 text-surface-700" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                    </button>
+                                </div>
+                                <p class="mt-2 text-[10px] text-surface-400 font-medium italic">Sugerencia: Incrementos de 5 en 5.</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 gap-5">
@@ -269,7 +338,15 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Hora preferida de entrega</label>
-                            <input id="evtTime" type="time" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all">
+                            <div class="relative max-w-[12rem]">
+                                <div class="absolute inset-y-0 right-0 top-0 flex items-center pr-4 pointer-events-none text-surface-400 group-focus-within:text-furent-500 transition-colors">
+                                    <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                </div>
+                                <input type="time" id="evtTime" 
+                                       class="block w-full px-4 py-3 bg-surface-50 border border-surface-200 text-surface-900 text-sm font-semibold rounded-xl focus:ring-4 focus:ring-furent-500/10 focus:border-furent-500 transition-all cursor-pointer" 
+                                       min="08:00" max="20:00" value="09:00" required>
+                            </div>
+                            <p class="mt-2 text-[10px] text-surface-400 font-medium italic">Horarios de entrega sugeridos: 8:00 AM - 8:00 PM.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-surface-500 uppercase tracking-wider mb-2">Notas adicionales <span class="text-surface-400 normal-case">(opcional)</span></label>
@@ -581,16 +658,11 @@
             // FIX: Limitar al stock máximo si está guardado en el item
             if(bag[idx].maxStock && nextQty > bag[idx].maxStock) {
                 nextQty = bag[idx].maxStock;
-                if(window.Swal && dir > 0) { // Mostrar alerta solo si intenta subir
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Límite de stock',
-                        text: `Solo hay ${bag[idx].maxStock} unidades disponibles de "${bag[idx].name}".`,
-                        confirmButtonColor: '#E07A3A',
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                }
+                showErrorModal({
+                    title: 'Límite de stock',
+                    message: `Solo hay ${bag[idx].maxStock} unidades disponibles de "${bag[idx].name}".`,
+                    footer: 'Por favor, ajusta la cantidad según la disponibilidad.'
+                });
             }
             bag[idx].qty = nextQty;
             
@@ -617,27 +689,29 @@
             if (currentStep === 1) {
                 let bag = []; try{bag=JSON.parse(localStorage.getItem('furent_bag')||'[]')}catch(e){}
                 if (bag.length === 0) {
-                    Swal.fire({icon:'error', title:'Bolsa vacía', text:'Agrega productos a tu bolsa antes de continuar.'});
+                    showErrorModal({
+                        title: 'Bolsa vacía',
+                        message: 'Agrega productos a tu bolsa antes de continuar.'
+                    });
                     return;
                 }
                 
                 // VALIDACIÓN DE STOCK: No dejar pasar si hay items que exceden el maxStock
                 let stockError = false;
-                let errorMsg = '';
+                let errorList = [];
                 bag.forEach(item => {
                     if (item.maxStock && item.qty > item.maxStock) {
                         stockError = true;
-                        errorMsg += `<li>"${item.name}" (Pedido: ${item.qty}, Disponible: ${item.maxStock})</li>`;
+                        errorList.push(`${item.name} (Pedido: ${item.qty}, Disponible: ${item.maxStock})`);
                     }
                 });
                 
                 if (stockError) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Stock insuficiente detectado',
-                        html: `<div class="text-left mt-2"><p class="text-sm mb-3">Los siguientes productos exceden el inventario disponible:</p><ul class="text-xs list-disc pl-5 space-y-1 font-bold text-red-600">${errorMsg}</ul><p class="text-xs text-surface-500 mt-4">Por favor, ajusta las cantidades antes de continuar.</p></div>`,
-                        confirmButtonColor: '#E07A3A',
-                        customClass: { popup: 'rounded-2xl' }
+                    showErrorModal({
+                        title: 'Stock insuficiente',
+                        message: 'Los siguientes productos exceden el inventario disponible:',
+                        items: errorList,
+                        footer: 'Ajusta las cantidades antes de continuar.'
                     });
                     return;
                 }
@@ -666,11 +740,10 @@
                 });
 
                 if (missing) {
-                    Swal.fire({
-                        icon: 'error',
+                    showErrorModal({
                         title: 'Datos incompletos',
-                        text: 'Por favor, llena los campos resaltados en rojo para continuar.',
-                        confirmButtonColor: '#E07A3A'
+                        message: 'Por favor, llena los campos resaltados en rojo para continuar.',
+                        footer: 'Asegúrate de haber seleccionado también el tipo de evento.'
                     });
                     return;
                 }
@@ -680,7 +753,11 @@
                 if (val === 'Transferencia Bancaria') {
                     const ref = document.getElementById('payReference').value.trim();
                     if(!ref) {
-                        Swal.fire({icon:'error', title:'Faltan datos', text:'Ingresa el número de referencia de la transferencia.'});
+                        showErrorModal({
+                            title: 'Faltan datos',
+                            message: 'Ingresa el número de referencia de la transferencia para validar tu pedido.',
+                            footer: '* Campo obligatorio para este método de pago.'
+                        });
                         return;
                     }
                 } else if (val === 'Credit Card') {
@@ -847,29 +924,16 @@
                 // FIX: Manejar errores de stock con detalle por producto
                 if (res.status === 409 && data.stockErrors) {
                     const errorItems = Object.values(data.stockErrors);
-                    const errorHtml = errorItems.map(e => `
-                        <div class="flex items-center gap-2.5 px-4 py-3 bg-red-50 text-red-700 rounded-xl border border-red-100 text-xs font-bold">
-                            <div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>
-                            <span>${e}</span>
-                        </div>
-                    `).join('');
-                    Swal.fire({
-                        icon: 'error',
-                        title: '<p class="text-lg font-extrabold">Stock insuficiente</p>',
-                        html: `
-                            <div class="mt-3 space-y-3 text-left">
-                                <p class="text-sm text-surface-500">No hay suficientes unidades para las fechas seleccionadas:</p>
-                                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">${errorHtml}</div>
-                                <p class="text-xs text-surface-400 italic mt-2">Ajusta las cantidades o selecciona otras fechas.</p>
-                            </div>`,
-                        confirmButtonColor: '#E07A3A',
-                        customClass: { popup: 'rounded-2xl' }
+                    showErrorModal({
+                        title: 'Stock insuficiente',
+                        message: 'No hay suficientes unidades para las fechas seleccionadas:',
+                        items: errorItems,
+                        footer: 'Por favor, ajusta las cantidades o selecciona otras fechas.'
                     });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
+                    showErrorModal({
                         title: 'Error',
-                        text: data.message || 'Ocurrió un error al procesar tu cotización. Verifica estar logueado.'
+                        message: data.message || 'Ocurrió un error al procesar tu cotización. Verifica estar logueado.'
                     });
                 }
                 btn.innerHTML = ogText;
@@ -877,7 +941,10 @@
             }
         } catch(e) {
             console.error(e);
-            Swal.fire({icon:'error', title:'Error', text:'Error de conexión con el servidor.'});
+            showErrorModal({
+                title: 'Error de conexión',
+                message: 'No pudimos conectarnos con el servidor. Verifica tu internet e intenta de nuevo.'
+            });
             btn.innerHTML = ogText;
             btn.disabled = false;
         }
@@ -1015,56 +1082,15 @@
                             // Close calendar automatically
                             fp.close();
                             
-                            if (window.Swal) {
-                                const prodText = reserveInfo.products || "No disponible";
-                                // Split and filter to avoid empty spaces or trailing commas resulting in empty tags
-                                const prodList = prodText.split(',').map(p => p.trim()).filter(p => p.length > 0);
-                                
-                                let prodHtml = "";
-                                if (prodList.length > 0) {
-                                    prodHtml = prodList.map(p => `
-                                        <div class="flex items-center gap-2.5 px-4 py-3 bg-red-50 text-red-700 rounded-xl border border-red-100/50 text-xs font-bold uppercase tracking-tight shadow-sm">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
-                                            ${p}
-                                        </div>
-                                    `).join('');
-                                } else {
-                                    prodHtml = `
-                                        <div class="px-4 py-3 bg-surface-100 text-surface-500 rounded-xl text-xs italic">
-                                            No se han especificado los mobiliarios.
-                                        </div>`;
-                                }
-
-                                Swal.fire({
-                                    title: '<p class="text-xl font-extrabold text-surface-900 tracking-tight">Mobiliario reservado</p>',
-                                    html: `
-                                        <div class="mt-4 space-y-4 text-left">
-                                            <p class="text-sm text-surface-500 leading-relaxed">
-                                                Para la fecha seleccionada, los siguientes elementos de tu bolsa <span class="text-red-600 font-bold">ya tienen una reserva confirmada</span>:
-                                            </p>
-                                            <div class="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                                                ${prodHtml}
-                                            </div>
-                                            <div class="pt-2">
-                                                <p class="text-xs text-surface-400 italic flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-                                                    Por favor, intenta con otro rango de fechas.
-                                                </p>
-                                            </div>
-                                        </div>`,
-                                    icon: 'warning',
-                                    iconColor: '#dc2626',
-                                    confirmButtonText: 'Entendido',
-                                    confirmButtonColor: '#E07A3A',
-                                    showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
-                                    hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' },
-                                    customClass: {
-                                        popup: 'rounded-[24px] border-none shadow-2xl p-6',
-                                        confirmButton: 'rounded-xl px-10 py-3 text-sm font-bold shadow-soft hover:scale-105 transition-all duration-200'
-                                    },
-                                    backdrop: `rgba(0,0,0,0.5) backdrop-blur-sm`
-                                });
-                            }
+                            const prodText = reserveInfo.products || "No disponible";
+                            const prodList = prodText.split(',').map(p => p.trim()).filter(p => p.length > 0);
+                            
+                            showErrorModal({
+                                title: 'Mobiliario reservado',
+                                message: 'Para la fecha seleccionada, los siguientes elementos de tu bolsa ya tienen una reserva confirmada:',
+                                items: prodList,
+                                footer: 'Por favor, intenta con otro rango de fechas.'
+                            });
                         });
                         
                         dayElem.style.position = "relative";
@@ -1104,11 +1130,10 @@
                             const diffDays = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
                             
                             if (diffDays > 7) {
-                                Swal.fire({
-                                    icon: 'warning',
+                                showErrorModal({
                                     title: 'Límite de tiempo',
-                                    text: 'El mobiliario puede reservarse por un máximo de 7 días. Por favor, selecciona un rango menor.',
-                                    confirmButtonColor: '#E07A3A'
+                                    message: 'El mobiliario puede reservarse por un máximo de 7 días. Por favor, selecciona un rango menor.',
+                                    footer: 'Esta política garantiza la rotación del mobiliario.'
                                 });
                                 setTimeout(() => {
                                     instance.clear();
@@ -1131,6 +1156,132 @@
             });
         }
     });
+
+    // Custom Error Modal Logic
+    function showErrorModal({ title, message, items = [], footer = '' }) {
+        const dialog = document.getElementById('error-dialog');
+        const titleEl = document.getElementById('error-title');
+        const msgEl = document.getElementById('error-message');
+        const listEl = document.getElementById('error-list');
+        const footerEl = document.getElementById('error-footer');
+        
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        
+        if (items.length > 0) {
+            listEl.innerHTML = items.map(item => `
+                <div class="flex items-center gap-2.5 px-4 py-3 bg-red-50 text-red-700 rounded-2xl border border-red-100/50 text-[11px] font-black uppercase tracking-tight shadow-sm translate-y-0 hover:-translate-y-0.5 transition-transform duration-200">
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0"></div>
+                    <span>${item}</span>
+                </div>
+            `).join('');
+            listEl.classList.remove('hidden');
+        } else {
+            listEl.classList.add('hidden');
+        }
+
+        if (footer) {
+            footerEl.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                ${footer}
+            `;
+            footerEl.classList.remove('hidden');
+        } else {
+            footerEl.classList.add('hidden');
+        }
+
+        dialog.showModal();
+    }
+
+    // Number Input (Guests) Logic
+    function changeGuests(delta) {
+        const input = document.getElementById('evtGuests');
+        let current = parseInt(input.value) || 0;
+        let next = current + delta;
+        if (next < 5) next = 5; // Minimum 5 guests recommended
+        if (next > 9999) next = 9999;
+        input.value = next;
+        
+        // Trigger visual feedback or validation if needed
+        input.dispatchEvent(new Event('input'));
+    }
+
+    // Dropdown Event Type Handling
+    function toggleEventTypeDropdown(btn) {
+        const menu = document.getElementById('evtTypeMenu');
+        const chevron = btn.querySelector('.chevron');
+        const isOpen = !menu.classList.contains('hidden');
+        
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+    }
+
+    function selectEventType(btnItem, val) {
+        const input = document.getElementById('evtType');
+        const textDisplay = document.getElementById('evtTypeText');
+        const iconHtml = btnItem.querySelector('div').innerHTML;
+        const menu = document.getElementById('evtTypeMenu');
+        const chevron = document.getElementById('evtTypeBtn').querySelector('.chevron');
+        
+        input.value = val;
+        textDisplay.innerHTML = `<div class="w-5 h-5 flex items-center justify-center text-furent-500">${iconHtml}</div><span>${val}</span>`;
+        input.dispatchEvent(new Event('input')); // Trigger validation check
+        
+        menu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown-parent')) {
+            document.getElementById('evtTypeMenu').classList.add('hidden');
+            const btn = document.getElementById('evtTypeBtn');
+            if (btn) btn.querySelector('.chevron').classList.remove('rotate-180');
+        }
+    });
     </script>
+    
+    <!-- TAILWIND CUSTOM ERROR MODAL -->
+    <el-dialog>
+      <dialog id="error-dialog" aria-labelledby="error-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent focus:outline-none">
+        <el-dialog-backdrop class="fixed inset-0 bg-surface-950/60 backdrop-blur-md transition-opacity data-closed:opacity-0 data-enter:duration-500 data-enter:ease-out data-leave:duration-300 data-leave:ease-in"></el-dialog-backdrop>
+    
+        <div class="flex min-h-full items-center justify-center p-4 text-center focus:outline-none">
+          <el-dialog-panel class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-[0_20px_70px_-10px_rgba(0,0,0,0.1)] transition-all data-closed:scale-95 data-closed:opacity-0 data-enter:duration-500 data-enter:ease-out data-leave:duration-300 data-leave:ease-in sm:w-full sm:max-w-md data-closed:sm:translate-y-4 data-closed:sm:scale-90 border border-surface-100">
+            <div class="bg-white px-6 pt-10 pb-8 sm:px-10 sm:pt-12 sm:pb-10">
+              <div class="text-center">
+                <div class="mx-auto flex size-24 items-center justify-center rounded-full bg-red-50 border-8 border-white shadow-xl shadow-red-500/10 mb-8 transform transition-transform duration-700 animate-in zoom-in spin-in-12 delay-150">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-10 text-red-500">
+                    <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+                <h3 id="error-title" class="text-2xl font-black tracking-tight text-surface-950">Mobiliario reservado</h3>
+                <div class="mt-4">
+                  <p id="error-message" class="text-sm font-medium text-surface-500 leading-relaxed text-pretty">Para la fecha seleccionada, los siguientes elementos de tu bolsa ya tienen una reserva confirmada:</p>
+                </div>
+                
+                <div id="error-list" class="mt-6 space-y-2.5 max-h-48 overflow-y-auto pr-1 py-1">
+                   <!-- Items injected via JS -->
+                </div>
+                
+                <p id="error-footer" class="mt-6 text-[11px] font-bold text-surface-400 italic flex items-center justify-center gap-2">
+                   <!-- Footer text injected via JS -->
+                </p>
+              </div>
+            </div>
+            <div class="bg-surface-50/50 px-6 py-6 sm:px-10 flex flex-col gap-3">
+              <button type="button" onclick="document.getElementById('error-dialog').close()" class="w-full inline-flex justify-center rounded-2xl bg-furent-500 px-6 py-4 text-sm font-black text-white shadow-xl shadow-furent-500/30 hover:bg-furent-600 active:scale-[0.98] transition-all duration-200">
+                Entendido
+              </button>
+            </div>
+          </el-dialog-panel>
+        </div>
+      </dialog>
+    </el-dialog>
 </body>
 </html>

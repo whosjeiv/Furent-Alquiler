@@ -412,31 +412,6 @@
         <script>
             // Notifications collapse/expand
             var notifsExpanded = false;
-            function showTopRightNotice(message, isError) {
-                var existing = document.querySelector('.panel-top-right-toast');
-                if (existing) existing.remove();
-
-                var toast = document.createElement('div');
-                toast.className = 'panel-top-right-toast fixed top-5 right-5 z-[120] px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition-all duration-300 opacity-0 -translate-y-2';
-                if (isError) {
-                    toast.classList.add('bg-red-600', 'text-white');
-                } else {
-                    toast.classList.add('bg-surface-900', 'text-white');
-                }
-                toast.textContent = message;
-                document.body.appendChild(toast);
-
-                requestAnimationFrame(function() {
-                    toast.classList.remove('opacity-0', '-translate-y-2');
-                    toast.classList.add('opacity-100', 'translate-y-0');
-                });
-
-                setTimeout(function() {
-                    toast.classList.remove('opacity-100', 'translate-y-0');
-                    toast.classList.add('opacity-0', '-translate-y-2');
-                    setTimeout(function() { toast.remove(); }, 300);
-                }, 1800);
-            }
             async function markAllNotificationsAsRead() {
                 var btn = document.getElementById('markAllNotifsBtn');
                 if (!btn || btn.disabled) return;
@@ -464,11 +439,11 @@
                     if (navbarBadge) navbarBadge.remove();
 
                     btn.remove();
-                    showTopRightNotice('Todas las notificaciones fueron leídas.');
+                    showToast('Todas las notificaciones fueron leídas.', 'success');
                 } catch (e) {
                     btn.disabled = false;
                     btn.textContent = originalText;
-                    showTopRightNotice('No fue posible marcar todas las notificaciones.', true);
+                    showToast('No fue posible marcar todas las notificaciones.', 'error');
                 }
             }
             function toggleNotifications() {

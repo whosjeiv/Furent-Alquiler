@@ -1166,14 +1166,7 @@
             const max = parseInt(qtyInput.max) || 999;
             if (parseInt(qtyInput.value) > max) {
                 qtyInput.value = max;
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Stock limitado',
-                    text: `La cantidad máxima disponible es ${max}`,
-                    confirmButtonColor: '#E07A3A',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+                showToast(`Solo contamos con ${max} unidades disponibles.`, 'warning');
             }
             updateTotal();
         });
@@ -1297,12 +1290,7 @@
             const qty = parseInt(qtyInput.value) || 1;
             
             if (qty > productData.maxStock) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Stock insuficiente',
-                    text: `Lo sentimos, solo contamos con ${productData.maxStock} unidades de este producto.`,
-                    confirmButtonColor: '#E07A3A'
-                });
+                showToast(`Solo contamos con ${productData.maxStock} unidades disponibles.`, 'error');
                 return;
             }
 
@@ -1446,16 +1434,16 @@
                     icon.classList.remove('text-surface-400');
                     icon.classList.add('text-red-500');
                     icon.setAttribute('fill', 'currentColor');
-                    showToast('Agregado a favoritos');
+                    showToast('Agregado a favoritos', 'success');
                 } else {
                     icon.classList.add('text-surface-400');
                     icon.classList.remove('text-red-500');
                     icon.setAttribute('fill', 'none');
-                    showToast('Eliminado de favoritos');
+                    showToast('Eliminado de favoritos', 'info');
                 }
             }
         })
-        .catch(() => showToast('Inicia sesión para guardar favoritos'));
+        .catch(() => showToast('Inicia sesión para guardar favoritos', 'warning'));
     }
     </script>
 
@@ -1698,7 +1686,7 @@
                     const diffDays = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
                     
                     if (diffDays > 7) {
-                        if (typeof showToast === 'function') showToast('Máximo 7 días de alquiler');
+                        if (typeof showToast === 'function') showToast('Máximo 7 días de alquiler', 'warning');
                         selStart = date;
                         selEnd = null;
                         render();
@@ -1712,7 +1700,7 @@
                         check.setDate(check.getDate() + 1);
                     }
                     if (hasOcc) {
-                        if (typeof showToast === 'function') showToast('Hay fechas ocupadas en ese rango');
+                        if (typeof showToast === 'function') showToast('Hay fechas ocupadas en ese rango', 'error');
                         selStart = date;
                         selEnd = null;
                     } else {
@@ -1789,7 +1777,7 @@
                         const diffDays = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
                         
                         if (diffDays > 7) {
-                            if (typeof showToast === 'function') showToast('Máximo 7 días de alquiler');
+                            if (typeof showToast === 'function') showToast('Máximo 7 días de alquiler', 'warning');
                             setTimeout(() => {
                                 instance.clear();
                                 selStart = null;

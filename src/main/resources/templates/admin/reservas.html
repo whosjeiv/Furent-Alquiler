@@ -1,7 +1,8 @@
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'reservas')}">
 <head>
     <title>Reservas — Furent Admin</title>
+    <!-- Tailwind Plus Elements for Modals -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
 </head>
 <body>
     <main>
@@ -13,12 +14,32 @@
                     <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Reservas y Cotizaciones</h1>
                     <p class="text-sm font-medium text-surface-500 mt-1">Supervisa, gestiona y administra el ciclo de vida de los alquileres.</p>
                 </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <div class="relative w-full md:w-64">
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <!-- Search -->
+                    <div class="relative flex-1 min-w-[240px]">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
                         </div>
-                        <input type="text" id="busquedaReserva" placeholder="Buscar por cliente o ID..." class="w-full pl-9 pr-4 py-2 border border-surface-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all font-medium text-surface-700 shadow-sm" onkeyup="filtrarReservas()">
+                        <input type="text" id="busquedaReserva" placeholder="Buscar por cliente, ID o método..." 
+                               class="w-full pl-9 pr-4 py-2.5 border border-surface-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all font-medium text-surface-700 shadow-sm" 
+                               onkeyup="filtrarReservas()">
+                    </div>
+                    <!-- Status Filter -->
+                    <select id="filtroEstado" onchange="filtrarReservas()" class="px-4 py-2.5 bg-white border border-surface-200 rounded-xl text-sm font-bold text-surface-700 focus:ring-2 focus:ring-furent-500/20 outline-none shadow-sm cursor-pointer">
+                        <option value="all">Todos los Estados</option>
+                        <option value="PENDIENTE">Pendientes</option>
+                        <option value="CONFIRMADA">Confirmadas</option>
+                        <option value="ENTREGADA">Entregadas</option>
+                        <option value="COMPLETADA">Completadas</option>
+                        <option value="CANCELADA">Canceladas</option>
+                    </select>
+                    <!-- Date Filter -->
+                    <div class="relative">
+                        <input type="text" id="filtroFecha" placeholder="Filtrar por fecha..." 
+                               class="pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl bg-white text-sm font-bold text-surface-700 shadow-sm focus:ring-2 focus:ring-furent-500/20 outline-none w-48 cursor-pointer">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -96,8 +117,12 @@
                                 <th class="pr-6 py-4 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-surface-100 text-sm">
-                            <tr th:each="r : ${reservas}" th:if="${r != null}" class="group hover:bg-surface-50/50 transition-colors reserva-fila">
+                        <tbody class="divide-y divide-surface-100 text-sm" id="tbodyReservas">
+                            <tr th:each="r : ${reservas}" th:if="${r != null}" 
+                                th:data-id="${r.id}"
+                                th:data-status="${r.estado}"
+                                th:data-date="${r.fechaInicio}"
+                                class="group hover:bg-surface-50/50 transition-colors reserva-fila">
                                 <!-- ID / Detalles -->
                                 <td class="pl-6 py-4 align-middle">
                                     <div class="flex flex-col gap-1">
@@ -208,58 +233,95 @@
                                 
                                 <!-- Estado Rápido -->
                                 <td class="py-4 align-middle">
-                                    <form th:if="${r.id != null}" th:action="@{/admin/reservas/estado/{id}(id=${r.id})}" method="post" class="relative group/form inline-block">
-                                        <select name="estado" onchange="confirmarCambioEstado(this)" th:class="${(r.estado == 'PENDIENTE' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 focus:border-amber-400' : 
-                                                            (r.estado == 'CONFIRMADA' ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 focus:border-blue-400' : 
-                                                            (r.estado == 'ENTREGADA' ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 focus:border-green-400' : 
-                                                            (r.estado == 'COMPLETADA' ? 'bg-surface-100 text-surface-700 border-surface-200 hover:bg-surface-200 focus:border-surface-400' : 
-                                                            'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 focus:border-red-400')))) + 
-                                                            ' transition-colors border font-bold text-xs rounded-xl px-3 py-1.5 focus:ring-0 appearance-none pr-8 shadow-sm cursor-pointer outline-none'}">
-                                            <option value="PENDIENTE" th:selected="${r.estado == 'PENDIENTE'}">Pendiente</option>
-                                            <option value="CONFIRMADA" th:selected="${r.estado == 'CONFIRMADA'}">Confirmada</option>
-                                            <option value="ENTREGADA" th:selected="${r.estado == 'ENTREGADA'}">Entregada (En curso)</option>
-                                            <option value="COMPLETADA" th:selected="${r.estado == 'COMPLETADA'}">Completada</option>
-                                            <option value="CANCELADA" th:selected="${r.estado == 'CANCELADA'}">Cancelada</option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-current opacity-70">
-                                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                    <form th:if="${r.id != null}" th:action="@{/admin/reservas/estado/{id}(id=${r.id})}" method="post" class="relative group/form inline-block dropdown-parent">
+                                        <input type="hidden" name="estado" th:value="${r.estado}" class="estado-hidden-input">
+                                        <button type="button" onclick="toggleStatusDropdown(this)" th:attr="data-original=${r.estado}"
+                                                th:class="${(r.estado == 'PENDIENTE' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                                                            (r.estado == 'CONFIRMADA' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                                                            (r.estado == 'ENTREGADA' ? 'bg-green-50 text-green-700 border-green-200' : 
+                                                            (r.estado == 'COMPLETADA' ? 'bg-surface-100 text-surface-700 border-surface-200' : 
+                                                            'bg-red-50 text-red-700 border-red-200')))) + 
+                                                            ' transition-all border font-bold text-[11px] rounded-full px-4 py-1.5 flex items-center gap-2 hover:shadow-md active:scale-95 duration-200'}">
+                                            <span class="status-text" th:text="${r.estado}">PENDIENTE</span>
+                                            <svg class="h-3 w-3 transition-transform duration-200 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                        </button>
+                                        
+                                        <!-- Status Dropdown Menu -->
+                                        <div class="dropdown-menu hidden absolute left-0 mt-2 w-44 bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl shadow-2xl z-[110] overflow-hidden py-1 shadow-furent-500/5">
+                                            <button type="button" onclick="selectNewStatus(this, 'PENDIENTE')" class="w-full px-4 py-2.5 text-xs font-bold text-amber-700 hover:bg-amber-50 transition-colors text-left flex items-center justify-between">
+                                                Pendiente <span th:if="${r.estado == 'PENDIENTE'}" class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                            </button>
+                                            <button type="button" onclick="selectNewStatus(this, 'CONFIRMADA')" class="w-full px-4 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 transition-colors text-left flex items-center justify-between">
+                                                Confirmada <span th:if="${r.estado == 'CONFIRMADA'}" class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                            </button>
+                                            <button type="button" onclick="selectNewStatus(this, 'ENTREGADA')" class="w-full px-4 py-2.5 text-xs font-bold text-green-700 hover:bg-green-50 transition-colors text-left flex items-center justify-between">
+                                                Entregada <span th:if="${r.estado == 'ENTREGADA'}" class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                            </button>
+                                            <button type="button" onclick="selectNewStatus(this, 'COMPLETADA')" class="w-full px-4 py-2.5 text-xs font-bold text-surface-700 hover:bg-surface-100 transition-colors text-left flex items-center justify-between">
+                                                Completada <span th:if="${r.estado == 'COMPLETADA'}" class="w-1.5 h-1.5 bg-surface-500 rounded-full"></span>
+                                            </button>
+                                            <button type="button" onclick="selectNewStatus(this, 'CANCELADA')" class="w-full px-4 py-2.5 text-xs font-bold text-red-700 hover:bg-red-50 transition-colors text-left flex items-center justify-between">
+                                                Cancelada <span th:if="${r.estado == 'CANCELADA'}" class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                            </button>
                                         </div>
                                     </form>
                                     <span th:if="${r.id == null}" class="text-xs font-bold text-surface-400 uppercase">Sin ID</span>
                                 </td>
 
                                 <!-- Acciones -->
-                                <td class="pr-6 py-4 align-middle text-right">
-                                    <div class="flex items-center justify-end gap-1 opacity-100 lg:opacity-60 group-hover:opacity-100 transition-opacity" th:if="${r.id != null}">
-                                        <a th:href="@{/admin/reservas/contrato/{id}(id=${r.id})}" target="_blank" class="p-2 text-surface-500 hover:text-furent-600 hover:bg-furent-50 rounded-lg transition-colors border border-transparent hover:border-furent-100" title="Ver Contrato PDF">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                                        </a>
-                                        <button type="button" th:attr="onclick=|sendWhatsApp('${r.usuarioNombre ?: 'Cliente'}', '${r.total ?: 0}', '${r.id}')|" class="p-2 text-surface-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100" title="Notificar WhatsApp">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-4.721 7.454c-1.332 0-2.615-.359-3.729-1.038l-.268-.159-2.774.727.741-2.711-.174-.275A9.74 9.74 0 013.058 12.3c0-5.385 4.381-9.766 9.771-9.766 2.61 0 5.064 1.017 6.911 2.863 1.848 1.846 2.865 4.3 2.865 6.903 0 5.386-4.381 9.767-9.77 9.767m9.77-11.838c0-5.386-4.381-9.766-9.77-9.766S3.058 4.478 3.058 9.864c0 1.721.455 3.395 1.319 4.87L3 20l5.368-1.408a9.73 9.73 0 004.872 1.288c5.4 0 9.77-4.38 9.77-9.766"/></svg>
+                                <td class="pr-6 py-4 align-middle text-right relative">
+                                    <div class="inline-block text-left dropdown-parent">
+                                        <button type="button" onclick="toggleReservaDropdown(this)"
+                                                class="inline-flex items-center gap-2 px-4 py-2 bg-surface-900 text-white text-xs font-bold rounded-xl hover:bg-surface-800 transition-all shadow-sm active:scale-95">
+                                            Opciones
+                                            <svg class="w-3.5 h-3.5 transition-transform duration-200 chevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                                         </button>
-                                        <button type="button" th:attr="onclick=|signDigital('${r.id}')|" class="p-2 text-surface-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100" title="Firma Digital">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
-                                        </button>
-                                        <!-- Eliminar cotización (solo pendientes) -->
-                                        <form th:if="${r.estado == 'PENDIENTE'}" th:action="@{/admin/reservas/eliminar/{id}(id=${r.id})}" method="post" class="inline-block" onsubmit="return confirmarEliminarCotizacion(event)">
-                                            <button type="submit" class="p-2 text-surface-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100" title="Eliminar cotización">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0115.916 21.75H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                        <!-- Dropdown Content -->
+                                        <div class="dropdown-menu hidden absolute right-0 mt-2 w-56 bg-surface-950 border border-surface-800 rounded-2xl shadow-2xl z-[100] overflow-hidden py-1.5 animate-in fade-in zoom-in duration-200 origin-top-right">
+                                            <button type="button" onclick="verDetallesReserva(this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-surface-200 hover:bg-surface-800 transition-colors text-left border-b border-surface-900/50">
+                                                <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                                                Ver Detalles
                                             </button>
-                                        </form>
+                                            <a th:href="@{/admin/reservas/contrato/{id}(id=${r.id})}" target="_blank" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-surface-200 hover:bg-surface-800 transition-colors">
+                                                <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                                Ver Contrato PDF
+                                            </a>
+                                            <button type="button" th:attr="onclick=|sendWhatsApp('${r.usuarioNombre ?: 'Cliente'}', '${r.total ?: 0}', '${r.id}')|" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-surface-200 hover:bg-surface-800 transition-colors text-left">
+                                                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-4.721 7.454c-1.332 0-2.615-.359-3.729-1.038l-.268-.159-2.774.727.741-2.711-.174-.275A9.74 9.74 0 013.058 12.3c0-5.385 4.381-9.766 9.771-9.766 2.61 0 5.064 1.017 6.911 2.863 1.848 1.846 2.865 4.3 2.865 6.903 0 5.386-4.381 9.767-9.77 9.767m9.77-11.838c0-5.386-4.381-9.766-9.77-9.766S3.058 4.478 3.058 9.864c0 1.721.455 3.395 1.319 4.87L3 20l5.368-1.408a9.73 9.73 0 004.872 1.288c5.4 0 9.77-4.38 9.77-9.766"/></svg>
+                                                Notificar WhatsApp
+                                            </button>
+                                            <button type="button" th:attr="onclick=|signDigital('${r.id}')|" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-surface-200 hover:bg-surface-800 transition-colors text-left border-b border-surface-900/50">
+                                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                                Firma Digital
+                                            </button>
+                                            <form th:if="${r.estado == 'PENDIENTE'}" th:action="@{/admin/reservas/eliminar/{id}(id=${r.id})}" method="post" class="m-0" onsubmit="return confirmarEliminarCotizacion(event)">
+                                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors text-left">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0115.916 21.75H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                                    Eliminar Cotización
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Empty State -->
-                <div th:if="${#lists.isEmpty(reservas)}" class="text-center py-24">
-                    <div class="w-20 h-20 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-surface-200 shadow-sm text-surface-400">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                
+                <!-- Pagination / Limits -->
+                <div class="bg-surface-50 border-t border-surface-200 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-surface-400 uppercase">Mostrar:</span>
+                        <div class="flex gap-1">
+                            <button onclick="setLimit(10)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white transition-all active-limit" data-limit="10">10</button>
+                            <button onclick="setLimit(50)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white transition-all" data-limit="50">50</button>
+                            <button onclick="setLimit(100)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white transition-all" data-limit="100">100</button>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-surface-900 mb-1">Sin Solicitudes</h3>
-                    <p class="text-sm font-medium text-surface-500">Aún no se han generado reservas o cotizaciones.</p>
+                    
+                    <div class="flex items-center gap-4" id="paginationControls">
+                        <!-- Will be populated by JS -->
+                    </div>
                 </div>
             </div>
             
@@ -271,38 +333,278 @@
             setTimeout(() => document.getElementById('successAlert').style.display='none', 4000);
         }
 
-        // Pagination + Search Filter
-        const reservaPaginator = new FurentPaginator({
-            containerId: 'tablaReservas',
-            itemSelector: '.reserva-fila',
-            perPage: 10
+        // Flatpickr for date filtering
+        flatpickr("#filtroFecha", {
+            locale: "es",
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr) {
+                filtrarReservas();
+            }
+        });
+
+        function sortRowsByRecent() {
+            const tbody = document.getElementById('tbodyReservas');
+            const rows = Array.from(tbody.querySelectorAll('.reserva-fila'));
+            rows.sort((a, b) => {
+                // Assuming newer IDs or dates are better. Let's try ID if it looks like a timestamp or sequential.
+                // Or just try the data-id string comparison descending.
+                return b.getAttribute('data-id').localeCompare(a.getAttribute('data-id'));
+            });
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        let reservaPaginator;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            sortRowsByRecent();
+            
+            reservaPaginator = new FurentPaginator({
+                containerId: 'tablaReservas',
+                itemSelector: '.reserva-fila',
+                perPage: 10
+            });
+            
+            // Override the paginator UI method to match the new design
+            reservaPaginator._renderControls = function(totalPages, totalItems) {
+                const controls = document.getElementById('paginationControls');
+                if (!controls) return;
+                
+                if (totalItems === 0) {
+                    controls.innerHTML = '<span class="text-xs font-bold text-surface-400 uppercase">Sin resultados</span>';
+                    return;
+                }
+
+                let html = `<span class="text-xs font-bold text-surface-400 uppercase">${totalItems} Encontrados</span>`;
+                
+                if (totalPages > 1) {
+                    html += `
+                        <div class="flex items-center gap-1 ml-4">
+                            <button onclick="reservaPaginator.goTo(${this.currentPage - 1})" ${this.currentPage === 1 ? 'disabled' : ''} class="p-2 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 transition-all text-surface-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                            </button>
+                            <span class="px-4 py-2 bg-white border border-surface-200 rounded-lg text-xs font-bold text-surface-900 shadow-sm">${this.currentPage} / ${totalPages}</span>
+                            <button onclick="reservaPaginator.goTo(${this.currentPage + 1})" ${this.currentPage === totalPages ? 'disabled' : ''} class="p-2 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 transition-all text-surface-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                            </button>
+                        </div>
+                    `;
+                }
+                controls.innerHTML = html;
+            };
+            
+            reservaPaginator.update();
         });
 
         function filtrarReservas() {
-            const input = document.getElementById("busquedaReserva");
-            reservaPaginator.filterBySearch(input.value);
+            const searchTerm = document.getElementById("busquedaReserva").value.toLowerCase();
+            const statusFilter = document.getElementById("filtroEstado").value;
+            const dateFilter = document.getElementById("filtroFecha").value; // "YYYY-MM-DD to YYYY-MM-DD"
+            
+            const rows = document.querySelectorAll('.reserva-fila');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const status = row.getAttribute('data-status');
+                const date = row.getAttribute('data-date'); // YYYY-MM-DD
+                
+                let matchesSearch = text.includes(searchTerm);
+                let matchesStatus = (statusFilter === 'all' || status === statusFilter);
+                let matchesDate = true;
+                
+                if (dateFilter.includes(' to ')) {
+                    const [start, end] = dateFilter.split(' to ');
+                    matchesDate = (date >= start && date <= end);
+                } else if (dateFilter) {
+                    matchesDate = (date === dateFilter);
+                }
+                
+                if (matchesSearch && matchesStatus && matchesDate) {
+                    delete row.dataset.searchHidden;
+                } else {
+                    row.dataset.searchHidden = 'true';
+                }
+            });
+            
+            reservaPaginator.update();
         }
 
-        // Confirm before changing reservation status
-        function confirmarCambioEstado(selectEl) {
-            const nuevoEstado = selectEl.value;
-            const form = selectEl.closest('form');
-            Swal.fire({
-                title: 'Confirmar cambio de estado',
-                text: '¿Cambiar el estado de esta reserva a ' + nuevoEstado + '?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#18181b',
-                cancelButtonColor: '#d1d5db',
-                confirmButtonText: 'Sí, cambiar',
-                cancelButtonText: 'Cancelar',
-                customClass: { popup: 'rounded-2xl' }
-            }).then((result) => {
-                if (result.isConfirmed) {
+        function setLimit(limit) {
+            reservaPaginator.perPage = limit;
+            reservaPaginator.currentPage = 1;
+            
+            document.querySelectorAll('.limit-btn').forEach(btn => {
+                btn.classList.remove('active-limit', 'bg-surface-900', 'text-white');
+                if (parseInt(btn.dataset.limit) === limit) {
+                    btn.classList.add('active-limit', 'bg-surface-900', 'text-white');
+                }
+            });
+            
+            reservaPaginator.update();
+        }
+
+        // Dropdown Logic
+        function toggleReservaDropdown(btn) {
+            const menu = btn.nextElementSibling;
+            const chevron = btn.querySelector('.chevron');
+            
+            // Close others
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            document.querySelectorAll('.chevron').forEach(c => {
+                if (c !== chevron) c.classList.remove('rotate-180');
+            });
+
+            const isOpen = !menu.classList.contains('hidden');
+            if (isOpen) {
+                menu.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            } else {
+                menu.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            }
+        }
+
+        // Close dropdowns on click outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-parent')) {
+                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+                document.querySelectorAll('.chevron').forEach(c => c.classList.remove('rotate-180'));
+            }
+        });
+
+        function toggleStatusDropdown(btn) {
+            const menu = btn.nextElementSibling;
+            const chevron = btn.querySelector('.chevron');
+            
+            // Close others
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+            document.querySelectorAll('.chevron').forEach(c => {
+                if (c !== chevron) c.classList.remove('rotate-180');
+            });
+
+            const isOpen = !menu.classList.contains('hidden');
+            if (isOpen) {
+                menu.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            } else {
+                menu.classList.remove('hidden');
+                menu.classList.add('animate-in', 'fade-in', 'zoom-in', 'duration-200', 'origin-top-left');
+                chevron.classList.add('rotate-180');
+            }
+        }        // === CUSTOM MODAL SYSTEM ===
+        let currentModalCallback = null;
+        let currentModalCancelCallback = null;
+
+        function showCustomModal({ title, message, confirmText, cancelText, type = 'danger', onConfirm, onCancel }) {
+            const dialog = document.getElementById('dialog');
+            const titleEl = document.getElementById('dialog-title');
+            const messageEl = document.getElementById('dialog-message');
+            const confirmBtn = document.getElementById('dialog-confirm-btn');
+            const cancelBtn = document.getElementById('dialog-cancel-btn'); // Added for consistency
+            const iconContainer = document.getElementById('dialog-icon-container');
+            const iconSvg = document.getElementById('dialog-icon-svg');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            confirmBtn.textContent = confirmText || 'Confirmar';
+            cancelBtn.textContent = cancelText || 'Cancelar'; // Set cancel button text
+
+            // Set styles based on type
+            if (type === 'danger') {
+                iconContainer.className = "mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:size-10";
+                iconSvg.className = "size-6 text-red-500";
+                iconSvg.innerHTML = `<path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />`;
+                confirmBtn.className = "inline-flex w-full justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-500 transition-all sm:ml-3 sm:w-auto shadow-lg shadow-red-600/20";
+            } else if (type === 'warning') {
+                iconContainer.className = "mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-amber-500/10 sm:mx-0 sm:size-10";
+                iconSvg.className = "size-6 text-amber-500";
+                iconSvg.innerHTML = `<path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />`;
+                confirmBtn.className = "inline-flex w-full justify-center rounded-xl bg-furent-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-furent-600 transition-all sm:ml-3 sm:w-auto shadow-lg shadow-furent-500/20";
+            } else { // Default to 'info' or 'blue'
+                iconContainer.className = "mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-blue-500/10 sm:mx-0 sm:size-10";
+                iconSvg.className = "size-6 text-blue-500";
+                iconSvg.innerHTML = `<path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" stroke-linecap="round" stroke-linejoin="round" />`;
+                confirmBtn.className = "inline-flex w-full justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-500 transition-all sm:ml-3 sm:w-auto shadow-lg shadow-blue-600/20";
+            }
+
+            currentModalCallback = onConfirm;
+            currentModalCancelCallback = onCancel;
+            dialog.showModal();
+        }
+
+        function handleModalConfirm() {
+            if (currentModalCallback) currentModalCallback();
+            closeModal();
+        }
+
+        function handleModalCancel() {
+            if (currentModalCancelCallback) currentModalCancelCallback();
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('dialog').close();
+        }
+
+        // Updated functions using the new Modal Dialog
+        function selectNewStatus(btnMenu, nuevoEstado) {
+            const form = btnMenu.closest('form');
+            const hiddenInput = form.querySelector('.estado-hidden-input');
+            const mainButton = form.querySelector('button[type="button"]');
+            const statusText = mainButton.querySelector('.status-text');
+            const menu = btnMenu.closest('.dropdown-menu');
+            
+            // Temporary UI update for visual feedback
+            const originalStatus = hiddenInput.value;
+            statusText.textContent = nuevoEstado;
+            
+            // Apply temporary classes for colors
+            const statusClasses = {
+                'PENDIENTE': 'bg-amber-50 text-amber-700 border-amber-200',
+                'CONFIRMADA': 'bg-blue-50 text-blue-700 border-blue-200',
+                'ENTREGADA': 'bg-green-50 text-green-700 border-green-200',
+                'COMPLETADA': 'bg-surface-100 text-surface-700 border-surface-200',
+                'CANCELADA': 'bg-red-50 text-red-700 border-red-200'
+            };
+            
+            mainButton.className = statusClasses[nuevoEstado] + ' transition-all border font-bold text-[11px] rounded-full px-4 py-1.5 flex items-center gap-2 hover:shadow-md active:scale-95 duration-200';
+            
+            menu.classList.add('hidden');
+            
+            // Call confirmation
+            confirmarCambioEstado(mainButton, nuevoEstado, originalStatus);
+        }
+
+        function confirmarCambioEstado(btn, nuevoEstado, originalEstado) {
+            const form = btn.closest('form');
+            const hiddenInput = form.querySelector('.estado-hidden-input');
+            
+            showCustomModal({
+                title: 'Actualizar Estado',
+                message: `¿Estás seguro de que deseas cambiar el estado de esta reserva a ${nuevoEstado}? Esta acción notificará al sistema.`,
+                confirmText: 'Actualizar',
+                cancelText: 'Cancelar',
+                type: 'warning',
+                onConfirm: () => {
+                    hiddenInput.value = nuevoEstado;
                     form.submit();
-                } else {
-                    // Reset to original value
-                    selectEl.selectedIndex = [...selectEl.options].findIndex(o => o.defaultSelected);
+                },
+                onCancel: () => {
+                    // Reset to original UI
+                    const statusText = btn.querySelector('.status-text');
+                    statusText.textContent = originalEstado;
+                    
+                    const statusClasses = {
+                        'PENDIENTE': 'bg-amber-50 text-amber-700 border-amber-200',
+                        'CONFIRMADA': 'bg-blue-50 text-blue-700 border-blue-200',
+                        'ENTREGADA': 'bg-green-50 text-green-700 border-green-200',
+                        'COMPLETADA': 'bg-surface-100 text-surface-700 border-surface-200',
+                        'CANCELADA': 'bg-red-50 text-red-700 border-red-200'
+                    };
+                    btn.className = statusClasses[originalEstado] + ' transition-all border font-bold text-[11px] rounded-full px-4 py-1.5 flex items-center gap-2 hover:shadow-md active:scale-95 duration-200';
                 }
             });
         }
@@ -310,18 +612,14 @@
         function confirmarEliminarCotizacion(event) {
             event.preventDefault();
             const form = event.target;
-            Swal.fire({
+            
+            showCustomModal({
                 title: 'Eliminar cotización',
-                text: 'Esta acción eliminará la cotización de forma permanente. ¿Deseas continuar?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#d1d5db',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                customClass: { popup: 'rounded-2xl' }
-            }).then((result) => {
-                if (result.isConfirmed) {
+                message: 'Esta acción es permanente y no podrá deshacerse. ¿Estás seguro de que deseas eliminar esta cotización?',
+                confirmText: 'Eliminar',
+                cancelText: 'Cancelar',
+                type: 'danger',
+                onConfirm: () => {
                     form.submit();
                 }
             });
@@ -333,14 +631,18 @@
             const row = buttonEl.closest('tr');
             const extra = row ? row.querySelector('.reserva-extra') : null;
             const html = extra ? extra.innerHTML : '<p class="text-sm text-surface-600">Sin detalles adicionales para esta reserva.</p>';
+            const isDark = document.documentElement.classList.contains('dark');
             Swal.fire({
                 title: 'Detalles de la reserva',
                 html: html,
                 confirmButtonText: 'Entendido',
-                confirmButtonColor: '#18181b', // surface-900
+                confirmButtonColor: '#18181b',
+                background: isDark ? '#18181b' : '#fff',
+                color: isDark ? '#f4f4f5' : '#18181b',
                 customClass: {
-                    popup: 'rounded-2xl',
-                    htmlContainer: 'text-left'
+                    popup: 'rounded-[1.5rem] shadow-2xl border-0',
+                    title: 'text-2xl font-bold tracking-tight mb-4',
+                    htmlContainer: 'text-left overflow-x-hidden'
                 }
             });
         }
@@ -352,28 +654,63 @@
         }
 
         function signDigital(id) {
-            Swal.fire({
+            showCustomModal({
                 title: 'Firma Digital',
-                text: '¿Estás de acuerdo con los términos y condiciones del contrato para la reserva #' + id.substring(0,8) + '?',
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, Acepto',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#18181b',
-                customClass: { popup: 'rounded-2xl' }
-            }).then((result) => {
-                if (result.isConfirmed) {
+                message: `¿Aceptas los términos y condiciones para la reserva #${id.substring(0,8)}? Al confirmar, el contrato quedará legalmente firmado.`,
+                confirmText: 'Firmar ahora',
+                cancelText: 'Cerrar',
+                type: 'info',
+                onConfirm: () => {
+                    // Assuming showToast is defined elsewhere or will be added.
+                    // For now, a simple alert or console log can be used if showToast is not available.
+                    // alert('¡Contrato firmado con éxito!');
+                    // console.log('¡Contrato firmado con éxito!');
+                    const isDark = document.documentElement.classList.contains('dark');
                     Swal.fire({
                         title: '¡Firmado!',
                         text: 'El contrato ha sido firmado digitalmente.',
                         icon: 'success',
                         confirmButtonColor: '#18181b',
-                        customClass: { popup: 'rounded-2xl' }
+                        background: isDark ? '#18181b' : '#fff',
+                        color: isDark ? '#f4f4f5' : '#18181b',
+                        customClass: { popup: 'rounded-[1.5rem]' }
                     });
                 }
             });
         }
     </script>
+    
+    <!-- TAILWIND CUSTOM MODAL DIALOG -->
+    <el-dialog>
+      <dialog id="dialog" aria-labelledby="dialog-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent">
+        <el-dialog-backdrop class="fixed inset-0 bg-surface-950/60 backdrop-blur-sm transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"></el-dialog-backdrop>
+    
+        <div tabindex="0" class="flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0">
+          <el-dialog-panel class="relative transform overflow-hidden rounded-[2rem] bg-white dark:bg-surface-900 text-left shadow-2xl outline outline-surface-200 dark:outline-surface-800 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95">
+            <div class="bg-white dark:bg-surface-900 px-6 pt-8 pb-6 sm:px-10 sm:pt-10">
+              <div class="sm:flex sm:items-start gap-5">
+                <div id="dialog-icon-container" class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:size-12">
+                  <svg id="dialog-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-7 text-red-500">
+                    <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+                <div class="mt-4 text-center sm:mt-0 sm:text-left">
+                  <h3 id="dialog-title" class="text-2xl font-black tracking-tight text-surface-900 dark:text-white">Deactivate account</h3>
+                  <div class="mt-3">
+                    <p id="dialog-message" class="text-sm font-medium text-surface-500 dark:text-surface-400 leading-relaxed text-pretty">Are you sure you want to deactivate your account? All of your data will be permanently removed. This action cannot be undone.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-surface-50 dark:bg-surface-800/50 px-6 py-5 sm:flex sm:flex-row-reverse sm:px-10 gap-3">
+              <button type="button" id="dialog-confirm-btn" onclick="handleModalConfirm()" class="inline-flex w-full justify-center rounded-xl bg-red-600 px-6 py-3 text-sm font-black text-white hover:bg-red-500 transition-all sm:ml-0 sm:w-auto shadow-lg shadow-red-600/20 active:scale-95">Confirmar</button>
+              <button type="button" id="dialog-cancel-btn" onclick="handleModalCancel()" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white dark:bg-surface-800 px-6 py-3 text-sm font-black text-surface-700 dark:text-surface-300 ring-1 ring-inset ring-surface-200 dark:ring-surface-700 hover:bg-surface-50 dark:hover:bg-surface-700 transition-all sm:mt-0 sm:w-auto active:scale-95">Cancelar</button>
+            </div>
+          </el-dialog-panel>
+        </div>
+      </dialog>
+    </el-dialog>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1.0.0/dist/elements.min.js"></script>
     </main>
 </body>
 </html>

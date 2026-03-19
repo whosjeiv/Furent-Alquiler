@@ -286,28 +286,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
-// Toast Notification
+// Global Professional Toasts (SweetAlert2)
 // ========================================
-function showToast(message) {
-    // Remove existing toasts
-    const existing = document.querySelector('.furent-toast');
-    if (existing) existing.remove();
+function showToast(message, type = 'success') {
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    // Custom Icon SVGs
+    const icons = {
+        success: `<div class="w-10 h-10 rounded-full bg-green-50 ${isDark ? 'bg-green-500/10' : ''} flex items-center justify-center text-green-500 shadow-inner">
+                    <svg class="w-6 h-6 animate__animated animate__heartBeat" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                  </div>`,
+        error:   `<div class="w-10 h-10 rounded-full bg-red-50 ${isDark ? 'bg-red-500/10' : ''} flex items-center justify-center text-red-500 shadow-inner">
+                    <svg class="w-6 h-6 animate__animated animate__shakeX" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </div>`,
+        warning: `<div class="w-10 h-10 rounded-full bg-amber-50 ${isDark ? 'bg-amber-500/10' : ''} flex items-center justify-center text-amber-500 shadow-inner">
+                    <svg class="w-6 h-6 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                  </div>`,
+        info:    `<div class="w-10 h-10 rounded-full bg-blue-50 ${isDark ? 'bg-blue-500/10' : ''} flex items-center justify-center text-blue-500 shadow-inner">
+                    <svg class="w-6 h-6 animate__animated animate__fadeIn" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+                  </div>`
+    };
 
-    const toast = document.createElement('div');
-    toast.className = 'furent-toast fixed bottom-6 right-6 z-[100] bg-surface-900 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg transform translate-y-4 opacity-0 transition-all duration-300';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.style.transform = 'translateY(0)';
-        toast.style.opacity = '1';
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true,
+        background: isDark ? '#18181b' : '#fff',
+        color: isDark ? '#f4f4f5' : '#18181b',
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
     });
 
-    setTimeout(() => {
-        toast.style.transform = 'translateY(4px)';
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
+    Toast.fire({
+        title: message,
+        iconHtml: icons[type] || icons.success,
+        showClass: {
+            popup: 'animate__animated animate__fadeInRight animate__faster'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutRight animate__faster'
+        },
+        customClass: {
+            popup: 'rounded-[1.25rem] border border-surface-200/50 dark:border-surface-800 shadow-2xl px-5 py-4 flex items-center',
+            icon: 'border-0 p-0 m-0 mr-4',
+            title: 'text-sm font-bold tracking-tight text-left m-0 leading-tight'
+        }
+    });
 }
 
 // ========================================
