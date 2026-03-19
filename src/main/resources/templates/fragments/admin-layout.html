@@ -106,19 +106,25 @@
             titleEl.textContent = config.title || 'Aviso';
             confirmBtn.textContent = config.confirmText || 'Entendido';
             
+            // Re-apply animation class to ensure it plays
+            dialog.classList.remove('animate-modal-out');
+            dialog.classList.add('open:animate-modal-in');
+            
             // Handle HTML or Text
             if (config.html) {
                 htmlEl.innerHTML = config.html;
                 htmlEl.classList.remove('hidden');
                 msgContainer.classList.add('hidden');
                 iconBox.classList.add('hidden');
-                panel.classList.replace('sm:max-w-md', 'sm:max-w-2xl');
+                panel.classList.remove('sm:max-w-md');
+                panel.classList.add('sm:max-w-xl');
             } else {
                 messageEl.textContent = config.message || '';
                 htmlEl.classList.add('hidden');
                 msgContainer.classList.remove('hidden');
                 iconBox.classList.remove('hidden');
-                panel.classList.replace('sm:max-w-2xl', 'sm:max-w-md');
+                panel.classList.remove('sm:max-w-2xl');
+                panel.classList.add('sm:max-w-md');
             }
 
             if (config.cancelText) {
@@ -160,9 +166,8 @@
             setTimeout(() => {
                 dialog.close();
                 dialog.classList.remove('animate-modal-out');
-                dialog.classList.add('open:animate-modal-in');
                 if (callback) callback();
-            }, 300);
+            }, 200);
         }
     </script>
     <style>
@@ -176,17 +181,23 @@
         .nav-link.active { color: #fff; background: rgba(255, 255, 255, 0.1); font-weight: 500; }
         .nav-link.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 60%; width: 4px; background: #E07A3A; border-radius: 0 4px 4px 0; }
 
-        /* Modal Animations */
+        /* Optimized Modal Animations */
         @keyframes modalShow {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); filter: blur(4px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+            0% { opacity: 0; transform: scale(0.98) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes modalHide {
-            0% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-            100% { opacity: 0; transform: scale(0.95) translateY(10px); filter: blur(4px); }
+            0% { opacity: 1; transform: scale(1) translateY(0); }
+            100% { opacity: 0; transform: scale(0.98) translateY(8px); }
         }
-        .open\:animate-modal-in { animation: modalShow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important; }
-        .animate-modal-out { animation: modalHide 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important; }
+        .open\:animate-modal-in { 
+            animation: modalShow 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+            will-change: transform, opacity;
+        }
+        .animate-modal-out { 
+            animation: modalHide 0.2s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+            will-change: transform, opacity;
+        }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -415,7 +426,7 @@
 
     <!-- Global Modal Dialog (Tailwind Plus) -->
     <el-dialog>
-      <dialog id="global-dialog" aria-labelledby="modal-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent focus:outline-none">
+      <dialog id="global-dialog" aria-labelledby="modal-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent focus:outline-none open:animate-modal-in">
         <el-dialog-backdrop class="fixed inset-0 bg-surface-950/40 backdrop-blur-md transition-opacity data-closed:opacity-0 data-enter:duration-500 data-enter:ease-out data-leave:duration-300 data-leave:ease-in"></el-dialog-backdrop>
     
         <div class="flex min-h-full items-center justify-center p-6 text-center focus:outline-none">

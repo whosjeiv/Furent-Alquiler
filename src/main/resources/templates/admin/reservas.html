@@ -1,8 +1,6 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'reservas')}">
 <head>
     <title>Reservas — Furent Admin</title>
-    <!-- Tailwind Plus Elements for Modals -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
 </head>
 <body>
     <main>
@@ -139,63 +137,80 @@
                                         </span>
                                         <!-- Contenido extendido para el modal de detalles -->
                                         <div class="hidden reserva-extra">
-                                            <div class="NEW_MODAL_CONTENT">
-
-
-                                                <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
-                                                    <h4 class="text-[11px] font-bold uppercase tracking-wider text-surface-500 mb-1">ID de reserva</h4>
-                                                    <p class="text-sm font-semibold text-surface-900" th:text="${r.id}">ID</p>
-                                                </div>
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                    <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
-                                                        <h4 class="text-[11px] font-bold uppercase tracking-wider text-surface-500 mb-1">Fechas</h4>
-                                                        <p class="text-sm font-semibold text-surface-900">
-                                                            <span th:text="${r.fechaInicio != null ? #temporals.format(r.fechaInicio, 'dd MMM yyyy') : '-'}">inicio</span>
-                                                            <span class="mx-1 text-surface-400">→</span>
-                                                            <span th:text="${r.fechaFin != null ? #temporals.format(r.fechaFin, 'dd MMM yyyy') : '-'}">fin</span>
-                                                            <span class="ml-2 text-[11px] inline-flex items-center px-2 py-0.5 rounded-full bg-furent-50 text-furent-700 border border-furent-200" th:text="${r.diasAlquiler + ' días'}">0 días</span>
-                                                        </p>
-                                                        <p class="text-xs text-surface-500 mt-1">
-                                                            Hora de entrega:
-                                                            <span class="font-semibold text-surface-900" th:text="${r.horaEntrega != null ? r.horaEntrega : 'A coordinar'}">--:--</span>
-                                                        </p>
+                                            <div class="space-y-5 py-2">
+                                                <!-- Info Grid -->
+                                                <div class="grid grid-cols-2 gap-y-4 gap-x-6 border-b border-surface-100 pb-5">
+                                                    <div>
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1">ID de Reserva</h4>
+                                                        <p class="text-xs font-bold text-surface-900 truncate" th:text="${r.id}">ID</p>
                                                     </div>
-                                                    <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
-                                                        <h4 class="text-[11px] font-bold uppercase tracking-wider text-surface-500 mb-1">Estado & Monto</h4>
-                                                        <p class="text-sm font-semibold text-surface-900" th:text="${'$' + #numbers.formatDecimal(r.total ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</p>
-                                                        <p class="mt-1">
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border"
-                                                                  th:text="${r.estado}"
-                                                                  th:classappend="${r.estado == 'PENDIENTE' ? ' bg-amber-50 text-amber-700 border-amber-200' :
-                                                                                  (r.estado == 'CONFIRMADA' ? ' bg-blue-50 text-blue-700 border-blue-200' :
-                                                                                  (r.estado == 'ENTREGADA' ? ' bg-green-50 text-green-700 border-green-200' :
-                                                                                  (r.estado == 'COMPLETADA' ? ' bg-surface-100 text-surface-700 border-surface-200' :
-                                                                                  ' bg-red-50 text-red-700 border-red-200')))}">
-                                                                Estado
-                                                            </span>
+                                                    <div>
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1">Estado</h4>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black border"
+                                                              th:text="${r.estado}"
+                                                              th:classappend="${r.estado == 'PENDIENTE' ? ' bg-amber-50 text-amber-700 border-amber-200' :
+                                                                              (r.estado == 'CONFIRMADA' ? ' bg-blue-50 text-blue-700 border-blue-200' :
+                                                                              (r.estado == 'ENTREGADA' ? ' bg-green-50 text-green-700 border-green-200' :
+                                                                              (r.estado == 'COMPLETADA' ? ' bg-surface-100 text-surface-700 border-surface-200' :
+                                                                              ' bg-red-50 text-red-700 border-red-200')))}">
+                                                            Estado
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-span-2">
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1">Fechas y Duración</h4>
+                                                        <div class="flex items-center gap-3">
+                                                            <p class="text-sm font-bold text-surface-900">
+                                                                <span th:text="${r.fechaInicio != null ? #temporals.format(r.fechaInicio, 'dd MMM yyyy') : '-'}">inicio</span>
+                                                                <span class="mx-2 text-surface-300">→</span>
+                                                                <span th:text="${r.fechaFin != null ? #temporals.format(r.fechaFin, 'dd MMM yyyy') : '-'}">fin</span>
+                                                            </p>
+                                                            <span class="text-[10px] font-black px-2 py-1 rounded-lg bg-surface-900 text-white" th:text="${r.diasAlquiler + ' días'}">0 días</span>
+                                                        </div>
+                                                        <p class="text-[11px] text-surface-500 mt-1.5 flex items-center gap-1.5">
+                                                            <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                            Hora de entrega estimada: <span class="font-bold text-surface-900" th:text="${r.horaEntrega != null ? r.horaEntrega : 'A coordinar'}">--:--</span>
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
-                                                    <h4 class="text-[11px] font-bold uppercase tracking-wider text-surface-500 mb-1">Dirección del evento</h4>
-                                                    <p class="text-sm font-semibold text-surface-900" th:text="${r.direccionEvento != null ? r.direccionEvento : 'No registrada'}">Dirección</p>
-                                                </div>
-                                                <div class="bg-surface-50 p-3 rounded-lg border border-surface-200" th:if="${r.notasEvento != null and !#strings.isEmpty(r.notasEvento)}">
-                                                    <h4 class="text-[11px] font-bold uppercase tracking-wider text-surface-500 mb-1">Notas del cliente</h4>
-                                                    <p class="text-sm font-semibold text-surface-900" th:text="${r.notasEvento}">Notas</p>
-                                                </div>
-                                                <div class="bg-surface-50 p-3 rounded-lg border border-surface-200">
-                                                    <h4 class="text-[11px] font-bold uppercase tracking-wider text-surface-500 mb-2">Mobiliarios incluidos</h4>
-                                                    <div class="space-y-2" th:if="${!#lists.isEmpty(r.items)}">
-                                                        <div class="flex items-center justify-between text-sm" th:each="item : ${r.items}">
-                                                            <div class="flex flex-col">
-                                                                <span class="font-semibold text-surface-900" th:text="${item.productoNombre}">Producto</span>
-                                                                <span class="text-[11px] text-surface-500" th:text="${item.cantidad + ' x $' + #numbers.formatDecimal(item.precioPorDia ?: 0, 1, 'POINT', 0, 'COMMA')}">detalle</span>
-                                                            </div>
-                                                            <span class="font-bold text-surface-900" th:text="${'$' + #numbers.formatDecimal(item.subtotal ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+
+                                                <!-- Logistics Section -->
+                                                <div class="space-y-4 border-b border-surface-100 pb-5">
+                                                    <div>
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1.5">Dirección del Evento</h4>
+                                                        <p class="text-sm font-medium text-surface-700" th:text="${r.direccionEvento != null ? r.direccionEvento : 'No registrada'}">Dirección</p>
+                                                    </div>
+                                                    <div th:if="${r.notasEvento != null and !#strings.isEmpty(r.notasEvento)}">
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1.5">Notas del Cliente</h4>
+                                                        <div class="bg-surface-50/50 p-3 rounded-xl border border-dashed border-surface-200">
+                                                            <p class="text-xs text-surface-600 leading-relaxed italic" th:text="${r.notasEvento}">Notas</p>
                                                         </div>
                                                     </div>
-                                                    <p class="text-xs text-surface-500" th:if="${#lists.isEmpty(r.items)}">Sin items asociados a esta reserva.</p>
+                                                </div>
+
+                                                <!-- Items List -->
+                                                <div>
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400">Mobiliarios Incluidos</h4>
+                                                        <span class="text-[10px] font-bold text-surface-400" th:text="${(r.items != null ? #lists.size(r.items) : 0) + ' items'}">0 items</span>
+                                                    </div>
+                                                    <div class="space-y-2.5" th:if="${!#lists.isEmpty(r.items)}">
+                                                        <div class="flex items-center justify-between bg-white group" th:each="item : ${r.items}">
+                                                            <div class="flex flex-col">
+                                                                <span class="text-xs font-bold text-surface-900 group-hover:text-furent-600 transition-colors" th:text="${item.productoNombre}">Producto</span>
+                                                                <span class="text-[10px] text-surface-400" th:text="${item.cantidad + ' x $' + #numbers.formatDecimal(item.precioPorDia ?: 0, 1, 'POINT', 0, 'COMMA')}">detalle</span>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <span class="text-xs font-black text-surface-900" th:text="${'$' + #numbers.formatDecimal(item.subtotal ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs text-surface-400 italic py-4 text-center border-2 border-dashed border-surface-50 rounded-2xl" th:if="${#lists.isEmpty(r.items)}">Sin inventario asociado.</p>
+                                                    
+                                                    <!-- Grand Total -->
+                                                    <div class="mt-5 pt-5 border-t-2 border-surface-900 flex items-center justify-between">
+                                                        <span class="text-xs font-black uppercase tracking-tighter text-surface-900">Total a Pagar</span>
+                                                        <span class="text-xl font-black text-surface-950" th:text="${'$' + #numbers.formatDecimal(r.total ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -630,26 +645,9 @@
 
         // Details Modal
         function verDetallesReserva(buttonEl) {
-            showModal({ title: 'Detalles de la reserva', html: (buttonEl.closest('tr').querySelector('.reserva-extra') || {innerHTML:'Sin detalles'}).innerHTML }); return;
-
-
-            const row = buttonEl.closest('tr');
-            const extra = row ? row.querySelector('.reserva-extra') : null;
-            const html = extra ? extra.innerHTML : '<p class="text-sm text-surface-600">Sin detalles adicionales para esta reserva.</p>';
-            const isDark = document.documentElement.classList.contains('dark');
-            Swal.fire({
-                title: 'Detalles de la reserva',
-                html: html,
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#18181b',
-                background: isDark ? '#18181b' : '#fff',
-                color: isDark ? '#f4f4f5' : '#18181b',
-                customClass: {
-                    popup: 'rounded-[1.5rem] shadow-2xl border-0',
-                    title: 'text-2xl font-bold tracking-tight mb-4',
-                    htmlContainer: 'text-left overflow-x-hidden'
-                }
-            });
+            const extra = buttonEl.closest('tr').querySelector('.reserva-extra');
+            const html = extra ? extra.innerHTML : '<p class="text-sm text-surface-500">Sin detalles adicionales para esta reserva.</p>';
+            showModal({ title: 'Detalles de la reserva', html: html });
         }
 
         function sendWhatsApp(nombre, total, id) {
@@ -715,7 +713,6 @@
         </div>
       </dialog>
     </el-dialog>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1.0.0/dist/elements.min.js"></script>
     </main>
 </body>
 </html>
