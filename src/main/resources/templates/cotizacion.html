@@ -1077,6 +1077,13 @@
                     `;
                 }
                 
+                // If card payment: skip Order Summary, redirect immediately to secure payment
+                if (payload.metodoPago === 'TARJETA' && data.pendingId) {
+                    window.location.href = '/pago/tarjeta?pendingId=' + encodeURIComponent(data.pendingId);
+                    return; // Prevent showing success screen here & keeps localStorage for payment success screen
+                }
+
+                // If NOT card payment, show success screen and clear bag
                 document.getElementById('stepSuccess').classList.remove('hidden');
                 localStorage.removeItem('furent_bag');
                 localStorage.removeItem('furent_selected_dates');
@@ -1092,13 +1099,6 @@
                         window.location.href = '/panel';
                     }
                 }, 1000);
-
-                if (payload.metodoPago === 'TARJETA' && data.pendingId) {
-                    setTimeout(() => { 
-                        clearInterval(interval);
-                        window.location.href = '/pago/tarjeta?pendingId=' + encodeURIComponent(data.pendingId); 
-                    }, 1500);
-                }
             } else {
                 const data = await res.json();
                 // FIX: Manejar errores de stock con detalle por producto

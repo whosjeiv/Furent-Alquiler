@@ -281,11 +281,13 @@ public class PageController {
         String reference = params.get("referenceCode");
         String transactionId = params.get("transactionId");
         String message = params.get("message");
+        String txValue = params.get("TX_VALUE");
         
         model.addAttribute("state", state);
         model.addAttribute("reference", reference);
         model.addAttribute("transactionId", transactionId);
         model.addAttribute("message", message);
+        model.addAttribute("txValue", txValue);
         
         // Determinar el mensaje amigable
         String statusTitle = "Procesando pago";

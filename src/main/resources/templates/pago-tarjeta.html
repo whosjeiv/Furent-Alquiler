@@ -7,12 +7,14 @@
 
     <main class="flex-1 flex items-center justify-center pt-[68px]">
         <div class="max-w-lg w-full px-4 py-12">
-            <div class="bg-white rounded-[2rem] shadow-2xl border border-surface-100 p-8 sm:p-12 text-center relative overflow-hidden">
-                <!-- Decorative background -->
+
+            <!-- ======================== -->
+            <!-- PHASE 1: Encrypting      -->
+            <!-- ======================== -->
+            <div id="phase-encrypt" class="bg-white rounded-[2rem] shadow-2xl border border-surface-100 p-8 sm:p-12 text-center relative overflow-hidden transition-all duration-500">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-furent-400 via-furent-600 to-furent-400"></div>
-                
+
                 <div class="mb-8 relative inline-block">
-                    <!-- Premium Animated Loader -->
                     <div class="w-24 h-24 rounded-full border-4 border-surface-100 border-t-furent-600 animate-spin"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
                         <svg class="w-10 h-10 text-furent-600 opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -31,63 +33,346 @@
                         <span class="text-sm text-surface-400 uppercase tracking-widest font-semibold">Monto a pagar</span>
                         <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">Seguro</span>
                     </div>
-                    <div class="text-3xl font-extrabold text-surface-900" id="amount-display" th:text="'$' + ${#numbers.formatDecimal(total != null ? total : 0, 1, 'POINT', 0, 'COMMA')}">$0</div>
+                    <div class="text-3xl font-extrabold text-surface-900" id="encrypt-amount" th:text="'$' + ${#numbers.formatDecimal(total != null ? total : 0, 1, 'POINT', 0, 'COMMA')}">$0</div>
                 </div>
 
-                <div id="redirect-message" class="flex flex-col items-center gap-3">
-                    <p class="text-sm font-medium text-furent-600 animate-pulse">Redirigiendo en unos segundos...</p>
+                <div class="flex flex-col items-center gap-3">
+                    <p class="text-sm font-medium text-furent-600 animate-pulse">Preparando formulario seguro...</p>
                     <div class="flex gap-1.5">
                         <span class="w-1.5 h-1.5 bg-furent-500 rounded-full animate-bounce" style="animation-delay: 0s"></span>
                         <span class="w-1.5 h-1.5 bg-furent-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
                         <span class="w-1.5 h-1.5 bg-furent-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
                     </div>
                 </div>
-
-                <form id="payu-form" th:action="${payuUrl}" method="post" class="hidden">
-                    <input name="merchantId"    type="hidden" th:value="${payuMerchantId}">
-                    <input name="accountId"     type="hidden" th:value="${payuAccountId}">
-                    <input name="description"   type="hidden" th:value="'Alquiler de Mobiliario Furent - Ref: ' + ${payuReferenceCode}">
-                    <input name="referenceCode" type="hidden" th:value="${payuReferenceCode}">
-                    <input name="amount"        type="hidden" th:value="${payuAmount}">
-                    <input name="tax"           type="hidden" value="0">
-                    <input name="taxReturnBase" type="hidden" value="0">
-                    <input name="currency"      type="hidden" th:value="${payuCurrency}">
-                    <input name="signature"     type="hidden" th:value="${payuSignature}">
-                    <input name="test"          type="hidden" th:value="${payuTest}">
-                    <input name="buyerEmail"    type="hidden" th:value="${payuBuyerEmail}">
-                    <input name="buyerFullName" type="hidden" th:value="${payuBuyerFullName}">
-                    <input name="responseUrl"    type="hidden" th:value="${payuResponseUrl}">
-                    <input name="confirmationUrl" type="hidden" th:value="${payuConfirmationUrl}">
-                </form>
-
                 <p class="text-xs text-surface-400 mt-10">
                     No cierres esta ventana ni recargues la página mientras establecemos la conexión.
                 </p>
             </div>
-            
-            <div class="mt-8 flex items-center justify-center gap-6 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-                <img src="https://www.payulatam.com/wp-content/uploads/2019/04/logo-payu.png" alt="PayU" class="h-6">
-                <div class="w-px h-4 bg-surface-300"></div>
-                <div class="flex gap-2">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" alt="Visa" class="h-4">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" alt="Mastercard" class="h-4">
+
+            <!-- ======================== -->
+            <!-- PHASE 2: Card Form       -->
+            <!-- ======================== -->
+            <div id="phase-card-form" class="hidden">
+                <div class="bg-white rounded-[2rem] shadow-2xl border border-surface-100 overflow-hidden">
+                    <!-- Header -->
+                    <div class="relative px-8 py-7 bg-gradient-to-r from-surface-900 via-surface-800 to-surface-900 text-white">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-furent-400 via-furent-500 to-furent-400"></div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-lg font-bold">Datos de pago</h2>
+                                <p class="text-sm text-surface-300 mt-0.5">Conexión cifrada SSL 256-bit</p>
+                            </div>
+                            <div class="flex items-center gap-2 opacity-60">
+                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                <span class="text-xs text-green-400 font-bold uppercase tracking-wider">Seguro</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-8 space-y-6">
+
+                        <!-- Card Visual Preview -->
+                        <div id="card-preview" class="relative w-full h-48 rounded-2xl p-6 overflow-hidden select-none"
+                             style="background: linear-gradient(135deg, #1f2937 0%, #374151 40%, #1f2937 100%)">
+                            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                            <div class="flex justify-between items-start relative z-10">
+                                <svg class="w-10 h-8 text-amber-400/80" viewBox="0 0 48 32" fill="currentColor">
+                                    <rect width="48" height="32" rx="4" fill="currentColor" opacity="0.3"/>
+                                    <rect x="4" y="8" width="12" height="10" rx="2" fill="currentColor"/>
+                                    <line x1="16" y1="10" x2="40" y2="10" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+                                    <line x1="16" y1="14" x2="36" y2="14" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+                                    <line x1="16" y1="18" x2="32" y2="18" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+                                </svg>
+                                <div id="card-brand-icon" class="text-white/50 text-sm font-bold tracking-wider">CARD</div>
+                            </div>
+                            <div class="mt-5 relative z-10">
+                                <p id="card-number-preview" class="text-white font-mono text-lg tracking-[0.2em] font-medium">•••• •••• •••• ••••</p>
+                            </div>
+                            <div class="flex justify-between items-end mt-4 relative z-10">
+                                <div>
+                                    <p class="text-[9px] text-white/40 uppercase tracking-widest font-bold">Titular</p>
+                                    <p id="card-name-preview" class="text-white/80 text-sm font-semibold tracking-wide uppercase">TU NOMBRE</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[9px] text-white/40 uppercase tracking-widest font-bold">Vence</p>
+                                    <p id="card-expiry-preview" class="text-white/80 text-sm font-mono font-semibold">MM/AA</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Amount badge -->
+                        <div class="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-100">
+                            <span class="text-sm text-surface-500 font-medium">Total a cobrar</span>
+                            <span class="text-xl font-extrabold text-surface-900" id="form-amount" th:text="'$' + ${#numbers.formatDecimal(total != null ? total : 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                        </div>
+
+                        <!-- Card Number -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-surface-400 uppercase tracking-widest mb-2">Número de tarjeta</label>
+                            <div class="relative">
+                                <input id="ccNumber" type="text" inputmode="numeric" autocomplete="cc-number"
+                                       placeholder="1234 5678 9012 3456" maxlength="19"
+                                       class="w-full pl-12 pr-14 py-3.5 bg-surface-50 border border-surface-200 rounded-xl text-base font-mono font-bold text-surface-800 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all tracking-wider">
+                                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                                </div>
+                                <div id="ccBrandBadge" class="absolute right-4 top-1/2 -translate-y-1/2 text-surface-300 text-xs font-bold tracking-wider"></div>
+                            </div>
+                            <p id="ccNumberErr" class="hidden text-xs text-red-600 font-medium mt-1"></p>
+                        </div>
+
+                        <!-- Name on card -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-surface-400 uppercase tracking-widest mb-2">Nombre en la tarjeta</label>
+                            <input id="ccName" type="text" autocomplete="cc-name"
+                                   placeholder="Como aparece en la tarjeta"
+                                   class="w-full px-4 py-3.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-bold text-surface-800 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all uppercase tracking-wide">
+                            <p id="ccNameErr" class="hidden text-xs text-red-600 font-medium mt-1"></p>
+                        </div>
+
+                        <!-- Expiry & CVV row -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[11px] font-bold text-surface-400 uppercase tracking-widest mb-2">Vencimiento</label>
+                                <input id="ccExpiry" type="text" inputmode="numeric" autocomplete="cc-exp"
+                                       placeholder="MM / AA" maxlength="7"
+                                       class="w-full px-4 py-3.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-mono font-bold text-surface-800 text-center focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all tracking-widest">
+                                <p id="ccExpiryErr" class="hidden text-xs text-red-600 font-medium mt-1"></p>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-surface-400 uppercase tracking-widest mb-2">CVV / CVC</label>
+                                <div class="relative">
+                                    <input id="ccCvv" type="password" inputmode="numeric" autocomplete="cc-csc"
+                                           placeholder="•••" maxlength="4"
+                                           class="w-full px-4 py-3.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-mono font-bold text-surface-800 text-center focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all tracking-[0.3em]">
+                                    <button type="button" onclick="toggleCvv()" class="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 transition-colors">
+                                        <svg id="cvvEye" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </button>
+                                </div>
+                                <p id="ccCvvErr" class="hidden text-xs text-red-600 font-medium mt-1"></p>
+                            </div>
+                        </div>
+
+                        <!-- Cuotas (installments) -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-surface-400 uppercase tracking-widest mb-2">Cuotas</label>
+                            <select id="ccCuotas"
+                                    class="w-full px-4 py-3.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-bold text-surface-800 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all appearance-none cursor-pointer">
+                                <option value="1">1 cuota (sin interés)</option>
+                                <option value="2">2 cuotas</option>
+                                <option value="3">3 cuotas</option>
+                                <option value="6">6 cuotas</option>
+                                <option value="12">12 cuotas</option>
+                            </select>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="button" id="payBtn" onclick="processPayment()"
+                                class="w-full py-4 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-bold text-base rounded-xl hover:from-furent-600 hover:to-furent-700 active:scale-[0.98] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                            <span id="payBtnText">Pagar de forma segura</span>
+                        </button>
+
+                        <!-- Trust badges -->
+                        <div class="flex items-center justify-center gap-4 pt-2 opacity-50">
+                            <img src="https://www.payulatam.com/wp-content/uploads/2019/04/logo-payu.png" alt="PayU" class="h-5 grayscale">
+                            <div class="w-px h-3 bg-surface-300"></div>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" alt="Visa" class="h-3.5 grayscale">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" alt="Mastercard" class="h-3.5 grayscale">
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Hidden PayU form -->
+            <form id="payu-form" th:action="${payuUrl}" method="post" class="hidden">
+                <input name="merchantId"    type="hidden" th:value="${payuMerchantId}">
+                <input name="accountId"     type="hidden" th:value="${payuAccountId}">
+                <input name="description"   type="hidden" th:value="'Alquiler de Mobiliario Furent - Ref: ' + ${payuReferenceCode}">
+                <input name="referenceCode" type="hidden" th:value="${payuReferenceCode}">
+                <input name="amount"        type="hidden" th:value="${payuAmount}">
+                <input name="tax"           type="hidden" value="0">
+                <input name="taxReturnBase" type="hidden" value="0">
+                <input name="currency"      type="hidden" th:value="${payuCurrency}">
+                <input name="signature"     type="hidden" th:value="${payuSignature}">
+                <input name="test"          type="hidden" th:value="${payuTest}">
+                <input name="buyerEmail"    type="hidden" th:value="${payuBuyerEmail}">
+                <input name="buyerFullName" type="hidden" th:value="${payuBuyerFullName}">
+                <input name="responseUrl"    type="hidden" th:value="${payuResponseUrl}">
+                <input name="confirmationUrl" type="hidden" th:value="${payuConfirmationUrl}">
+                <!-- Extra fields to pre-fill PayU's form -->
+                <input name="payerFullName"  type="hidden" id="payuPayerName">
+                <input name="extra1"         type="hidden" id="payuExtra1">
+            </form>
+
         </div>
     </main>
 
     <div th:replace="~{fragments/layout :: footer}"></div>
 
-    <script th:inline="javascript">
-        (function() {
-            const form = document.getElementById('payu-form');
-            if (form) {
-                setTimeout(() => {
-                    form.submit();
-                }, 2500);
+    <style>
+        @keyframes cardShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .card-shimmer {
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: cardShimmer 2s ease-in-out infinite;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .fade-in-up-anim { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+    (function() {
+        // Phase 1 → Phase 2 after 2.5 seconds
+        setTimeout(() => {
+            const phase1 = document.getElementById('phase-encrypt');
+            const phase2 = document.getElementById('phase-card-form');
+            phase1.style.opacity = '0';
+            phase1.style.transform = 'translateY(-20px) scale(0.95)';
+            setTimeout(() => {
+                phase1.classList.add('hidden');
+                phase2.classList.remove('hidden');
+                phase2.classList.add('fade-in-up-anim');
+            }, 400);
+        }, 2500);
+
+        // ---- Card number formatting ----
+        const ccNumber = document.getElementById('ccNumber');
+        const ccName   = document.getElementById('ccName');
+        const ccExpiry = document.getElementById('ccExpiry');
+        const ccCvv    = document.getElementById('ccCvv');
+
+        ccNumber.addEventListener('input', function() {
+            let v = this.value.replace(/\D/g, '').slice(0, 16);
+            this.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+            // Preview
+            const preview = document.getElementById('card-number-preview');
+            if (v.length === 0) {
+                preview.textContent = '•••• •••• •••• ••••';
+            } else {
+                let display = v.padEnd(16, '•');
+                preview.textContent = display.replace(/(.{4})/g, '$1 ').trim();
             }
-        })();
+            // Detect brand
+            detectBrand(v);
+            validateField('ccNumber');
+        });
+
+        ccName.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            document.getElementById('card-name-preview').textContent = this.value || 'TU NOMBRE';
+            validateField('ccName');
+        });
+
+        ccExpiry.addEventListener('input', function() {
+            let v = this.value.replace(/\D/g, '').slice(0, 4);
+            if (v.length >= 3) v = v.slice(0,2) + ' / ' + v.slice(2);
+            this.value = v;
+            document.getElementById('card-expiry-preview').textContent = v || 'MM/AA';
+            validateField('ccExpiry');
+        });
+
+        ccCvv.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 4);
+            validateField('ccCvv');
+        });
+
+        function detectBrand(num) {
+            const badge = document.getElementById('ccBrandBadge');
+            const icon  = document.getElementById('card-brand-icon');
+            const preview = document.getElementById('card-preview');
+            let brand = '';
+            if (/^4/.test(num))        { brand = 'VISA';       preview.style.background = 'linear-gradient(135deg, #1a365d 0%, #2563eb 40%, #1e40af 100%)'; }
+            else if (/^5[1-5]/.test(num) || /^2[2-7]/.test(num)) { brand = 'MASTERCARD'; preview.style.background = 'linear-gradient(135deg, #7c2d12 0%, #dc2626 40%, #9a3412 100%)'; }
+            else if (/^3[47]/.test(num)) { brand = 'AMEX';       preview.style.background = 'linear-gradient(135deg, #14532d 0%, #16a34a 40%, #15803d 100%)'; }
+            else if (/^(6011|65|64[4-9])/.test(num)) { brand = 'DISCOVER'; preview.style.background = 'linear-gradient(135deg, #431407 0%, #ea580c 40%, #9a3412 100%)'; }
+            else { preview.style.background = 'linear-gradient(135deg, #1f2937 0%, #374151 40%, #1f2937 100%)'; }
+            badge.textContent = brand;
+            icon.textContent = brand || 'CARD';
+        }
+    })();
+
+    function toggleCvv() {
+        const inp = document.getElementById('ccCvv');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    // ---- Validation ----
+    function validateField(id) {
+        const el = document.getElementById(id);
+        const err = document.getElementById(id + 'Err');
+        if (!err) return true;
+        err.classList.add('hidden');
+        el.classList.remove('!border-red-400', '!bg-red-50/50');
+        let valid = true;
+        const v = el.value.trim();
+        if (id === 'ccNumber') {
+            const digits = v.replace(/\D/g, '');
+            if (digits.length < 13 || digits.length > 19) { valid = false; err.textContent = 'Número de tarjeta inválido'; }
+            else if (!luhnCheck(digits)) { valid = false; err.textContent = 'Número de tarjeta inválido (Luhn)'; }
+        } else if (id === 'ccName') {
+            if (v.length < 3) { valid = false; err.textContent = 'Ingresa el nombre como aparece en la tarjeta'; }
+        } else if (id === 'ccExpiry') {
+            const parts = v.replace(/\s/g, '').split('/');
+            if (parts.length !== 2 || parts[0].length !== 2 || parts[1].length !== 2) { valid = false; err.textContent = 'Formato inválido (MM / AA)'; }
+            else {
+                const month = parseInt(parts[0]);
+                const year = parseInt('20' + parts[1]);
+                const now = new Date();
+                if (month < 1 || month > 12) { valid = false; err.textContent = 'Mes inválido'; }
+                else if (year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)) { valid = false; err.textContent = 'Tarjeta vencida'; }
+            }
+        } else if (id === 'ccCvv') {
+            if (v.length < 3 || v.length > 4) { valid = false; err.textContent = 'CVV inválido'; }
+        }
+        if (!valid) {
+            err.classList.remove('hidden');
+            el.classList.add('!border-red-400', '!bg-red-50/50');
+        }
+        return valid;
+    }
+
+    function luhnCheck(num) {
+        let sum = 0, alt = false;
+        for (let i = num.length - 1; i >= 0; i--) {
+            let n = parseInt(num[i]);
+            if (alt) { n *= 2; if (n > 9) n -= 9; }
+            sum += n;
+            alt = !alt;
+        }
+        return sum % 10 === 0;
+    }
+
+    function processPayment() {
+        const fields = ['ccNumber', 'ccName', 'ccExpiry', 'ccCvv'];
+        let allValid = true;
+        fields.forEach(f => { if (!validateField(f)) allValid = false; });
+        if (!allValid) return;
+
+        // Set extra PayU fields
+        document.getElementById('payuPayerName').value = document.getElementById('ccName').value.trim();
+        document.getElementById('payuExtra1').value = 'cuotas:' + document.getElementById('ccCuotas').value;
+
+        // Show processing state
+        const btn = document.getElementById('payBtn');
+        const btnText = document.getElementById('payBtnText');
+        btn.disabled = true;
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+        btnText.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Procesando pago...';
+
+        // Submit to PayU after brief animation
+        setTimeout(() => {
+            document.getElementById('payu-form').submit();
+        }, 1500);
+    }
     </script>
 </body>
 </html>
-

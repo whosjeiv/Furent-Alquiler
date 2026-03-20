@@ -18,44 +18,88 @@
 
         <!-- Coupons Table -->
         <div class="px-10">
-            <div class="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 overflow-hidden shadow-glass">
-                <table id="couponTable" class="premium-table w-full">
-                    <thead>
+            <div class="relative overflow-x-auto bg-white dark:bg-surface-900 shadow-glass dark:shadow-none rounded-2xl border border-surface-200 dark:border-surface-700">
+                <div class="p-4 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4 border-b border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+                    <label for="couponSearchInput" class="sr-only">Buscar</label>
+                    <div class="relative w-full sm:w-auto">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-surface-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+                        </div>
+                        <input type="text" id="couponSearchInput" class="block w-full sm:w-80 ps-9 pe-3 py-2.5 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 text-surface-900 dark:text-white text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 shadow-sm placeholder:text-surface-400 transition-all" placeholder="Buscar cupón...">
+                    </div>
+                    <div class="w-full sm:w-auto relative">
+                        <button id="dropdownDefaultButton" class="w-full sm:w-auto inline-flex items-center justify-center text-surface-600 dark:text-surface-300 bg-white dark:bg-surface-900 box-border border border-surface-200 dark:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-white focus:ring-4 focus:ring-surface-100 dark:focus:ring-surface-700 shadow-sm font-medium rounded-xl text-sm px-4 py-2.5 focus:outline-none transition-all" type="button">
+                            <svg class="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M18.796 4H5.204a1 1 0 0 0-.753 1.659l5.302 6.058a1 1 0 0 1 .247.659v4.874a.5.5 0 0 0 .2.4l3 2.25a.5.5 0 0 0 .8-.4v-7.124a1 1 0 0 1 .247-.659l5.302-6.059c.566-.646.106-1.658-.753-1.658Z"/></svg>
+                            Filtrar por
+                            <svg class="w-4 h-4 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div id="dropdownFilter" class="z-50 hidden absolute right-0 mt-2 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl shadow-xl w-44 origin-top-right">
+                            <ul class="p-2 text-sm text-surface-600 dark:text-surface-300 font-medium" aria-labelledby="dropdownDefaultButton">
+                                <li>
+                                    <button class="w-full text-left px-3 py-2 hover:bg-surface-50 dark:hover:bg-surface-700 hover:text-furent-500 dark:hover:text-furent-400 rounded-lg transition-colors filter-btn" data-filter="">Mostrar todos</button>
+                                </li>
+                                <li>
+                                    <button class="w-full text-left px-3 py-2 hover:bg-surface-50 dark:hover:bg-surface-700 hover:text-furent-500 dark:hover:text-furent-400 rounded-lg transition-colors filter-btn" data-filter="Activo">Estado: Activo</button>
+                                </li>
+                                <li>
+                                    <button class="w-full text-left px-3 py-2 hover:bg-surface-50 dark:hover:bg-surface-700 hover:text-furent-500 dark:hover:text-furent-400 rounded-lg transition-colors filter-btn" data-filter="Inactivo">Estado: Inactivo</button>
+                                </li>
+                                <li>
+                                    <button class="w-full text-left px-3 py-2 hover:bg-surface-50 dark:hover:bg-surface-700 hover:text-furent-500 dark:hover:text-furent-400 rounded-lg transition-colors filter-btn" data-filter="PORCENTAJE">Tipo: Porcentaje</button>
+                                </li>
+                                <li>
+                                    <button class="w-full text-left px-3 py-2 hover:bg-surface-50 dark:hover:bg-surface-700 hover:text-furent-500 dark:hover:text-furent-400 rounded-lg transition-colors filter-btn" data-filter="MONTO_FIJO">Tipo: Monto Fijo</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Table -->
+                <table id="couponTable" class="w-full text-sm text-left text-surface-500 dark:text-surface-400">
+                    <thead class="text-xs text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-800/50 uppercase border-b border-surface-200 dark:border-surface-700">
                         <tr>
-                            <th>Código</th>
-                            <th>Tipo</th>
-                            <th>Valor</th>
-                            <th>Válido</th>
-                            <th>Usos</th>
-                            <th>Monto Mín.</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Código</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Tipo</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Valor</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider hidden md:table-cell">Válido</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Usos</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider hidden lg:table-cell">Monto Mín.</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Estado</th>
+                            <th scope="col" class="px-6 py-4 font-semibold tracking-wider text-right">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="c : ${cupones}" th:if="${c != null}">
-                            <td>
-                                <span class="font-mono font-bold text-furent-600 dark:text-furent-400 bg-furent-50 dark:bg-furent-900/30 px-3 py-1 rounded-lg" th:text="${c.codigo ?: '—'}">CUPON</span>
+                        <tr th:each="c : ${cupones}" th:if="${c != null}" class="bg-white dark:bg-surface-900 border-b border-surface-100 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/80 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="font-mono font-bold text-furent-600 dark:text-furent-400 bg-furent-50 dark:bg-furent-900/30 px-3 py-1.5 rounded-lg border border-furent-100 dark:border-furent-800" th:text="${c.codigo ?: '—'}">CUPON</span>
                             </td>
-                            <td class="dark:text-surface-300" th:text="${c.tipo ?: '—'}">PORCENTAJE</td>
-                            <td>
+                            <td class="px-6 py-4 whitespace-nowrap text-surface-900 dark:text-white font-medium" th:text="${c.tipo ?: '—'}">PORCENTAJE</td>
+                            <td class="px-6 py-4 whitespace-nowrap font-medium text-surface-900 dark:text-surface-200">
                                 <span th:if="${c.tipo == 'PORCENTAJE'}" th:text="${(c.valor != null ? c.valor : 0) + '%'}">10%</span>
-                                <span th:if="${c.tipo != 'PORCENTAJE'}" th:text="'$' + ${#numbers.formatDecimal(c.valor != null ? c.valor : 0, 0, 'COMMA', 0, 'POINT')}">$10,000</span>
+                                <span th:if="${c.tipo != 'PORCENTAJE'}" th:text="${'$' + (c.valor != null ? c.valor : '0')}">$10,000</span>
                             </td>
-                            <td>
-                                <span class="text-sm dark:text-surface-400" th:text="${(c.validoDesde != null ? c.validoDesde : '—') + ' — ' + (c.validoHasta != null ? c.validoHasta : '—')}">Fechas</span>
+                            <td class="px-6 py-4 whitespace-nowrap text-xs hidden md:table-cell">
+                                <span th:text="${(c.validoDesde != null ? c.validoDesde : '—') + ' — ' + (c.validoHasta != null ? c.validoHasta : '—')}">Fechas</span>
                             </td>
-                            <td class="dark:text-surface-300">
-                                <span th:text="${c.usosActuales + '/' + c.usosMaximos}">0/100</span>
+                            <td class="px-6 py-4 whitespace-nowrap min-w-[120px]">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 h-2 bg-surface-200 dark:bg-surface-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-furent-500 rounded-full" th:style="|width: ${c.usosMaximos > 0 ? (c.usosActuales * 100 / c.usosMaximos) : 0}%|"></div>
+                                    </div>
+                                    <span class="text-xs font-semibold text-surface-900 dark:text-white" th:text="${c.usosActuales + '/' + c.usosMaximos}">0/100</span>
+                                </div>
                             </td>
-                            <td class="dark:text-surface-300" th:text="'$' + ${#numbers.formatDecimal(c.montoMinimo != null ? c.montoMinimo : 0, 0, 'COMMA', 0, 'POINT')}">$0</td>
-                            <td>
-                                <span th:if="${c.activo}" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">Activo</span>
-                                <span th:unless="${c.activo}" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400">Inactivo</span>
+                            <td class="px-6 py-4 whitespace-nowrap font-medium hidden lg:table-cell">
+                                <span th:text="${'$' + (c.montoMinimo != null ? c.montoMinimo : '0')}">$0</span>
                             </td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <button class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 btn-edit-coupon" title="Editar"
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span th:if="${c.activo}" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200/50 dark:border-green-800/50 shadow-sm">Activo</span>
+                                <span th:unless="${c.activo}" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-800/50 shadow-sm">Inactivo</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end gap-5">
+                                    <button class="font-bold text-furent-500 hover:text-furent-600 dark:text-furent-400 dark:hover:text-furent-300 transition-colors focus:outline-none btn-edit-coupon"
                                             th:data-id="${c.id}"
                                             th:data-codigo="${c.codigo ?: ''}"
                                             th:data-tipo="${c.tipo ?: 'PORCENTAJE'}"
@@ -64,14 +108,11 @@
                                             th:data-hasta="${c.validoHasta != null ? c.validoHasta : ''}"
                                             th:data-usos="${c.usosMaximos}"
                                             th:data-montomin="${c.montoMinimo != null ? c.montoMinimo : 0}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                        Editar
                                     </button>
-                                    <form th:action="@{/admin/cupones/eliminar/{id}(id=${c.id})}" method="post"
-                                          onsubmit="return confirm('¿Eliminar este cupón?')">
-                                        <button type="submit" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1" title="Eliminar">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="font-bold text-[#E94B4B] hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors focus:outline-none" th:data-id="${c.id}" th:data-codigo="${c.codigo}" onclick="openDeleteModal(this.getAttribute('data-id'), this.getAttribute('data-codigo'))">
+                                        Eliminar
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -82,80 +123,178 @@
 
         <!-- Empty State -->
         <div th:if="${cupones == null or cupones.isEmpty()}" class="px-10 mt-6">
-            <div class="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 p-12 text-center">
+            <div class="bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-700 p-12 text-center shadow-sm">
                 <svg class="w-16 h-16 mx-auto text-surface-300 dark:text-surface-600 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
                 <h3 class="text-lg font-semibold text-surface-700 dark:text-surface-300">No hay cupones creados</h3>
-                <p class="text-surface-400 dark:text-surface-500 mt-1">Crea tu primer cupón de descuento con el botón de arriba</p>
+                <p class="text-surface-400 dark:text-surface-500 mt-1">Crea tu primer cupón de descuento con el botón de "Nuevo Cupón"</p>
             </div>
         </div>
 
-        <!-- Coupon Modal -->
-        <div id="couponModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center">
-            <div class="bg-white dark:bg-surface-800 rounded-3xl shadow-2xl w-full max-w-lg mx-4 p-8">
-                <h2 id="couponModalTitle" class="text-2xl font-bold text-surface-900 dark:text-white mb-6">Nuevo Cupón</h2>
-                <form th:action="@{/admin/cupones/guardar}" method="post" class="space-y-4">
-                    <input type="hidden" id="couponId" name="id">
-                    <div>
-                        <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Código</label>
-                        <input id="couponCodigo" name="codigo" type="text" required placeholder="ej. DESCUENTO20"
-                               class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 focus:ring-2 focus:ring-furent-100 dark:focus:ring-furent-900/50 outline-none uppercase">
+        <!-- Coupon Modal (TailwindPlus Style) -->
+        <div id="couponModal" tabindex="-1" aria-hidden="true" class="fixed inset-0 bg-surface-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center transition-opacity fade-in">
+            <div class="relative w-full max-w-lg mx-4">
+                <!-- Modal content -->
+                <div class="relative bg-white dark:bg-surface-800 rounded-[28px] shadow-2xl p-8 transform transition-all fade-in-up">
+                    
+                    <!-- Modal header -->
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 id="couponModalTitle" class="text-2xl font-bold text-surface-900 dark:text-white tracking-tight">
+                            Nuevo Cupón
+                        </h3>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    
+                    <!-- Modal body -->
+                    <form th:action="@{/admin/cupones/guardar}" method="post" class="space-y-4">
+                        <input type="hidden" id="couponId" name="id">
+                        
                         <div>
-                            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Tipo</label>
-                            <select id="couponTipo" name="tipo" class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 outline-none">
-                                <option value="PORCENTAJE">Porcentaje (%)</option>
-                                <option value="MONTO_FIJO">Monto Fijo ($)</option>
-                            </select>
+                            <label for="couponCodigo" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Código</label>
+                            <input type="text" id="couponCodigo" name="codigo" required placeholder="EJ. DESCUENTO20"
+                                   class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 placeholder:text-surface-400 font-medium transition-colors shadow-sm uppercase">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Valor</label>
-                            <input id="couponValor" name="valor" type="number" step="0.01" required
-                                   class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 outline-none">
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="couponTipo" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Tipo</label>
+                                <select id="couponTipo" name="tipo" class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 font-medium transition-colors shadow-sm">
+                                    <option value="PORCENTAJE">Porcentaje (%)</option>
+                                    <option value="MONTO_FIJO">Monto Fijo ($)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="couponValor" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Valor</label>
+                                <input type="number" step="0.01" id="couponValor" name="valor" required
+                                       class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 placeholder:text-surface-400 font-medium transition-colors shadow-sm">
+                            </div>
                         </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="couponDesde" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Válido desde</label>
+                                <div class="relative">
+                                    <input type="date" id="couponDesde" name="validoDesde" required
+                                           class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 font-medium transition-colors shadow-sm [color-scheme:light] dark:[color-scheme:dark]">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="couponHasta" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Válido hasta</label>
+                                <div class="relative">
+                                    <input type="date" id="couponHasta" name="validoHasta" required
+                                           class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 font-medium transition-colors shadow-sm [color-scheme:light] dark:[color-scheme:dark]">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="couponUsos" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Usos máximos</label>
+                                <input type="number" id="couponUsos" name="usosMaximos" required value="100"
+                                       class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 font-medium transition-colors shadow-sm">
+                            </div>
+                            <div>
+                                <label for="couponMontoMin" class="block text-[13px] font-semibold text-surface-600 dark:text-surface-300 mb-1.5">Monto mínimo ($)</label>
+                                <input type="number" step="0.01" id="couponMontoMin" name="montoMinimo" value="0"
+                                       class="block w-full px-4 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-900 dark:text-white sm:text-sm rounded-xl focus:ring-furent-500 focus:border-furent-500 font-medium transition-colors shadow-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- Modal footer -->
+                        <div class="flex items-center gap-3 pt-6 mt-6 border-t border-surface-100 dark:border-surface-700 mb-2">
+                            <button type="button" onclick="closeCouponModal()" class="flex-1 px-5 py-3.5 bg-surface-50 hover:bg-surface-100 dark:bg-surface-700 dark:hover:bg-surface-600 text-surface-800 dark:text-white font-semibold rounded-xl text-[15px] transition-colors focus:ring-4 focus:ring-surface-200 dark:focus:ring-surface-600 outline-none">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="flex-1 px-5 py-3.5 bg-furent-500 hover:bg-furent-600 text-white font-semibold rounded-xl text-[15px] shadow-lg shadow-furent-500/30 transition-all focus:ring-4 focus:ring-furent-500/50 outline-none">
+                                Guardar Cupón
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal (TailwindPlus) -->
+        <div id="deleteCouponModal" tabindex="-1" aria-hidden="true" class="fixed inset-0 bg-surface-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center transition-opacity fade-in">
+            <div class="relative w-full max-w-sm mx-4">
+                <div class="relative bg-white dark:bg-surface-800 rounded-[24px] shadow-2xl p-6 transform transition-all fade-in-up text-center">
+                    
+                    <!-- Icon -->
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/40 mb-5">
+                        <svg class="h-8 w-8 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Válido desde</label>
-                            <input id="couponDesde" name="validoDesde" type="date" required
-                                   class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Válido hasta</label>
-                            <input id="couponHasta" name="validoHasta" type="date" required
-                                   class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 outline-none">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Usos máximos</label>
-                            <input id="couponUsos" name="usosMaximos" type="number" required value="100"
-                                   class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">Monto mínimo ($)</label>
-                            <input id="couponMontoMin" name="montoMinimo" type="number" step="0.01" value="0"
-                                   class="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-700 text-surface-900 dark:text-white focus:border-furent-400 outline-none">
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 pt-4">
-                        <button type="submit" class="flex-1 py-3 bg-furent-500 hover:bg-furent-600 text-white rounded-xl font-semibold transition-all">
-                            Guardar
-                        </button>
-                        <button type="button" onclick="closeCouponModal()" class="flex-1 py-3 bg-surface-100 dark:bg-surface-700 hover:bg-surface-200 dark:hover:bg-surface-600 text-surface-700 dark:text-surface-300 rounded-xl font-semibold transition-all">
+
+                    <!-- Texts -->
+                    <h3 class="text-xl font-bold text-surface-900 dark:text-white mb-2">Eliminar Cupón</h3>
+                    <p class="text-[14px] text-surface-500 dark:text-surface-400 mb-6">
+                        ¿Estás seguro de que deseas eliminar el cupón <strong id="deleteCouponCode" class="font-bold text-surface-800 dark:text-surface-200"></strong>? Esta acción no se puede deshacer.
+                    </p>
+
+                    <!-- Form Buttons -->
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-surface-50 hover:bg-surface-100 dark:bg-surface-700 dark:hover:bg-surface-600 text-surface-800 dark:text-white font-semibold rounded-xl transition-colors focus:ring-4 focus:ring-surface-200 dark:focus:ring-surface-600 outline-none text-sm">
                             Cancelar
                         </button>
+                        <form id="deleteCouponForm" th:action="@{/admin/cupones/eliminar/0}" method="post" class="flex-1">
+                            <button type="submit" class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition-colors focus:ring-4 focus:ring-red-500/50 outline-none">
+                                Eliminar
+                            </button>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
 
         <script th:inline="none">
             $(document).ready(function() {
-                $('#couponTable').DataTable({
-                    language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                var table = $('#couponTable').DataTable({
+                    language: {
+                        "sProcessing":     "Procesando...",
+                        "sLengthMenu":     "Mostrar _MENU_ registros",
+                        "sZeroRecords":    "No se encontraron resultados",
+                        "sEmptyTable":     "Ningún cupón disponible",
+                        "sInfo":           "Mostrando del _START_ al _END_ de _TOTAL_ cupones",
+                        "sInfoEmpty":      "Mostrando del 0 al 0 de 0 cupones",
+                        "sInfoFiltered":   "(filtrado de _MAX_ cupones en total)",
+                        "sSearch":         "Buscar:",
+                        "sLoadingRecords": "Cargando...",
+                        "oPaginate": {
+                            "sFirst":    "Primero",
+                            "sLast":     "Último",
+                            "sNext":     "Siguiente",
+                            "sPrevious": "Anterior"
+                        }
+                    },
                     pageLength: 10,
-                    order: [[3, 'desc']]
+                    order: [[3, 'desc']],
+                    dom: '<"overflow-x-auto"t><"p-4 border-t border-surface-200 dark:border-surface-700 flex flex-col md:flex-row shadow-inner items-center justify-between"p>',
+                    ordering: true,
+                    info: false
+                });
+
+                // Flowbite Custom Input Search binding
+                $('#couponSearchInput').on('keyup', function() {
+                    table.search(this.value).draw();
+                });
+
+                // Toggle Dropdown Filter Menu
+                $('#dropdownDefaultButton').on('click', function(e) {
+                    e.stopPropagation();
+                    $('#dropdownFilter').toggleClass('hidden');
+                });
+
+                // Flowbite Custom Button Filter binding
+                $('.filter-btn').on('click', function(e) {
+                    e.preventDefault();
+                    var filter = $(this).data('filter');
+                    table.search(filter).draw();
+                    $('#dropdownFilter').addClass('hidden');
+                });
+
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('#dropdownDefaultButton, #dropdownFilter').length) {
+                        $('#dropdownFilter').addClass('hidden');
+                    }
                 });
 
                 $(document).on('click', '.btn-edit-coupon', function() {
@@ -208,6 +347,22 @@
 
             document.getElementById('couponModal').addEventListener('click', function(e) {
                 if (e.target === this) closeCouponModal();
+            });
+
+            function openDeleteModal(id, codigo) {
+                document.getElementById('deleteCouponCode').textContent = codigo;
+                document.getElementById('deleteCouponForm').action = '/admin/cupones/eliminar/' + id;
+                document.getElementById('deleteCouponModal').classList.remove('hidden');
+                document.getElementById('deleteCouponModal').classList.add('flex');
+            }
+
+            function closeDeleteModal() {
+                document.getElementById('deleteCouponModal').classList.add('hidden');
+                document.getElementById('deleteCouponModal').classList.remove('flex');
+            }
+
+            document.getElementById('deleteCouponModal').addEventListener('click', function(e) {
+                if (e.target === this) closeDeleteModal();
             });
         </script>
     </main>
