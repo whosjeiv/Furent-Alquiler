@@ -63,8 +63,17 @@ public class PasswordResetService {
             throw new InvalidOperationException("El enlace ha expirado o ya fue utilizado");
         }
 
-        if (newPassword.length() < 6) {
-            throw new InvalidOperationException("La contraseña debe tener al menos 6 caracteres");
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new InvalidOperationException("La contraseña debe tener al menos 8 caracteres");
+        }
+        int score = 0;
+        if (newPassword.length() >= 8) score++;
+        if (newPassword.chars().anyMatch(Character::isUpperCase)) score++;
+        if (newPassword.chars().anyMatch(Character::isLowerCase)) score++;
+        if (newPassword.chars().anyMatch(Character::isDigit)) score++;
+        if (newPassword.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) score++;
+        if (score < 3) {
+            throw new InvalidOperationException("La contraseña es muy débil. Incluye mayúsculas, minúsculas, números y caracteres especiales.");
         }
 
         User user = userService.findById(token.getUserId())

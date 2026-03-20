@@ -65,12 +65,72 @@ public class EmailService {
 
     public void sendPasswordResetEmail(String toEmail, String resetLink) {
         String subject = "Recuperar contraseña — Furent";
-        String html = buildGenericHtmlEmail(
-                "Restablecer Contraseña",
-                "Haz clic en el siguiente enlace para restablecer tu contraseña:<br><br>" +
-                        "<a href=\"" + resetLink + "\" style=\"color: #7c3aed; font-weight: bold;\">Restablecer mi contraseña</a>"
-        );
+        String html = buildPasswordResetHtmlEmail(resetLink);
         sendHtmlEmail(toEmail, subject, html);
+    }
+
+    private String buildPasswordResetHtmlEmail(String resetLink) {
+        return """
+                <!DOCTYPE html>
+                <html lang="es">
+                <head><meta charset="UTF-8"></head>
+                <body style="margin:0;padding:0;background-color:#f4f1fa;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+                <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f4f1fa;padding:32px 0;">
+                    <tr><td align="center">
+                        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.08);">
+                            <tr>
+                                <td style="background:linear-gradient(135deg,#7c3aed 0%%,#a855f7 100%%);padding:28px 32px;text-align:center;">
+                                    <h1 style="margin:0;font-size:24px;color:#ffffff;letter-spacing:1px;">FURENT</h1>
+                                    <p style="margin:4px 0 0;font-size:11px;color:rgba(255,255,255,0.75);letter-spacing:0.5px;">Alquiler de Mobiliarios para Eventos</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:32px;">
+                                    <h2 style="margin:0 0 16px;font-size:20px;color:#1f2937;">Recuperar Contraseña 🔑</h2>
+                                    <p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#4b5563;">
+                                        Recibimos una solicitud para restablecer tu contraseña. Si no fuiste tú, puedes ignorar este correo.
+                                    </p>
+                                    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#4b5563;">
+                                        Haz clic en el botón para crear una nueva contraseña. Este enlace expira en <strong>1 hora</strong>.
+                                    </p>
+                                    <table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+                                        <tr>
+                                            <td style="background:linear-gradient(135deg,#7c3aed 0%%,#a855f7 100%%);border-radius:12px;padding:16px 48px;">
+                                                <a href="%s" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;">Restablecer Contraseña</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">
+                                        Si el botón no funciona, copia y pega este enlace:<br/>
+                                        <span style="color:#7c3aed;word-break:break-all;">%s</span>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:0 32px 24px;">
+                                    <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#fef3c7;border-radius:10px;border:1px solid #fde68a;">
+                                        <tr>
+                                            <td style="padding:14px 18px;">
+                                                <p style="margin:0;font-size:12px;color:#92400e;line-height:1.5;">
+                                                    ⚠️ <strong>Seguridad:</strong> Nunca compartas este enlace. Furent nunca te pedirá tu contraseña.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:20px 32px;background-color:#faf5ff;border-top:1px solid #ede9fe;text-align:center;">
+                                    <p style="margin:0;font-size:11px;color:#9ca3af;">Este correo fue enviado automáticamente desde Furent.</p>
+                                    <p style="margin:4px 0 0;font-size:11px;color:#9ca3af;">© 2026 Furent — Todos los derechos reservados.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td></tr>
+                </table>
+                </body>
+                </html>
+                """.formatted(resetLink, resetLink);
     }
 
     public void sendPaymentConfirmation(String toEmail, String reservaId) {

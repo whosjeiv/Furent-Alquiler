@@ -169,6 +169,13 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
+		<!-- TOTP (Google Authenticator 2FA) -->
+		<dependency>
+			<groupId>dev.samstevens.totp</groupId>
+			<artifactId>totp</artifactId>
+			<version>1.7.1</version>
+		</dependency>
+
 		<!-- JWT (JSON Web Tokens) -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

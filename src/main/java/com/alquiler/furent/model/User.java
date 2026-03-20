@@ -42,6 +42,10 @@ public class User {
     private String apariencia = "light";
     private boolean notificacionesEmail = true;
 
+    // 2FA (Google Authenticator)
+    private String totpSecret;
+    private boolean totpEnabled = false;
+
     public User() {
         this.fechaCreacion = LocalDateTime.now();
         this.activo = true;

@@ -44,12 +44,13 @@ public class PageController {
     private final PendingCardPaymentRepository pendingCardPaymentRepository;
     private final PayUService payUService;
     private final PayUProperties payUProperties;
+    private final EmailService emailService;
 
     public PageController(ProductService productService, ReservationService reservationService,
             UserService userService, PasswordEncoder passwordEncoder, ReviewService reviewService,
             ContactService contactService, NotificationService notificationService,
             PasswordResetService passwordResetService, PendingCardPaymentRepository pendingCardPaymentRepository,
-            PayUService payUService, PayUProperties payUProperties) {
+            PayUService payUService, PayUProperties payUProperties, EmailService emailService) {
         this.productService = productService;
         this.reservationService = reservationService;
         this.userService = userService;
@@ -61,6 +62,7 @@ public class PageController {
         this.pendingCardPaymentRepository = pendingCardPaymentRepository;
         this.payUService = payUService;
         this.payUProperties = payUProperties;
+        this.emailService = emailService;
     }
 
     @GetMapping("/")
@@ -487,17 +489,26 @@ public class PageController {
     }
 
     @PostMapping("/password-reset")
-    public String requestPasswordReset(@RequestParam String email, RedirectAttributes redirectAttributes) {
+    public String requestPasswordReset(@RequestParam String email, RedirectAttributes redirectAttributes,
+                                       HttpServletRequest request) {
         try {
             var token = passwordResetService.createToken(email);
-            // En producción se enviaría por email. Aquí mostramos el enlace.
-            String resetUrl = "/password-reset/" + token.getToken();
+            // Build absolute reset URL
+            String baseUrl = request.getScheme() + "://" + request.getServerName()
+                    + (request.getServerPort() != 80 && request.getServerPort() != 443
+                        ? ":" + request.getServerPort() : "");
+            String resetUrl = baseUrl + "/password-reset/" + token.getToken();
             log.info("Enlace de recuperación generado para {}: {}", email, resetUrl);
+
+            // Send the email
+            emailService.sendPasswordResetEmail(email, resetUrl);
+            log.info("Email de recuperación enviado exitosamente a: {}", email);
+
             redirectAttributes.addFlashAttribute("success",
-                    "Si el correo existe, recibirás un enlace de recuperación. Revisa tu bandeja.");
-            redirectAttributes.addFlashAttribute("resetLink", resetUrl);
+                    "Te hemos enviado un enlace de recuperación. Revisa tu bandeja de entrada y spam.");
         } catch (RuntimeException e) {
-            // No revelamos si el email existe o no por seguridad
+            log.error("Error en recuperación de contraseña para {}: {}", email, e.getMessage(), e);
+            // Don't reveal if email exists or not - always show same message
             redirectAttributes.addFlashAttribute("success",
                     "Si el correo existe, recibirás un enlace de recuperación. Revisa tu bandeja.");
         }
