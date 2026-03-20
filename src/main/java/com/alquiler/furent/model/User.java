@@ -218,4 +218,20 @@ public class User {
     public void setNotificacionesEmail(boolean notificacionesEmail) {
         this.notificacionesEmail = notificacionesEmail;
     }
+
+    public String getTotpSecret() {
+        return totpSecret;
+    }
+
+    public void setTotpSecret(String totpSecret) {
+        this.totpSecret = totpSecret;
+    }
+
+    public boolean isTotpEnabled() {
+        return totpEnabled;
+    }
+
+    public void setTotpEnabled(boolean totpEnabled) {
+        this.totpEnabled = totpEnabled;
+    }
 }

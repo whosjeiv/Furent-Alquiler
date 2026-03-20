@@ -116,7 +116,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**", "/api/pagos/payu/confirmacion")
                         .permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/panel", "/configuracion", "/cotizacion",
+                        .requestMatchers("/panel", "/configuracion", "/configuracion/**", "/cotizacion",
                                 "/cotizacion/**", "/pago/**",
                                 "/api/cotizacion", "/api/favoritos/**",
                                 "/api/notificaciones/**", "/api/cupones/**",

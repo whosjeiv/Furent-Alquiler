@@ -45,12 +45,14 @@ public class PageController {
     private final PayUService payUService;
     private final PayUProperties payUProperties;
     private final EmailService emailService;
+    private final TotpService totpService;
 
     public PageController(ProductService productService, ReservationService reservationService,
             UserService userService, PasswordEncoder passwordEncoder, ReviewService reviewService,
             ContactService contactService, NotificationService notificationService,
             PasswordResetService passwordResetService, PendingCardPaymentRepository pendingCardPaymentRepository,
-            PayUService payUService, PayUProperties payUProperties, EmailService emailService) {
+            PayUService payUService, PayUProperties payUProperties, EmailService emailService,
+            TotpService totpService) {
         this.productService = productService;
         this.reservationService = reservationService;
         this.userService = userService;
@@ -63,6 +65,7 @@ public class PageController {
         this.payUService = payUService;
         this.payUProperties = payUProperties;
         this.emailService = emailService;
+        this.totpService = totpService;
     }
 
     @GetMapping("/")
@@ -421,7 +424,8 @@ public class PageController {
     public String updatePassword(@RequestParam String currentPassword,
             @RequestParam String newPassword,
             @RequestParam String confirmPassword,
-            Authentication auth, RedirectAttributes redirectAttributes) {
+            Authentication auth, RedirectAttributes redirectAttributes,
+            HttpServletRequest request) {
         if (auth != null) {
             Optional<User> optUser = userService.findByEmail(auth.getName());
             if (optUser.isPresent()) {
@@ -434,16 +438,130 @@ public class PageController {
                     redirectAttributes.addFlashAttribute("passwordError", "Las contraseñas no coinciden");
                     return "redirect:/configuracion";
                 }
-                if (newPassword.length() < 6) {
+                // 3-of-5 password rules
+                int score = 0;
+                if (newPassword.length() >= 8) score++;
+                if (newPassword.chars().anyMatch(Character::isUpperCase)) score++;
+                if (newPassword.chars().anyMatch(Character::isLowerCase)) score++;
+                if (newPassword.chars().anyMatch(Character::isDigit)) score++;
+                if (newPassword.chars().anyMatch(c -> !Character.isLetterOrDigit(c))) score++;
+                if (score < 3) {
                     redirectAttributes.addFlashAttribute("passwordError",
-                            "La contraseña debe tener al menos 6 caracteres");
+                            "La contraseña es muy débil. Incluye mayúsculas, minúsculas, números y caracteres especiales.");
                     return "redirect:/configuracion";
                 }
                 user.setPassword(passwordEncoder.encode(newPassword));
                 userService.save(user);
+                // Send security alert email
+                try {
+                    String baseUrl = request.getScheme() + "://" + request.getServerName()
+                            + (request.getServerPort() != 80 && request.getServerPort() != 443
+                                ? ":" + request.getServerPort() : "");
+                    var token = passwordResetService.createToken(user.getEmail());
+                    String resetUrl = baseUrl + "/password-reset/" + token.getToken();
+                    emailService.sendPasswordChangedEmail(user.getEmail(), user.getNombre(), resetUrl);
+                } catch (Exception ex) {
+                    log.warn("No se pudo enviar email de confirmación de cambio de contraseña: {}", ex.getMessage());
+                }
                 redirectAttributes.addFlashAttribute("success", "Contraseña actualizada correctamente");
             }
         }
+        return "redirect:/configuracion";
+    }
+
+    @PostMapping("/configuracion/cerrar-sesiones")
+    public String cerrarSesiones(@RequestParam String password,
+            Authentication auth, RedirectAttributes redirectAttributes,
+            HttpServletRequest request) {
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            if (optUser.isPresent()) {
+                User user = optUser.get();
+                if (!passwordEncoder.matches(password, user.getPassword())) {
+                    redirectAttributes.addFlashAttribute("sessionError", "Contraseña incorrecta");
+                    return "redirect:/configuracion";
+                }
+                // Invalidate current session — Spring Security Remember-Me tokens
+                // are stored per-user; clearing them forces re-login on other devices.
+                try {
+                    var session = request.getSession(false);
+                    if (session != null) session.invalidate();
+                } catch (Exception ignored) {}
+                redirectAttributes.addFlashAttribute("success", "Sesiones cerradas en otros dispositivos. Por favor inicia sesión de nuevo.");
+                return "redirect:/login?manual=true";
+            }
+        }
+        return "redirect:/configuracion";
+    }
+
+    @PostMapping("/configuracion/eliminar-cuenta")
+    public String eliminarCuenta(@RequestParam String password,
+            Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            if (optUser.isPresent()) {
+                User user = optUser.get();
+                if (!passwordEncoder.matches(password, user.getPassword())) {
+                    redirectAttributes.addFlashAttribute("deleteError", "Contraseña incorrecta. No se eliminó la cuenta.");
+                    return "redirect:/configuracion";
+                }
+                userService.deleteUser(user.getId());
+                log.info("Cuenta eliminada por el usuario: {}", user.getEmail());
+                return "redirect:/login?manual=true";
+            }
+        }
+        return "redirect:/configuracion";
+    }
+
+    // === 2FA TOTP ===
+
+    @GetMapping("/configuracion/2fa/setup")
+    public String setup2fa(Authentication auth, Model model) {
+        if (auth == null) return "redirect:/login";
+        Optional<User> optUser = userService.findByEmail(auth.getName());
+        if (optUser.isEmpty()) return "redirect:/configuracion";
+        User user = optUser.get();
+        String secret = totpService.generateSecret();
+        String qrUri = totpService.generateQrDataUri(user.getEmail(), secret);
+        model.addAttribute("totpSecret", secret);
+        model.addAttribute("totpQr", qrUri);
+        model.addAttribute("pageTitle", "Configurar 2FA");
+        return "settings-2fa-setup";
+    }
+
+    @PostMapping("/configuracion/2fa/enable")
+    public String enable2fa(@RequestParam String secret, @RequestParam String code,
+            Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth == null) return "redirect:/login";
+        Optional<User> optUser = userService.findByEmail(auth.getName());
+        if (optUser.isEmpty()) return "redirect:/configuracion";
+        User user = optUser.get();
+        if (!totpService.verifyCode(secret, code)) {
+            redirectAttributes.addFlashAttribute("totpError", "Código incorrecto. Inténtalo de nuevo.");
+            return "redirect:/configuracion/2fa/setup";
+        }
+        user.setTotpSecret(secret);
+        user.setTotpEnabled(true);
+        userService.save(user);
+        redirectAttributes.addFlashAttribute("success", "¡Autenticación de dos pasos activada exitosamente!");
+        return "redirect:/configuracion";
+    }
+
+    @PostMapping("/configuracion/2fa/disable")
+    public String disable2fa(@RequestParam String code,
+            Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth == null) return "redirect:/login";
+        Optional<User> optUser = userService.findByEmail(auth.getName());
+        if (optUser.isEmpty()) return "redirect:/configuracion";
+        User user = optUser.get();
+        if (!totpService.verifyCode(user.getTotpSecret(), code)) {
+            redirectAttributes.addFlashAttribute("totpDisableError", "Código incorrecto. 2FA no desactivado.");
+            return "redirect:/configuracion";
+        }
+        user.setTotpSecret(null);
+        user.setTotpEnabled(false);
+        userService.save(user);
+        redirectAttributes.addFlashAttribute("success", "Autenticación de dos pasos desactivada.");
         return "redirect:/configuracion";
     }
 
@@ -530,13 +648,35 @@ public class PageController {
     @PostMapping("/password-reset/confirm")
     public String confirmPasswordReset(@RequestParam String token, @RequestParam String password,
                                        @RequestParam String confirmPassword,
-                                       RedirectAttributes redirectAttributes) {
+                                       RedirectAttributes redirectAttributes,
+                                       HttpServletRequest request) {
         if (!password.equals(confirmPassword)) {
             redirectAttributes.addFlashAttribute("error", "Las contraseñas no coinciden");
             return "redirect:/password-reset/" + token;
         }
         try {
+            // Find user before resetting so we have the email
+            var tokenOpt = passwordResetService.findByToken(token);
             passwordResetService.resetPassword(token, password);
+            // Send success / security alert email
+            if (tokenOpt.isPresent()) {
+                try {
+                    String userEmail = tokenOpt.get().getUserId() != null
+                        ? userService.findById(tokenOpt.get().getUserId()).map(u -> u.getEmail()).orElse(null)
+                        : null;
+                    if (userEmail != null) {
+                        String nombre = userService.findByEmail(userEmail).map(u -> u.getNombre()).orElse("Usuario");
+                        String baseUrl = request.getScheme() + "://" + request.getServerName()
+                                + (request.getServerPort() != 80 && request.getServerPort() != 443
+                                    ? ":" + request.getServerPort() : "");
+                        var newToken = passwordResetService.createToken(userEmail);
+                        String resetUrl = baseUrl + "/password-reset/" + newToken.getToken();
+                        emailService.sendPasswordChangedEmail(userEmail, nombre, resetUrl);
+                    }
+                } catch (Exception ex) {
+                    log.warn("No se pudo enviar email de confirmación tras reset: {}", ex.getMessage());
+                }
+            }
             redirectAttributes.addFlashAttribute("success", "¡Contraseña actualizada! Ya puedes iniciar sesión.");
             return "redirect:/login";
         } catch (RuntimeException e) {
