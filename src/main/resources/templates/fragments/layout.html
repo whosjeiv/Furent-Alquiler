@@ -77,6 +77,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -285,7 +286,7 @@ document.addEventListener('click', function(e) {
 </script>
 
 <!-- FOOTER FRAGMENT -->
-<footer th:fragment="footer" xmlns:th="http://www.thymeleaf.org"
+<footer th:fragment="footer" xmlns:th="http://www.thymeleaf.org" x-data="{ openLegal: false, legalTab: 'terminos' }"
         class="bg-white border-t border-surface-200/60 mt-auto" role="contentinfo" aria-label="Pie de página">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
@@ -296,13 +297,13 @@ document.addEventListener('click', function(e) {
                 </div>
                 <p class="text-sm text-surface-500 leading-relaxed max-w-xs mb-5">Plataforma profesional de alquiler de mobiliario para eventos. Calidad, elegancia y servicio excepcional.</p>
                 <div class="flex space-x-3">
-                    <a href="#" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="Instagram">
+                    <a href="https://www.instagram.com/jose.valdes28/?hl=es" target="_blank" rel="noopener noreferrer" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="Instagram">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                     </a>
-                    <a href="#" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="Facebook">
+                    <a href="https://www.facebook.com/josedaniel.valdeslastres" target="_blank" rel="noopener noreferrer" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="Facebook">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385h-3.047v-3.47h3.047v-2.642c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.738-.9 10.126-5.864 10.126-11.854z"/></svg>
                     </a>
-                    <a href="#" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="WhatsApp">
+                    <a href="https://wa.me/573105782442" target="_blank" rel="noopener noreferrer" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="WhatsApp">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     </a>
                 </div>
@@ -328,9 +329,9 @@ document.addEventListener('click', function(e) {
             <div>
                 <h4 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-4">Legal</h4>
                 <ul class="space-y-2.5">
-                    <li><a href="#" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Términos</a></li>
-                    <li><a href="#" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Privacidad</a></li>
-                    <li><a href="#" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Cancelación</a></li>
+                    <li><a href="javascript:void(0)" @click.prevent="openLegal = true; legalTab = 'terminos'" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Términos</a></li>
+                    <li><a href="javascript:void(0)" @click.prevent="openLegal = true; legalTab = 'privacidad'" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Privacidad</a></li>
+                    <li><a href="javascript:void(0)" @click.prevent="openLegal = true; legalTab = 'cancelacion'" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Cancelación</a></li>
                 </ul>
             </div>
         </div>
@@ -338,10 +339,10 @@ document.addEventListener('click', function(e) {
             <!-- Newsletter -->
             <div class="flex flex-col md:flex-row items-center gap-4 justify-between mb-8">
                 <p class="text-surface-500 text-sm">Recibe ofertas exclusivas y novedades</p>
-                <div class="flex gap-2 w-full md:w-auto">
-                    <input type="email" placeholder="tu@email.com" class="flex-1 md:w-64 px-4 py-2.5 rounded-xl border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500">
-                    <button class="px-5 py-2.5 rounded-xl font-semibold text-sm text-white" style="background: linear-gradient(135deg, #E07A3A, #C2630F);">Suscribirse</button>
-                </div>
+                <form class="flex gap-2 w-full md:w-auto" onsubmit="event.preventDefault(); showToast('¡Gracias por suscribirte al newsletter!', 'success'); this.reset();">
+                    <input type="email" required placeholder="tu@email.com" class="flex-1 md:w-64 px-4 py-2.5 rounded-xl border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500">
+                    <button type="submit" class="px-5 py-2.5 rounded-xl font-semibold text-sm text-white" style="background: linear-gradient(135deg, #E07A3A, #C2630F);">Suscribirse</button>
+                </form>
             </div>
             <!-- Copyright -->
             <div class="flex flex-col sm:flex-row items-center justify-between">
@@ -570,4 +571,96 @@ document.addEventListener('click', function(e) {
             }
         });
     </script>
+    
+    <!-- Legal Modal Dialog AlpineJS Powered -->
+    <div x-show="openLegal" style="display: none;" class="relative z-[250]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div x-show="openLegal"
+             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-surface-950/40 backdrop-blur-md transition-opacity"></div>
+             
+        <!-- Dialog -->
+        <div class="fixed inset-0 z-[250] w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div x-show="openLegal" @click.away="openLegal = false"
+                     x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="relative transform overflow-hidden rounded-[2rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-surface-100 flex flex-col max-h-[85vh]">
+                    
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-5 border-b border-surface-100 bg-surface-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-furent-50 rounded-xl text-furent-500 border border-furent-100/50">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-black tracking-tight text-surface-900" id="legal-modal-title">Información Legal</h3>
+                        </div>
+                        <button type="button" @click="openLegal = false" class="text-surface-400 hover:text-surface-600 bg-white border border-surface-200 hover:bg-surface-50 rounded-xl p-2 transition-colors focus:ring-2 focus:outline-none focus:ring-furent-500/20 shadow-sm">
+                            <span class="sr-only">Cerrar</span>
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex border-b border-surface-100 overflow-x-auto bg-surface-50/20 px-4 pt-2">
+                        <button @click="legalTab = 'terminos'" :class="{'border-furent-500 text-furent-600 font-bold': legalTab === 'terminos', 'border-transparent text-surface-500 hover:text-surface-800 font-medium': legalTab !== 'terminos'}" class="whitespace-nowrap pb-3 pt-2 px-4 border-b-2 text-[14px] transition-colors">Términos de Servicio</button>
+                        <button @click="legalTab = 'privacidad'" :class="{'border-furent-500 text-furent-600 font-bold': legalTab === 'privacidad', 'border-transparent text-surface-500 hover:text-surface-800 font-medium': legalTab !== 'privacidad'}" class="whitespace-nowrap pb-3 pt-2 px-4 border-b-2 text-[14px] transition-colors mx-2">Política de Privacidad</button>
+                        <button @click="legalTab = 'cancelacion'" :class="{'border-furent-500 text-furent-600 font-bold': legalTab === 'cancelacion', 'border-transparent text-surface-500 hover:text-surface-800 font-medium': legalTab !== 'cancelacion'}" class="whitespace-nowrap pb-3 pt-2 px-4 border-b-2 text-[14px] transition-colors">Política de Cancelación</button>
+                    </div>
+
+                    <!-- Content Body -->
+                    <div class="p-6 overflow-y-auto flex-1 bg-white custom-scrollbar">
+                        
+                        <!-- Términos -->
+                        <div x-show="legalTab === 'terminos'" class="space-y-5 text-surface-600 text-[14px] leading-relaxed">
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1">1. Aceptación de los Términos</h4>
+                            <p>Al acceder y utilizar los servicios de Furent, usted acepta estar sujeto a estos términos y condiciones. Si no está de acuerdo con alguna parte, no podrá utilizar nuestra plataforma de alquiler de mobiliario.</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">2. Uso del Servicio</h4>
+                            <p>Furent proporciona una plataforma tecnológica integral para descubrir, cotizar y alquilar mobiliario de alta calidad para sus eventos sociales o corporativos. Como usuario, se compromete a proveer información real y actualizada sobre usted y su evento.</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">3. Responsabilidad sobre los bienes</h4>
+                            <p>El cliente, a partir de la firma del comprobante de entrega, asume la responsabilidad y resguardo absoluto sobre las sillas, mesas, carpas y decoraciones apartadas. Furent no se hace responsable por multas civiles relacionadas al acomodo de estos tras su entrega.</p>
+                        </div>
+                        
+                        <!-- Privacidad -->
+                        <div x-show="legalTab === 'privacidad'" style="display:none;" class="space-y-5 text-surface-600 text-[14px] leading-relaxed">
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1">Protección de sus datos 🔒</h4>
+                            <p>En Furent, el respeto por su privacidad y la seguridad de su data es algo que nos tomamos muy en serio. Estamos comprometidos con los estándares colombianos de tratamiento de la información (Habeas Data).</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">¿Qué recopilamos?</h4>
+                            <p>Solo solicitamos aquellos datos explícitamente requeridos para materializar su evento: Nombres, correos, ubicaciones de domicilios o fincas, números telefónicos y copias de recibos o depósitos interbancarios.</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">Uso y seguridad interna</h4>
+                            <p>Usted puede estar tranquilo(a), nuestra base de datos viaja de forma encriptada entre el navegador y nuestros puertos. Sus datos no le serán vendidos en ningún punto ni circunstancia a agencias de marketing o servicios ajenos a Furent S.A.S.</p>
+                        </div>
+                        
+                        <!-- Cancelación -->
+                        <div x-show="legalTab === 'cancelacion'" style="display:none;" class="space-y-5 text-surface-600 text-[14px] leading-relaxed">
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1">Políticas de reembolso 💳</h4>
+                            <p>Nos enorgullece ser su socio ideal para sus eventos. Sabemos que las cosas a veces no salen de acuerdo al plan. Hemos diseñado una política de contingencia equitativa para resguardar nuestra disponibilidad y velar por sus recursos económicos:</p>
+                            
+                            <ul class="list-disc pl-5 mt-4 space-y-3 bg-furent-50/50 py-4 pr-4 rounded-xl border border-furent-100">
+                                <li class="text-furent-900"><strong class="font-bold">Anulación con 20 días de antelación:</strong> Le obsequiamos la reversión del 100% de cualquier pago o seña dada.</li>
+                                <li class="text-furent-900"><strong class="font-bold">Anulación entre 6 a 19 días de antelación:</strong> Solo habrá un reembolso pactado entre el 40% a 50%, a discreción administrativa.</li>
+                                <li class="text-red-700/80"><strong class="font-bold">Anulación exprés de última hora (< 5 días):</strong> Pierde su derecho al reembolso general por los sobrecostos causados en nuestro calendario.</li>
+                            </ul>
+                            
+                            <div class="p-5 bg-amber-50 text-amber-800 rounded-xl mt-6 border border-amber-200/60 shadow-sm">
+                                <p class="font-extrabold text-sm mb-1 uppercase tracking-wider text-amber-900">Nota Climática / Extrema</p>
+                                <p class="text-xs leading-relaxed font-medium">En reservaciones catalogadas "Al aire libre", Furent declina y no ejecutará devoluciones si el clima perjudica su uso tras la consolidación de nuestra entrega y recibo con el personal de logística.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="bg-surface-50/50 px-6 py-5 border-t border-surface-100 sm:flex sm:flex-row-reverse">
+                        <button type="button" @click="openLegal = false" class="inline-flex w-full justify-center items-center rounded-xl bg-surface-900 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-surface-900/10 hover:bg-surface-800 hover:scale-[1.02] active:scale-[0.98] transition-all sm:ml-3 sm:w-auto">Aceptar y Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </footer>

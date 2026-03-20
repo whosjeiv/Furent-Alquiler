@@ -125,7 +125,10 @@ public class AdminProductosController {
         product.setEstadoMantenimiento(estadoMantenimiento);
         product.setNotasMantenimiento(notasMantenimiento);
 
-        boolean available = stock > 0 && !"EN_REPARACION".equals(estadoMantenimiento);
+        boolean available = stock > 0
+                && !"EN_MANTENIMIENTO".equals(estadoMantenimiento)
+                && !"FUERA_DE_SERVICIO".equals(estadoMantenimiento)
+                && !"EN_REPARACION".equals(estadoMantenimiento);
         product.setDisponible(available);
 
         productService.saveProduct(product);

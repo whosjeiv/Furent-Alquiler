@@ -340,6 +340,14 @@ public class PageController {
         msg.setMensaje(mensaje);
         contactService.save(msg);
         log.info("Nuevo mensaje de contacto de: {}", email);
+        
+        try {
+            emailService.sendContactNotification("valdeslastresjosedaniel@gmail.com", 
+                    nombre, email, asunto, mensaje, msg.getTelefono());
+        } catch (Exception e) {
+            log.error("No se pudo enviar notificacion de contacto por email: {}", e.getMessage());
+        }
+        
         redirectAttributes.addFlashAttribute("success", "¡Mensaje enviado exitosamente! Te responderemos pronto.");
         return "redirect:/contacto";
     }

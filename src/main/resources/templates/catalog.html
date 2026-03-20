@@ -220,7 +220,7 @@
                     <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 hidden">
                         <div th:each="product, iterStat : ${products}"
                              class="product-card group bg-white rounded-2xl overflow-hidden border border-surface-100 shadow-soft transition-all duration-300 hover:shadow-hover hover:-translate-y-1"
-                             th:data-id="${product.id}"
+                         th:data-id="${product.id}"
                              th:data-name="${product.name}"
                              th:data-category="${product.category}"
                              th:data-price="${product.pricePerDay}"
@@ -229,14 +229,30 @@
                              th:data-available="${product.available}"
                              th:data-image="${product.imageUrl}"
                              th:data-short="${product.shortDescription}"
-                             th:data-stock="${product.stock}">
+                             th:data-stock="${product.stock}"
+                             th:data-estado="${product.estadoMantenimiento}">
                             <!-- Image -->
                             <a th:href="@{/producto/{id}(id=${product.id})}" class="block relative overflow-hidden aspect-[4/3]">
                                 <img th:src="${product.imageUrl}" th:alt="${product.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 <div class="absolute top-3 left-3">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-surface-700 shadow-sm" th:text="${product.category}">Sillas</span>
                                 </div>
-                                <div class="absolute top-3 right-3" th:if="${product.available}">
+                                <!-- Badge: En Mantenimiento (prioridad) -->
+                                <div class="absolute top-3 right-3" th:if="${product.estadoMantenimiento == 'EN_MANTENIMIENTO'}">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold bg-amber-100/90 backdrop-blur-sm text-amber-700 border border-amber-300/60 shadow-sm">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+                                        Mantenimiento
+                                    </span>
+                                </div>
+                                <!-- Badge: Fuera de Servicio (prioridad) -->
+                                <div class="absolute top-3 right-3" th:if="${product.estadoMantenimiento == 'FUERA_DE_SERVICIO'}">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold bg-red-100/90 backdrop-blur-sm text-red-700 border border-red-300/60 shadow-sm">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        Fuera de Servicio
+                                    </span>
+                                </div>
+                                <!-- Badge: Disponible -->
+                                <div class="absolute top-3 right-3" th:if="${product.estadoMantenimiento != 'EN_MANTENIMIENTO' and product.estadoMantenimiento != 'FUERA_DE_SERVICIO' and product.available}">
                                     <span class="badge-disponible inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-50/90 backdrop-blur-sm text-green-700 border border-green-200/50">
                                         Disponible
                                     </span>
@@ -257,14 +273,23 @@
                                         <span class="text-base font-bold text-surface-900" th:text="'$' + ${#numbers.formatInteger(product.pricePerDay, 1, 'POINT')}">$60.000</span>
                                         <span class="text-xs text-surface-400">/ día</span>
                                     </div>
-                                    <button type="button" class="add-to-bag-btn inline-flex items-center gap-1.5 px-3.5 py-2 bg-furent-500 text-white text-xs font-medium rounded-lg hover:bg-furent-600 transition-colors shadow-sm"
+                                    <!-- Botón Agregar: solo si operativo y disponible -->
+                                    <button th:if="${product.estadoMantenimiento != 'EN_MANTENIMIENTO' and product.estadoMantenimiento != 'FUERA_DE_SERVICIO' and product.available}" type="button" class="add-to-bag-btn inline-flex items-center gap-1.5 px-3.5 py-2 bg-furent-500 text-white text-xs font-medium rounded-lg hover:bg-furent-600 transition-colors shadow-sm"
                                             th:data-id="${product.id}"
                                             th:data-name="${product.name}"
                                             th:data-price="${product.pricePerDay}"
                                             th:data-image="${product.imageUrl}"
-                                            th:data-stock="${product.stock}">
+                                            th:data-stock="${product.stock}"
+                                            th:data-max-qty="${product.maxQuantity}">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Agregar
+                                    </button>
+                                    <!-- Botón bloqueado: mantenimiento, fuera de servicio o sin stock -->
+                                    <button th:unless="${product.estadoMantenimiento != 'EN_MANTENIMIENTO' and product.estadoMantenimiento != 'FUERA_DE_SERVICIO' and product.available}" type="button" disabled
+                                            th:title="${product.estadoMantenimiento == 'EN_MANTENIMIENTO' ? 'En mantenimiento' : (product.estadoMantenimiento == 'FUERA_DE_SERVICIO' ? 'Fuera de servicio' : 'Sin stock')}"
+                                            class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-surface-200 text-surface-400 text-xs font-medium rounded-lg cursor-not-allowed">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        No disponible
                                     </button>
                                 </div>
                                 <!-- Compare checkbox -->
@@ -642,7 +667,8 @@
                     price: btn.dataset.price, 
                     image: btn.dataset.image, 
                     qty: 1,
-                    maxStock: parseInt(btn.dataset.stock) || 0
+                    maxStock: parseInt(btn.dataset.stock) || 0,
+                    maxQty: parseInt(btn.dataset.maxQty) || 0
                 });
                 showToast({
                     message: `¡${btn.dataset.name} agregado a la bolsa!`,
@@ -663,11 +689,12 @@
                 const action = qtyBtn.dataset.action;
                 const item = bag.find(i => i.id === id);
                 if (item) {
+                    const effectiveMax = (item.maxQty && item.maxQty > 0) ? Math.min(item.maxQty, item.maxStock || 9999) : (item.maxStock || 9999);
                     if (action === 'increase') { 
-                        if (item.maxStock && item.qty >= item.maxStock) {
+                        if (item.qty >= effectiveMax) {
                             showModal({
-                                title: 'Límite de stock',
-                                message: `Solo hay ${item.maxStock} unidades disponibles de "${item.name}".`,
+                                title: 'Límite alcanzado',
+                                message: `Solo puedes reservar hasta ${effectiveMax} unidades de "${item.name}".`,
                                 type: 'warning'
                             });
                         } else {

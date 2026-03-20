@@ -225,12 +225,20 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
-    public void sendContactNotification(String adminEmail, String fromName, String subject) {
+    public void sendContactNotification(String adminEmail, String fromName, String fromEmail, String subject, String messageBody, String phone) {
         String html = buildGenericHtmlEmail(
                 "Nuevo Mensaje de Contacto",
-                "Has recibido un nuevo mensaje de contacto de <strong>" + fromName + "</strong> con asunto: <strong>" + subject + "</strong>."
+                "<p>Has recibido un nuevo mensaje de contacto desde el formulario de la página web.</p>" +
+                "<ul>" +
+                "<li><strong>Nombre:</strong> " + fromName + "</li>" +
+                "<li><strong>Email:</strong> " + fromEmail + "</li>" +
+                "<li><strong>Teléfono:</strong> " + (phone.isBlank() ? "No provisto" : phone) + "</li>" +
+                "<li><strong>Asunto:</strong> " + subject + "</li>" +
+                "</ul>" +
+                "<p><strong>Mensaje:</strong></p>" +
+                "<blockquote style=\"border-left:4px solid #7c3aed; padding-left:16px; margin-left:0; color:#4b5563; font-style:italic;\">" + messageBody + "</blockquote>"
         );
-        sendHtmlEmail(adminEmail, "Nuevo mensaje de contacto: " + subject, html);
+        sendHtmlEmail(adminEmail, "Nuevo contacto web: " + subject, html);
     }
 
     /**

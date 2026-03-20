@@ -741,13 +741,14 @@
             let nextQty = bag[idx].qty + dir;
             if(nextQty < 1) nextQty = 1;
             
-            // FIX: Limitar al stock máximo si está guardado en el item
-            if(bag[idx].maxStock && nextQty > bag[idx].maxStock) {
-                nextQty = bag[idx].maxStock;
+            // Limitar al máximo efectivo: min(cantidadMaxima, stock)
+            const effectiveMax = (bag[idx].maxQty && bag[idx].maxQty > 0) ? Math.min(bag[idx].maxQty, bag[idx].maxStock || 9999) : (bag[idx].maxStock || 9999);
+            if(nextQty > effectiveMax) {
+                nextQty = effectiveMax;
                 showErrorModal({
-                    title: 'Límite de stock',
-                    message: `Solo hay ${bag[idx].maxStock} unidades disponibles de "${bag[idx].name}".`,
-                    footer: 'Por favor, ajusta la cantidad según la disponibilidad.'
+                    title: 'Límite alcanzado',
+                    message: `Solo puedes reservar hasta ${effectiveMax} unidades de "${bag[idx].name}".`,
+                    footer: 'Por favor, ajusta la cantidad según el límite permitido.'
                 });
             }
             bag[idx].qty = nextQty;
@@ -782,20 +783,21 @@
                     return;
                 }
                 
-                // VALIDACIÓN DE STOCK: No dejar pasar si hay items que exceden el maxStock
+                // VALIDACIÓN: No dejar pasar si hay items que exceden el límite (cantidadMaxima o stock)
                 let stockError = false;
                 let errorList = [];
                 bag.forEach(item => {
-                    if (item.maxStock && item.qty > item.maxStock) {
+                    const effectiveMax = (item.maxQty && item.maxQty > 0) ? Math.min(item.maxQty, item.maxStock || 9999) : (item.maxStock || 9999);
+                    if (item.qty > effectiveMax) {
                         stockError = true;
-                        errorList.push(`${item.name} (Pedido: ${item.qty}, Disponible: ${item.maxStock})`);
+                        errorList.push(`${item.name} (Pedido: ${item.qty}, Máximo: ${effectiveMax})`);
                     }
                 });
                 
                 if (stockError) {
                     showErrorModal({
-                        title: 'Stock insuficiente',
-                        message: 'Los siguientes productos exceden el inventario disponible:',
+                        title: 'Cantidad excede el límite',
+                        message: 'Los siguientes productos exceden la cantidad máxima permitida:',
                         items: errorList,
                         footer: 'Ajusta las cantidades antes de continuar.'
                     });

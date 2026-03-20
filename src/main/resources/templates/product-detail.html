@@ -786,15 +786,39 @@
 
                                         <!-- Center: Qty & Action -->
                                         <div class="flex flex-col items-center gap-4 sel-bar-action">
-                                            <div class="flex flex-col items-center gap-2 qty-selector-container">
+
+                                            <!-- === BLOQUEADO: En Mantenimiento === -->
+                                            <div th:if="${product.estadoMantenimiento == 'EN_MANTENIMIENTO'}" class="flex flex-col items-center gap-2">
+                                                <div class="flex items-center gap-3 px-6 py-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700">
+                                                    <svg class="w-6 h-6 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+                                                    <div>
+                                                        <p class="font-black text-sm">En Mantenimiento</p>
+                                                        <p class="text-xs font-medium text-amber-600">Este mobiliario no está disponible para reservas</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- === BLOQUEADO: Fuera de Servicio === -->
+                                            <div th:if="${product.estadoMantenimiento == 'FUERA_DE_SERVICIO'}" class="flex flex-col items-center gap-2">
+                                                <div class="flex items-center gap-3 px-6 py-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
+                                                    <svg class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                    <div>
+                                                        <p class="font-black text-sm">Fuera de Servicio</p>
+                                                        <p class="text-xs font-medium text-red-600">Este mobiliario no está disponible para reservas</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- === DISPONIBLE: Selector normal === -->
+                                            <div th:if="${product.estadoMantenimiento != 'EN_MANTENIMIENTO' and product.estadoMantenimiento != 'FUERA_DE_SERVICIO'}" class="flex flex-col items-center gap-2 qty-selector-container">
                                                 <span class="text-[10px] font-black text-surface-300 uppercase tracking-[0.2em] leading-none qty-label">CANTIDAD</span>
                                                 <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm rounded-2xl p-1 border border-surface-100 shadow-sm">
                                                     <button type="button" id="qtyDecrease" class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-surface-600 hover:text-furent-600 hover:bg-furent-50 transition-all text-xl shadow-sm">−</button>
-                                                    <input type="number" id="quantity" value="1" th:min="${product.minQuantity}" th:max="${product.stock}" class="w-14 text-center bg-transparent border-none text-base font-black text-surface-800 outline-none focus:ring-0">
+                                                    <input type="number" id="quantity" value="1" th:min="${product.minQuantity}" th:max="${product.maxQuantity > 0 && product.maxQuantity < product.stock ? product.maxQuantity : product.stock}" class="w-20 text-center bg-transparent border-none text-base font-black text-surface-800 outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                                                     <button type="button" id="qtyIncrease" class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-surface-600 hover:text-furent-600 hover:bg-furent-50 transition-all text-xl shadow-sm">+</button>
                                                 </div>
                                             </div>
-                                            <button id="reserveNowBtn" class="px-12 py-5 bg-furent-600 text-white font-black rounded-[1.5rem] hover:bg-furent-700 transition-all shadow-lg active:scale-95 text-base whitespace-nowrap"
+                                            <button th:if="${product.estadoMantenimiento != 'EN_MANTENIMIENTO' and product.estadoMantenimiento != 'FUERA_DE_SERVICIO'}" id="reserveNowBtn" class="px-12 py-5 bg-furent-600 text-white font-black rounded-[1.5rem] hover:bg-furent-700 transition-all shadow-lg active:scale-95 text-base whitespace-nowrap"
                                                     th:data-id="${product.id}"
                                                     th:data-name="${product.name}"
                                                     th:data-price="${product.pricePerDay}"
@@ -1070,7 +1094,8 @@
             name: /*[[${product.name}]]*/ '',
             price: /*[[${product.pricePerDay}]]*/ 0,
             image: /*[[${product.imageUrl}]]*/ '',
-            maxStock: /*[[${product.stock}]]*/ 0
+            maxStock: /*[[${product.stock}]]*/ 0,
+            maxQty: /*[[${product.maxQuantity}]]*/ 0
         };
         const occupiedRanges = /*[[${occupiedRanges}]]*/ [];
     </script>
@@ -1130,6 +1155,8 @@
             if (parseInt(qtyInput.value) < max) {
                 qtyInput.value = parseInt(qtyInput.value) + 1;
                 updateTotal();
+            } else {
+                showToast(`Máximo ${max} unidades por reserva para este mobiliario.`, 'warning');
             }
         });
         qtyInput.addEventListener('input', () => {
@@ -1216,11 +1243,12 @@
                 const action = qtyBtn.dataset.action;
                 const item = bag.find(i => i.id == id);
                 if (item) {
+                    const effectiveMax = (item.maxQty && item.maxQty > 0) ? Math.min(item.maxQty, item.maxStock || 9999) : (item.maxStock || 9999);
                     if (action === 'increase') { 
-                        if (item.maxStock && item.qty >= item.maxStock) {
+                        if (item.qty >= effectiveMax) {
                             showModal({
-                                title: 'Límite de stock',
-                                message: `Solo hay ${item.maxStock} unidades disponibles de "${item.name}".`,
+                                title: 'Límite alcanzado',
+                                message: `Solo puedes reservar hasta ${effectiveMax} unidades de "${item.name}".`,
                                 type: 'warning'
                             });
                         } else {
@@ -1255,13 +1283,14 @@
         // === Reserve Now Button ===
         document.getElementById('reserveNowBtn').addEventListener('click', () => {
             const qty = parseInt(qtyInput.value) || 1;
+            const effectiveMax = (productData.maxQty && productData.maxQty > 0) ? Math.min(productData.maxQty, productData.maxStock || 9999) : (productData.maxStock || 9999);
             
-            if (qty > productData.maxStock) {
+            if (qty > effectiveMax) {
                 showModal({
-                    title: 'Límite de stock',
-                    message: `Solo contamos con ${productData.maxStock} unidades disponibles de "${productData.name}".`,
+                    title: 'Límite alcanzado',
+                    message: `Solo puedes reservar hasta ${effectiveMax} unidades de "${productData.name}".`,
                     type: 'warning',
-                    footer: 'Por favor, ajusta tu pedido según la disponibilidad.'
+                    footer: 'Por favor, ajusta tu pedido según el límite permitido.'
                 });
                 return;
             }
@@ -1281,7 +1310,8 @@
                     price: productData.price, 
                     image: productData.image, 
                     qty: qty,
-                    maxStock: productData.maxStock
+                    maxStock: productData.maxStock,
+                    maxQty: productData.maxQty
                 });
                 showToast({
                     message: `¡${productData.name} agregado a la bolsa!`,

@@ -12,34 +12,6 @@
                     <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Reservas y Cotizaciones</h1>
                     <p class="text-sm font-medium text-surface-500 mt-1">Supervisa, gestiona y administra el ciclo de vida de los alquileres.</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <!-- Search -->
-                    <div class="relative flex-1 min-w-[240px]">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
-                        </div>
-                        <input type="text" id="busquedaReserva" placeholder="Buscar por cliente, ID o método..." 
-                               class="w-full pl-9 pr-4 py-2.5 border border-surface-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all font-medium text-surface-700 shadow-sm" 
-                               onkeyup="filtrarReservas()">
-                    </div>
-                    <!-- Status Filter -->
-                    <select id="filtroEstado" onchange="filtrarReservas()" class="px-4 py-2.5 bg-white border border-surface-200 rounded-xl text-sm font-bold text-surface-700 focus:ring-2 focus:ring-furent-500/20 outline-none shadow-sm cursor-pointer">
-                        <option value="all">Todos los Estados</option>
-                        <option value="PENDIENTE">Pendientes</option>
-                        <option value="CONFIRMADA">Confirmadas</option>
-                        <option value="ENTREGADA">Entregadas</option>
-                        <option value="COMPLETADA">Completadas</option>
-                        <option value="CANCELADA">Canceladas</option>
-                    </select>
-                    <!-- Date Filter -->
-                    <div class="relative">
-                        <input type="text" id="filtroFecha" placeholder="Filtrar por fecha..." 
-                               class="pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl bg-white text-sm font-bold text-surface-700 shadow-sm focus:ring-2 focus:ring-furent-500/20 outline-none w-48 cursor-pointer">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Success Alert -->
@@ -103,6 +75,83 @@
 
             <!-- Main Order Table - Compact & Clean -->
             <div class="bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden relative z-10">
+
+                <!-- Table Toolbar -->
+                <div class="px-6 py-4 border-b border-surface-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+
+                    <!-- Search -->
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
+                        </div>
+                        <input type="text" id="busquedaReserva" placeholder="Buscar por cliente, ID o método..."
+                               class="w-full pl-9 pr-4 py-2.5 border border-surface-200 rounded-xl bg-surface-50 text-sm font-medium text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/20 focus:border-furent-400 focus:bg-white transition-all"
+                               onkeyup="filtrarReservas()">
+                    </div>
+
+                    <!-- Custom Estado Dropdown (Tailwind + SVG Icons) -->
+                    <div class="relative dropdown-parent" id="statusFilterParent">
+                        <button type="button" id="statusFilterBtn" onclick="toggleStatusFilter()"
+                                class="flex items-center gap-2 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-bold text-surface-700 hover:bg-white transition-all w-full sm:w-auto whitespace-nowrap">
+                            <span id="statusFilterLabel" class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-surface-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
+                                Todos los Estados
+                            </span>
+                            <svg class="w-4 h-4 text-surface-400 ml-auto sm:ml-2 transition-transform duration-200" id="statusFilterChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                        </button>
+                        <div id="statusFilterMenu" class="hidden absolute left-0 mt-2 w-60 bg-white border border-surface-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+                            <!-- All -->
+                            <button onclick="selectEstado('all', '<svg class=\'w-4 h-4 text-surface-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z\'/></svg>Todos los Estados')"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-surface-50 flex items-center gap-2.5 transition-colors">
+                                <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
+                                <span>Todos los Estados</span>
+                            </button>
+                            <div class="my-1 border-t border-surface-100"></div>
+                            <!-- Pendiente -->
+                            <button onclick="selectEstado('PENDIENTE', '<svg class=\'w-4 h-4 text-amber-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Pendientes')"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2.5 transition-colors">
+                                <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Pendientes</span>
+                            </button>
+                            <!-- Confirmada -->
+                            <button onclick="selectEstado('CONFIRMADA', '<svg class=\'w-4 h-4 text-blue-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Confirmadas')"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 flex items-center gap-2.5 transition-colors">
+                                <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Confirmadas</span>
+                            </button>
+                            <!-- Entregada -->
+                            <button onclick="selectEstado('ENTREGADA', '<svg class=\'w-4 h-4 text-green-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12\'/></svg>Entregadas')"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50 flex items-center gap-2.5 transition-colors">
+                                <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
+                                <span>Entregadas</span>
+                            </button>
+                            <!-- Completada -->
+                            <button onclick="selectEstado('COMPLETADA', '<svg class=\'w-4 h-4 text-surface-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12\'/></svg>Completadas')"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-semibold text-surface-600 hover:bg-surface-50 flex items-center gap-2.5 transition-colors">
+                                <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12"/></svg>
+                                <span>Completadas</span>
+                            </button>
+                            <!-- Cancelada -->
+                            <button onclick="selectEstado('CANCELADA', '<svg class=\'w-4 h-4 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Canceladas')"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
+                                <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Canceladas</span>
+                            </button>
+                        </div>
+                        <!-- Hidden real value for filtering -->
+                        <input type="hidden" id="filtroEstado" value="all">
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <input type="text" id="filtroFecha" placeholder="Filtrar por fecha..."
+                               class="pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl bg-surface-50 text-sm font-bold text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/20 focus:bg-white transition-all w-full sm:w-52 cursor-pointer">
+                    </div>
+                </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse whitespace-nowrap" id="tablaReservas">
                         <thead class="bg-surface-50 border-b border-surface-200 text-xs font-bold text-surface-500 uppercase tracking-wider">
@@ -325,19 +374,19 @@
                     </table>
                 </div>
                 
-                <!-- Pagination / Limits -->
+                <!-- Limits & Pagination (Restored & Enhanced) -->
                 <div class="bg-surface-50 border-t border-surface-200 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-bold text-surface-400 uppercase">Mostrar:</span>
                         <div class="flex gap-1">
-                            <button onclick="setLimit(10)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white transition-all active-limit" data-limit="10">10</button>
-                            <button onclick="setLimit(50)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white transition-all" data-limit="50">50</button>
-                            <button onclick="setLimit(100)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white transition-all" data-limit="100">100</button>
+                            <button onclick="setLimit(10)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-surface-900 text-white transition-all active-limit" data-limit="10">10</button>
+                            <button onclick="setLimit(50)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white text-surface-700 transition-all" data-limit="50">50</button>
+                            <button onclick="setLimit(100)" class="limit-btn px-3 py-1.5 text-xs font-bold rounded-lg border border-surface-200 bg-white text-surface-700 transition-all" data-limit="100">100</button>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-4" id="paginationControls">
-                        <!-- Will be populated by JS -->
+                        <!-- Populated by JS -->
                     </div>
                 </div>
             </div>
@@ -372,46 +421,98 @@
         }
 
         let reservaPaginator;
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             sortRowsByRecent();
             
             reservaPaginator = new FurentPaginator({
-                containerId: 'tablaReservas',
+                containerId: 'tbodyReservas',
                 itemSelector: '.reserva-fila',
                 perPage: 10
             });
             
-            // Override the paginator UI method to match the new design
+            // Hide the default paginator UI it creates automatically
+            if (reservaPaginator.paginationEl) reservaPaginator.paginationEl.style.display = 'none';
+
+            // Enhanced UI for pagination arrows (Matching Image 1)
             reservaPaginator._renderControls = function(totalPages, totalItems) {
                 const controls = document.getElementById('paginationControls');
                 if (!controls) return;
                 
                 if (totalItems === 0) {
-                    controls.innerHTML = '<span class="text-xs font-bold text-surface-400 uppercase">Sin resultados</span>';
+                    controls.innerHTML = '<span class="text-[10px] font-black text-surface-400 uppercase tracking-widest">Sin resultados</span>';
                     return;
                 }
 
-                let html = `<span class="text-xs font-bold text-surface-400 uppercase">${totalItems} Encontrados</span>`;
+                let html = `<span class="text-[10px] font-black text-surface-400 uppercase tracking-widest">${totalItems} REGISTROS</span>`;
                 
                 if (totalPages > 1) {
                     html += `
-                        <div class="flex items-center gap-1 ml-4">
-                            <button onclick="reservaPaginator.goTo(${this.currentPage - 1})" ${this.currentPage === 1 ? 'disabled' : ''} class="p-2 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 transition-all text-surface-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                        <div class="flex items-center gap-1.5 ml-4">
+                            <button onclick="reservaPaginator.goTo(${this.currentPage - 1})" ${this.currentPage === 1 ? 'disabled' : ''} 
+                                    class="w-10 h-10 flex items-center justify-center rounded-2xl border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-surface-600 shadow-sm active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
                             </button>
-                            <span class="px-4 py-2 bg-white border border-surface-200 rounded-lg text-xs font-bold text-surface-900 shadow-sm">${this.currentPage} / ${totalPages}</span>
-                            <button onclick="reservaPaginator.goTo(${this.currentPage + 1})" ${this.currentPage === totalPages ? 'disabled' : ''} class="p-2 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 transition-all text-surface-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                            <div class="h-10 px-6 flex items-center bg-white border border-surface-200 rounded-2xl shadow-sm">
+                                <span class="text-xs font-black text-surface-900 tracking-tight">${this.currentPage}</span>
+                                <span class="mx-3 text-surface-300 font-medium">/</span>
+                                <span class="text-xs font-black text-surface-900 tracking-tight">${totalPages}</span>
+                            </div>
+                            <button onclick="reservaPaginator.goTo(${this.currentPage + 1})" ${this.currentPage === totalPages ? 'disabled' : ''} 
+                                    class="w-10 h-10 flex items-center justify-center rounded-2xl border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-surface-600 shadow-sm active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                             </button>
                         </div>
                     `;
                 }
                 controls.innerHTML = html;
             };
-            
+
             reservaPaginator.update();
         });
+
+        function setLimit(limit) {
+            reservaPaginator.perPage = limit;
+            reservaPaginator.currentPage = 1;
+            
+            document.querySelectorAll('.limit-btn').forEach(btn => {
+                btn.classList.remove('active-limit', 'bg-surface-900', 'text-white', 'bg-white', 'text-surface-700');
+                if (parseInt(btn.dataset.limit) === limit) {
+                    btn.classList.add('active-limit', 'bg-surface-900', 'text-white');
+                } else {
+                    btn.classList.add('bg-white', 'text-surface-700');
+                }
+            });
+            
+            reservaPaginator.update();
+        }
+
+        // Custom Status Filter Dropdown
+        function toggleStatusFilter() {
+            const menu = document.getElementById('statusFilterMenu');
+            const chevron = document.getElementById('statusFilterChevron');
+            const isOpen = !menu.classList.contains('hidden');
+            // Close all other dropdowns first
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.chevron').forEach(c => c.classList.remove('rotate-180'));
+            if (isOpen) {
+                menu.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            } else {
+                menu.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            }
+        }
+
+        function selectEstado(value, iconAndLabel) {
+            document.getElementById('filtroEstado').value = value;
+            const labelEl = document.getElementById('statusFilterLabel');
+            labelEl.className = 'flex items-center gap-2';
+            labelEl.innerHTML = iconAndLabel;
+            document.getElementById('statusFilterMenu').classList.add('hidden');
+            document.getElementById('statusFilterChevron').classList.remove('rotate-180');
+            filtrarReservas();
+        }
 
         function filtrarReservas() {
             const searchTerm = document.getElementById("busquedaReserva").value.toLowerCase();
@@ -442,22 +543,11 @@
                 }
             });
             
+            reservaPaginator.currentPage = 1;
             reservaPaginator.update();
         }
 
-        function setLimit(limit) {
-            reservaPaginator.perPage = limit;
-            reservaPaginator.currentPage = 1;
-            
-            document.querySelectorAll('.limit-btn').forEach(btn => {
-                btn.classList.remove('active-limit', 'bg-surface-900', 'text-white');
-                if (parseInt(btn.dataset.limit) === limit) {
-                    btn.classList.add('active-limit', 'bg-surface-900', 'text-white');
-                }
-            });
-            
-            reservaPaginator.update();
-        }
+
 
         // Dropdown Logic
         function toggleReservaDropdown(btn) {

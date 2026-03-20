@@ -45,18 +45,87 @@
                                 <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Teléfono</label>
                                 <input type="tel" name="telefono" placeholder="+57 300 000 0000" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
                             </div>
-                            <div>
+                            <div x-data="{ open: false, selectedValue: '', selectedLabel: 'Seleccionar tipo de evento' }">
                                 <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Asunto</label>
-                                <select name="asunto" required class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-600 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
-                                    <option value="">Seleccionar tipo de evento</option>
-                                    <option value="Boda">Boda</option>
-                                    <option value="Evento corporativo">Evento corporativo</option>
-                                    <option value="Fiesta privada">Fiesta privada</option>
-                                    <option value="Gala">Gala</option>
-                                    <option value="Conferencia">Conferencia</option>
-                                    <option value="Consulta general">Consulta general</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
+                                
+                                <input type="hidden" name="asunto" x-model="selectedValue" required>
+                                
+                                <div class="relative">
+                                    <button type="button" @click="open = !open" @click.away="open = false" 
+                                            class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm text-surface-600 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all flex justify-between items-center z-10 relative">
+                                        <span x-text="selectedLabel"></span>
+                                        <svg class="w-5 h-5 text-surface-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+
+                                    <div x-show="open" 
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="transform opacity-0 scale-95"
+                                         x-transition:enter-end="transform opacity-100 scale-100"
+                                         x-transition:leave="transition ease-in duration-75"
+                                         x-transition:leave-start="transform opacity-100 scale-100"
+                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                         class="absolute z-[60] w-full mt-2 bg-white border border-surface-100 rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-black ring-opacity-5 overflow-hidden" 
+                                         style="display: none;">
+                                        <ul tabindex="-1" role="listbox" class="max-h-60 rounded-xl py-2 text-base leading-6 shadow-xs overflow-auto focus:outline-none sm:text-sm sm:leading-5">
+                                            
+                                            <!-- Boda -->
+                                            <li role="option" @click="selectedValue = 'Boda'; selectedLabel = 'Boda'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-pink-100/60 flex items-center justify-center shrink-0 text-pink-500 border border-pink-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Boda</span>
+                                            </li>
+
+                                            <!-- Evento corporativo -->
+                                            <li role="option" @click="selectedValue = 'Evento corporativo'; selectedLabel = 'Evento corporativo'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-blue-100/60 flex items-center justify-center shrink-0 text-blue-500 border border-blue-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Evento corporativo</span>
+                                            </li>
+                                            
+                                            <!-- Fiesta privada -->
+                                            <li role="option" @click="selectedValue = 'Fiesta privada'; selectedLabel = 'Fiesta privada'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-yellow-100/60 flex items-center justify-center shrink-0 text-yellow-500 border border-yellow-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Fiesta privada</span>
+                                            </li>
+                                            
+                                            <!-- Gala -->
+                                            <li role="option" @click="selectedValue = 'Gala'; selectedLabel = 'Gala'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-indigo-100/60 flex items-center justify-center shrink-0 text-indigo-500 border border-indigo-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Gala</span>
+                                            </li>
+
+                                            <!-- Conferencia -->
+                                            <li role="option" @click="selectedValue = 'Conferencia'; selectedLabel = 'Conferencia'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-furent-100/60 flex items-center justify-center shrink-0 text-furent-500 border border-furent-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Conferencia</span>
+                                            </li>
+                                            
+                                            <!-- Consulta general -->
+                                            <li role="option" @click="selectedValue = 'Consulta general'; selectedLabel = 'Consulta general'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-teal-100/60 flex items-center justify-center shrink-0 text-teal-600 border border-teal-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Consulta general</span>
+                                            </li>
+
+                                            <!-- Otro -->
+                                            <li role="option" @click="selectedValue = 'Otro'; selectedLabel = 'Otro'; open = false" class="cursor-pointer select-none relative py-2.5 px-3 mx-2 rounded-lg hover:bg-surface-50 transition-colors flex items-center gap-3 text-surface-700 font-medium">
+                                                <span class="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center shrink-0 text-surface-500 border border-surface-200">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                                                </span>
+                                                <span class="block truncate">Otro</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Mensaje</label>

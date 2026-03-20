@@ -58,13 +58,61 @@
                 </button>
             </div>
 
-            <!-- Search Bar -->
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <!-- Search Bar + Filters -->
+            <div class="flex flex-col md:flex-row items-center gap-3 mb-6">
+                <!-- Search -->
                 <div class="relative w-full md:max-w-md">
                     <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                     <input type="text" id="searchInput" placeholder="Buscar por nombre, categoría o material..." class="w-full pl-12 pr-4 py-3 bg-white border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all shadow-sm">
                 </div>
-                <span class="text-sm font-semibold text-surface-500 px-4 whitespace-nowrap" id="itemCount"><span th:text="${#lists.size(productos)}">0</span> muebles registrados</span>
+
+                <!-- Status Filter Dropdown -->
+                <div class="relative" id="mobStatusParent">
+                    <button type="button" onclick="toggleMobStatusFilter()"
+                            class="flex items-center gap-2 pl-4 pr-3 py-3 bg-white border border-surface-200 rounded-xl text-sm font-bold text-surface-700 hover:border-surface-300 transition-all shadow-sm whitespace-nowrap">
+                        <span id="mobStatusLabel" class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-surface-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                            Todos
+                        </span>
+                        <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" id="mobStatusChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div id="mobStatusMenu" class="hidden absolute left-0 mt-2 w-60 bg-white border border-surface-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+                        <!-- Todos -->
+                        <button onclick="selectMobStatus('all', '<svg class=\'w-4 h-4 text-surface-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z\'/></svg>Todos')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-surface-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                            <span>Todos los estados</span>
+                        </button>
+                        <div class="my-1 border-t border-surface-100"></div>
+                        <!-- Disponible -->
+                        <button onclick="selectMobStatus('available', '<svg class=\'w-4 h-4 text-green-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Disponibles')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Disponibles</span>
+                        </button>
+                        <!-- Agotado -->
+                        <button onclick="selectMobStatus('unavailable', '<svg class=\'w-4 h-4 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Agotados')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Agotados</span>
+                        </button>
+                        <!-- Mantenimiento -->
+                        <button onclick="selectMobStatus('maintenance', '<svg class=\'w-4 h-4 text-amber-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z\'/></svg>En Mantenimiento')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+                            <span>En Mantenimiento</span>
+                        </button>
+                        <!-- Fuera de Servicio -->
+                        <button onclick="selectMobStatus('out_of_service', '<svg class=\'w-4 h-4 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636\'/></svg>Fuera de Servicio')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            <span>Fuera de Servicio</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="mobStatusFilter" value="all">
+                </div>
+
+                <span class="text-sm font-semibold text-surface-500 px-4 whitespace-nowrap ml-auto" id="itemCount"><span th:text="${#lists.size(productos)}">0</span> muebles registrados</span>
             </div>
 
             <!-- ═══════════════ COMPACT VIEW (Table) ═══════════════ -->
@@ -84,7 +132,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="p : ${productos}" class="product-row bg-white border-b border-surface-100 hover:bg-surface-50/60 transition-colors" th:data-search="${#strings.toLowerCase(p.nombre + ' ' + p.categoriaNombre + ' ' + p.material + ' ' + p.id)}">
+                        <tr th:each="p : ${productos}" class="product-row bg-white border-b border-surface-100 hover:bg-surface-50/60 transition-colors"
+                            th:data-search="${#strings.toLowerCase(p.nombre + ' ' + p.categoriaNombre + ' ' + p.material + ' ' + p.id)}"
+                            th:data-avail="${p.disponible ? 'available' : 'unavailable'}"
+                            th:data-maint="${p.estadoMantenimiento}">
                             <td class="p-4">
                                 <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-surface-100 flex items-center justify-center shrink-0">
                                     <img th:if="${p.imagenUrl != null and !p.imagenUrl.isEmpty()}" th:src="${p.imagenUrl}" th:alt="${p.nombre}" class="w-full h-full object-cover">
@@ -109,10 +160,20 @@
                             </td>
                             <td class="px-6 py-4 font-bold text-surface-900" th:text="'$' + ${#numbers.formatDecimal(p.precioPorDia, 1, 'COMMA', 0, 'POINT')}">$60,000</td>
                             <td class="px-6 py-4">
-                                <span th:if="${p.disponible}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold">
+                                <!-- En Mantenimiento (prioridad sobre disponible) -->
+                                <span th:if="${p.estadoMantenimiento == 'EN_MANTENIMIENTO'}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">
+                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Mantenimiento
+                                </span>
+                                <!-- Fuera de Servicio -->
+                                <span th:if="${p.estadoMantenimiento == 'FUERA_DE_SERVICIO'}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-lg text-xs font-bold">
+                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>Fuera de Servicio
+                                </span>
+                                <!-- Disponible -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and p.disponible}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold">
                                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Disponible
                                 </span>
-                                <span th:unless="${p.disponible}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-bold">
+                                <!-- Agotado -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and !p.disponible}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-bold">
                                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>Agotado
                                 </span>
                             </td>
@@ -136,7 +197,10 @@
             <!-- ═══════════════ EXPANDED VIEW (Cards Grid) ═══════════════ -->
             <div id="expandedView" class="hidden">
                 <div id="expandedGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    <div th:each="p : ${productos}" class="product-card group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-surface-100 transition-all duration-300 flex flex-col relative overflow-hidden" th:data-search="${#strings.toLowerCase(p.nombre + ' ' + p.categoriaNombre + ' ' + p.material + ' ' + p.id)}">
+                    <div th:each="p : ${productos}" class="product-card group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-surface-100 transition-all duration-300 flex flex-col relative overflow-hidden"
+                         th:data-search="${#strings.toLowerCase(p.nombre + ' ' + p.categoriaNombre + ' ' + p.material + ' ' + p.id)}"
+                         th:data-avail="${p.disponible ? 'available' : 'unavailable'}"
+                         th:data-maint="${p.estadoMantenimiento}">
                         
                         <!-- Card Image -->
                         <div class="w-full aspect-[4/3] overflow-hidden bg-surface-100 relative">
@@ -146,10 +210,20 @@
                             </div>
                             <!-- Status Badge -->
                             <div class="absolute top-3 left-3">
-                                <span th:if="${p.disponible}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                <!-- En Mantenimiento (prioridad) -->
+                                <span th:if="${p.estadoMantenimiento == 'EN_MANTENIMIENTO'}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Mantenimiento
+                                </span>
+                                <!-- Fuera de Servicio (prioridad) -->
+                                <span th:if="${p.estadoMantenimiento == 'FUERA_DE_SERVICIO'}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-600/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Fuera de Servicio
+                                </span>
+                                <!-- Disponible -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and p.disponible}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
                                     <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>Disponible
                                 </span>
-                                <span th:unless="${p.disponible}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                <!-- Agotado -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and !p.disponible}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
                                     <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Agotado
                                 </span>
                             </div>
@@ -287,13 +361,13 @@
                                         <div class="flex-1 relative">
                                             <input type="number" name="cantidadMinima" id="f_cantidadMinima" required min="1" placeholder="Mínimo" 
                                                    class="w-full pl-10 pr-4 py-3 bg-surface-50 border border-surface-100 rounded-xl text-sm font-bold text-surface-900 focus:outline-none focus:border-furent-500">
-                                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
                                         </div>
                                         <span class="text-surface-300 font-bold text-sm">a</span>
                                         <div class="flex-1 relative">
                                             <input type="number" name="cantidadMaxima" id="f_cantidadMaxima" required min="1" placeholder="Máximo" 
                                                    class="w-full pl-10 pr-4 py-3 bg-surface-50 border border-surface-100 rounded-xl text-sm font-bold text-surface-900 focus:outline-none focus:border-furent-500">
-                                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
                                         </div>
                                     </div>
                                 </div>
@@ -362,13 +436,23 @@
 
                                 <!-- Category & Specs -->
                                 <div class="space-y-4 pt-1">
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-3 relative" id="f_catParent">
                                         <div class="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 font-bold text-xs shrink-0">C</div>
                                         <div class="flex-1">
                                             <p class="text-[10px] font-black uppercase text-surface-400 tracking-wide">Categoría</p>
-                                            <select name="categoriaNombre" id="f_categoriaNombre" required class="w-full text-sm font-bold text-surface-800 bg-transparent focus:outline-none mt-0.5 border-none p-0 focus:ring-0">
-                                                <option th:each="cat : ${categorias}" th:value="${cat.nombre}" th:text="${cat.nombre}"></option>
-                                            </select>
+                                            <button type="button" onclick="toggleF_CatDropdown()" class="w-full flex items-center justify-between text-sm font-bold text-surface-800 bg-transparent focus:outline-none mt-0.5 border-none p-0 focus:ring-0">
+                                                <span id="f_catLabel">Seleccionar</span>
+                                                <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" id="f_catChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                            </button>
+                                            <div id="f_catMenu" class="hidden absolute left-0 right-0 mt-2 bg-white border border-surface-100 rounded-xl shadow-xl z-[110] py-1.5 max-h-48 overflow-y-auto">
+                                                <button th:each="cat : ${categorias}" type="button"
+                                                        th:attr="data-cat=${cat.nombre}"
+                                                        onclick="selectF_Cat(this.getAttribute('data-cat'))"
+                                                        class="w-full text-left px-4 py-2 text-xs font-bold text-surface-700 hover:bg-surface-50 transition-colors"
+                                                        th:text="${cat.nombre}">
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="categoriaNombre" id="f_categoriaNombre" required>
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-3">
@@ -400,14 +484,35 @@
                                             </div>
                                         </div>
                                         
-                                        <div>
+                                        <div class="relative" id="f_maintParent">
                                             <p class="text-[10px] font-black uppercase text-surface-400 mb-2">Mantenimiento</p>
-                                            <select name="estadoMantenimiento" id="f_estadoMantenimiento" class="w-full text-xs font-bold text-surface-700 bg-surface-50 px-3 py-2.5 rounded-xl mb-2 border border-surface-100 focus:outline-none">
-                                                <option value="OPERATIVO">Operativo</option>
-                                                <option value="EN_MANTENIMIENTO">En Mantenimiento</option>
-                                                <option value="FUERA_DE_SERVICIO">Fuera de Servicio</option>
-                                            </select>
-                                            <textarea name="notasMantenimiento" id="f_notasMantenimiento" rows="2" placeholder="Notas adicionales..." class="w-full text-xs font-medium bg-surface-50 px-3 py-2.5 rounded-xl border border-surface-100 focus:outline-none resize-none"></textarea>
+                                            <button type="button" onclick="toggleF_MaintDropdown()"
+                                                    class="w-full flex items-center justify-between text-xs font-bold text-surface-700 bg-surface-50 px-3 py-2.5 rounded-xl mb-2 border border-surface-100 focus:outline-none">
+                                                <span id="f_maintLabel" class="flex items-center gap-2">
+                                                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    Operativo
+                                                </span>
+                                                <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" id="f_maintChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                            </button>
+                                            <div id="f_maintMenu" class="hidden absolute left-0 right-0 mt-[-4px] bg-white border border-surface-100 rounded-xl shadow-xl z-[110] py-1.5 overflow-hidden">
+                                                <button type="button" onclick="selectF_Maint('OPERATIVO', '<svg class=\'w-3.5 h-3.5 text-green-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Operativo')"
+                                                        class="w-full text-left px-4 py-2 text-[11px] font-bold text-green-700 hover:bg-green-50 flex items-center gap-2 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    Operativo
+                                                </button>
+                                                <button type="button" onclick="selectF_Maint('EN_MANTENIMIENTO', '<svg class=\'w-3.5 h-3.5 text-amber-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z\'/></svg>En Mantenimiento')"
+                                                        class="w-full text-left px-4 py-2 text-[11px] font-bold text-amber-700 hover:bg-amber-50 flex items-center gap-2 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+                                                    En Mantenimiento
+                                                </button>
+                                                <button type="button" onclick="selectF_Maint('FUERA_DE_SERVICIO', '<svg class=\'w-3.5 h-3.5 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M6 18L18 6M6 6l12 12\'/></svg>Fuera de Servicio')"
+                                                        class="w-full text-left px-4 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    Fuera de Servicio
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="estadoMantenimiento" id="f_estadoMantenimiento" value="OPERATIVO">
+                                            <textarea name="notasMantenimiento" id="f_notasMantenimiento" rows="2" placeholder="Notas adicionales..." class="w-full text-xs font-medium bg-surface-50 px-3 py-2.5 rounded-xl border border-surface-100 focus:outline-none resize-none mt-2"></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -476,15 +581,43 @@
         runProductFilters();
     }
 
-    function getFilteredCards() {
-        const searchInput = document.getElementById('searchInput');
-        const term = searchInput ? searchInput.value.toLowerCase() : '';
-        const cards = Array.from(document.querySelectorAll('.product-card'));
-        return cards.filter(c => {
-            const d = c.getAttribute('data-search');
-            return d && d.includes(term);
-        });
+    let mobStatusFilterValue = 'all';
+
+    function toggleMobStatusFilter() {
+        const menu = document.getElementById('mobStatusMenu');
+        const chevron = document.getElementById('mobStatusChevron');
+        const isOpen = !menu.classList.contains('hidden');
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
     }
+
+    function selectMobStatus(value, iconAndLabel) {
+        mobStatusFilterValue = value;
+        document.getElementById('mobStatusFilter').value = value;
+        const labelEl = document.getElementById('mobStatusLabel');
+        labelEl.className = 'flex items-center gap-2';
+        labelEl.innerHTML = iconAndLabel;
+        document.getElementById('mobStatusMenu').classList.add('hidden');
+        document.getElementById('mobStatusChevron').classList.remove('rotate-180');
+        currentPage = 1;
+        runProductFilters();
+    }
+
+    // Close mob dropdown on click outside
+    document.addEventListener('click', function(e) {
+        const parent = document.getElementById('mobStatusParent');
+        if (parent && !parent.contains(e.target)) {
+            document.getElementById('mobStatusMenu')?.classList.add('hidden');
+            document.getElementById('mobStatusChevron')?.classList.remove('rotate-180');
+        }
+    });
+
+    // removed getFilteredCards
 
     function renderPagination(filteredCount) {
         const pagBar = document.getElementById('paginationBar');
@@ -557,68 +690,69 @@
 
     function goToPage(page) {
         currentPage = page;
-        applyExpandedPagination();
-    }
-
-    function applyExpandedPagination() {
-        const filtered = getFilteredCards();
-        const totalFiltered = filtered.length;
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
-        const end = start + ITEMS_PER_PAGE;
-
-        // Show/hide cards based on page
-        filtered.forEach((card, i) => {
-            card.style.display = (i >= start && i < end) ? '' : 'none';
-        });
-
-        // Hide non-matching cards
-        const searchInput = document.getElementById('searchInput');
-        const term = searchInput ? searchInput.value.toLowerCase() : '';
-        document.querySelectorAll('.product-card').forEach(card => {
-            const d = card.getAttribute('data-search');
-            if (!(d && d.includes(term))) card.style.display = 'none';
-        });
-
-        renderPagination(totalFiltered);
+        runProductFilters();
     }
 
     function runProductFilters() {
         const searchInput = document.getElementById('searchInput');
         const term = searchInput ? searchInput.value.toLowerCase() : '';
-        const itemCount = document.querySelector('#itemCount span');
-        const emptyState = document.getElementById('emptyState');
-        let visibleCount = 0;
-
-        // Filter table rows
-        document.querySelectorAll('.product-row').forEach(row => {
-            const d = row.getAttribute('data-search');
-            if (d && d.includes(term)) { row.style.display = ''; visibleCount++; }
-            else { row.style.display = 'none'; }
+        const isExpanded = currentMode === 'expanded';
+        
+        // Determinar qué selectores usar según el modo de vista actual
+        const activeSelectors = isExpanded ? '.product-card' : '.product-row';
+        const inactiveSelectors = isExpanded ? '.product-row' : '.product-card';
+        
+        // Ocultar todos los elementos de la vista inactiva para que no interfieran
+        document.querySelectorAll(inactiveSelectors).forEach(el => el.style.display = 'none');
+        
+        const elements = Array.from(document.querySelectorAll(activeSelectors));
+        let filtered = [];
+        
+        // Filtrar elementos de la vista activa basándose en estatus y búsqueda
+        elements.forEach(el => {
+            const d = el.getAttribute('data-search');
+            const avail = el.getAttribute('data-avail');
+            const maint = (el.getAttribute('data-maint') || '').toUpperCase();
+            const matchesSearch = d && d.includes(term);
+            const isMaint = maint === 'EN_MANTENIMIENTO';
+            const isOos = maint === 'FUERA_DE_SERVICIO';
+            let matchesStatus = true;
+            if (mobStatusFilterValue === 'available') matchesStatus = avail === 'available' && !isMaint && !isOos;
+            else if (mobStatusFilterValue === 'unavailable') matchesStatus = avail === 'unavailable' && !isMaint && !isOos;
+            else if (mobStatusFilterValue === 'maintenance') matchesStatus = isMaint;
+            else if (mobStatusFilterValue === 'out_of_service') matchesStatus = isOos;
+            
+            if (matchesSearch && matchesStatus) {
+                filtered.push(el);
+            } else {
+                el.style.display = 'none';
+            }
         });
 
-        const totalRows = document.querySelectorAll('.product-row').length;
-        if (itemCount) itemCount.textContent = visibleCount;
+        const totalFiltered = filtered.length;
+        
+        // Paginar elementos filtrados
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        
+        filtered.forEach((el, i) => {
+            el.style.display = (i >= start && i < end) ? '' : 'none';
+        });
+
+        // Actualizar contadores y estado de inventario vacío
+        const itemCount = document.querySelector('#itemCount span');
+        if (itemCount) itemCount.textContent = totalFiltered;
+        
+        const emptyState = document.getElementById('emptyState');
         if (emptyState) {
-            if (visibleCount === 0 && totalRows > 0) {
+            if (totalFiltered === 0 && Array.from(document.querySelectorAll('.product-row')).length > 0) {
                 emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
             } else {
                 emptyState.classList.add('hidden'); emptyState.classList.remove('flex');
             }
         }
 
-        // Expanded view pagination
-        if (currentMode === 'expanded') {
-            applyExpandedPagination();
-        } else {
-            document.querySelectorAll('.product-card').forEach(card => {
-                const d = card.getAttribute('data-search');
-                if (d && d.includes(term)) { card.style.display = ''; }
-                else { card.style.display = 'none'; }
-            });
-        }
-
-        // Always update pagination bar
-        renderPagination(visibleCount);
+        renderPagination(totalFiltered);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -684,7 +818,11 @@
         document.getElementById('f_descripcion').value = btn.dataset.descripcion;
         document.getElementById('f_descripcionCorta').value = btn.dataset.descripcionCorta;
         document.getElementById('f_precioPorDia').value = btn.dataset.precio;
-        document.getElementById('f_categoriaNombre').value = btn.dataset.categoria;
+        
+        const catValue = btn.dataset.categoria;
+        document.getElementById('f_categoriaNombre').value = catValue;
+        document.getElementById('f_catLabel').textContent = catValue || 'Seleccionar';
+        
         document.getElementById('f_material').value = btn.dataset.material;
         document.getElementById('f_dimensiones').value = btn.dataset.dimensiones;
         
@@ -698,7 +836,20 @@
         
         // New intelligence fields
         document.getElementById('f_stockMinimo').value = btn.dataset.stockMin || 2;
-        document.getElementById('f_estadoMantenimiento').value = btn.dataset.mantenimiento || 'OPERATIVO';
+        
+        const maintValue = btn.dataset.mantenimiento || 'OPERATIVO';
+        document.getElementById('f_estadoMantenimiento').value = maintValue;
+        
+        let maintHtml = '';
+        if (maintValue === 'OPERATIVO') {
+            maintHtml = '<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Operativo';
+        } else if (maintValue === 'EN_MANTENIMIENTO') {
+            maintHtml = '<svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>En Mantenimiento';
+        } else {
+            maintHtml = '<svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>Fuera de Servicio';
+        }
+        document.getElementById('f_maintLabel').innerHTML = maintHtml;
+        
         document.getElementById('f_notasMantenimiento').value = btn.dataset.notas || '';
         
         openModal('Editar Mobiliario');
@@ -727,7 +878,13 @@
             document.getElementById('f_cantidadMinima').value = 1;
             document.getElementById('f_cantidadMaxima').value = 100;
             document.getElementById('f_stockMinimo').value = 2; // Default
+            
+            document.getElementById('f_categoriaNombre').value = '';
+            document.getElementById('f_catLabel').textContent = 'Seleccionar';
+            
             document.getElementById('f_estadoMantenimiento').value = 'OPERATIVO';
+            document.getElementById('f_maintLabel').innerHTML = '<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Operativo';
+            
             document.getElementById('f_color').value = '';
         }, 300);
     }
@@ -763,9 +920,59 @@
         }
     }
 
-    // Close on click outside
-    modal.addEventListener('click', (e) => {
+    // Dropdown Form Handlers
+    function toggleF_CatDropdown() {
+        const menu = document.getElementById('f_catMenu');
+        const chevron = document.getElementById('f_catChevron');
+        const isOpen = !menu.classList.contains('hidden');
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+    }
+    function selectF_Cat(val) {
+        document.getElementById('f_categoriaNombre').value = val;
+        document.getElementById('f_catLabel').textContent = val;
+        document.getElementById('f_catMenu').classList.add('hidden');
+        document.getElementById('f_catChevron').classList.remove('rotate-180');
+    }
+
+    function toggleF_MaintDropdown() {
+        const menu = document.getElementById('f_maintMenu');
+        const chevron = document.getElementById('f_maintChevron');
+        const isOpen = !menu.classList.contains('hidden');
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+    }
+    function selectF_Maint(val, html) {
+        document.getElementById('f_estadoMantenimiento').value = val;
+        document.getElementById('f_maintLabel').innerHTML = html;
+        document.getElementById('f_maintMenu').classList.add('hidden');
+        document.getElementById('f_maintChevron').classList.remove('rotate-180');
+    }
+
+    // Close on click outside generic
+    document.addEventListener('click', (e) => {
         if(e.target === modal) closeModal();
+        
+        const catParent = document.getElementById('f_catParent');
+        if (catParent && !catParent.contains(e.target)) {
+            document.getElementById('f_catMenu')?.classList.add('hidden');
+            document.getElementById('f_catChevron')?.classList.remove('rotate-180');
+        }
+        const maintParent = document.getElementById('f_maintParent');
+        if (maintParent && !maintParent.contains(e.target)) {
+            document.getElementById('f_maintMenu')?.classList.add('hidden');
+            document.getElementById('f_maintChevron')?.classList.remove('rotate-180');
+        }
     });
     </script>
     </main>

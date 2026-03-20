@@ -210,16 +210,27 @@
                     <div class="panel-card bg-white border border-surface-200 p-6 sm:p-8 panel-animate panel-animate-d2">
 
                         <!-- Controls -->
-                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-                            <div>
-                                <h2 class="text-xl font-bold text-surface-900 tracking-tight">Mis Reservas</h2>
-                                <p class="text-sm text-surface-500 mt-1">Status y control de tus cotizaciones.</p>
+                        <div class="flex flex-col gap-4 mb-8">
+                            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <h2 class="text-xl font-bold text-surface-900 tracking-tight">Mis Reservas</h2>
+                                    <p class="text-sm text-surface-500 mt-1">Status y control de tus cotizaciones.</p>
+                                </div>
+                                <div class="bg-surface-100 p-1 rounded-xl flex gap-1 overflow-x-auto w-full md:w-auto">
+                                    <button class="filter-btn active flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg bg-white text-surface-900 shadow-sm transition-all whitespace-nowrap" data-filter="all">Todas</button>
+                                    <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="active">Activas</button>
+                                    <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="pending">Pendientes</button>
+                                    <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="completed">Finalizadas</button>
+                                </div>
                             </div>
-                            <div class="bg-surface-100 p-1 rounded-xl flex gap-1 overflow-x-auto w-full md:w-auto">
-                                <button class="filter-btn active flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg bg-white text-surface-900 shadow-sm transition-all whitespace-nowrap" data-filter="all">Todas</button>
-                                <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="active">Activas</button>
-                                <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="pending">Pendientes</button>
-                                <button class="filter-btn flex-1 md:flex-none px-4 py-2 text-xs font-semibold rounded-lg text-surface-500 hover:text-surface-900 hover:bg-white/50 transition-all whitespace-nowrap" data-filter="completed">Finalizadas</button>
+                            <!-- Search bar -->
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
+                                </div>
+                                <input type="text" id="reservaSearch" placeholder="Buscar reserva por nombre o producto..."
+                                       class="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl bg-surface-50 text-sm font-medium text-surface-700 focus:outline-none focus:ring-2 focus:ring-furent-500/20 focus:border-furent-400 focus:bg-white transition-all"
+                                       oninput="panelFilter()">
                             </div>
                         </div>
 
@@ -318,6 +329,26 @@
                             </div>
                             <h3 class="text-lg font-bold text-surface-900 mb-1">Sin coincidencias</h3>
                             <p class="text-sm text-surface-500 max-w-sm mx-auto">No identificamos reservas que coincidan con este estado.</p>
+                        </div>
+
+                        <!-- Pagination Controls -->
+                        <div id="panelPagination" class="hidden mt-6 pt-6 border-t border-surface-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <span id="panelPaginationInfo" class="text-[10px] font-black text-surface-400 uppercase tracking-widest"></span>
+                            <div class="flex items-center gap-1.5">
+                                <button id="panelPrevBtn" onclick="panelGoTo(panelCurrentPage - 1)"
+                                        class="w-10 h-10 flex items-center justify-center rounded-2xl border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-surface-600 shadow-sm active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                                </button>
+                                <div class="h-10 px-5 flex items-center bg-white border border-surface-200 rounded-2xl shadow-sm gap-2">
+                                    <span id="panelCurrentPageLabel" class="text-xs font-black text-surface-900">1</span>
+                                    <span class="text-surface-300 font-medium">/</span>
+                                    <span id="panelTotalPagesLabel" class="text-xs font-black text-surface-900">1</span>
+                                </div>
+                                <button id="panelNextBtn" onclick="panelGoTo(panelCurrentPage + 1)"
+                                        class="w-10 h-10 flex items-center justify-center rounded-2xl border border-surface-200 bg-white hover:bg-surface-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-surface-600 shadow-sm active:scale-95">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -493,49 +524,103 @@
             });
             document.addEventListener('DOMContentLoaded', () => {
                 const btns = document.querySelectorAll('.filter-btn');
-                const cards = document.querySelectorAll('.res-card');
+                const allCards = [...document.querySelectorAll('.res-card')];
                 const emptyState = document.getElementById('emptyState');
-                
-                // Init setup
-                if(cards.length === 0) {
-                    emptyState.classList.remove('hidden');
-                    emptyState.classList.add('flex');
+                const pagination = document.getElementById('panelPagination');
+                const prevBtn = document.getElementById('panelPrevBtn');
+                const nextBtn = document.getElementById('panelNextBtn');
+                const currentPageLabel = document.getElementById('panelCurrentPageLabel');
+                const totalPagesLabel = document.getElementById('panelTotalPagesLabel');
+                const paginationInfo = document.getElementById('panelPaginationInfo');
+
+                const PER_PAGE = 5;
+                window.panelCurrentPage = 1;
+                let currentFilter = 'all';
+                let currentSearch = '';
+
+                window.panelFilter = function() {
+                    currentSearch = (document.getElementById('reservaSearch')?.value || '').toLowerCase().trim();
+                    window.panelCurrentPage = 1;
+                    renderPage();
+                };
+
+                window.panelGoTo = function(page) {
+                    const filtered = getFiltered();
+                    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+                    if (page < 1 || page > totalPages) return;
+                    window.panelCurrentPage = page;
+                    renderPage();
+                };
+
+                function getFiltered() {
+                    return allCards.filter(card => {
+                        const status = card.getAttribute('data-status');
+                        const text = card.textContent.toLowerCase();
+                        const matchesFilter = (currentFilter === 'all' || currentFilter === status);
+                        const matchesSearch = !currentSearch || text.includes(currentSearch);
+                        return matchesFilter && matchesSearch;
+                    });
                 }
 
+                function renderPage() {
+                    const filtered = getFiltered();
+                    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+                    if (window.panelCurrentPage > totalPages) window.panelCurrentPage = totalPages;
+
+                    const start = (window.panelCurrentPage - 1) * PER_PAGE;
+                    const end = start + PER_PAGE;
+
+                    // Hide all first
+                    allCards.forEach(c => c.style.display = 'none');
+
+                    // Show only the current page slice of filtered
+                    filtered.forEach((card, i) => {
+                        if (i >= start && i < end) {
+                            card.style.display = 'flex';
+                        }
+                    });
+
+                    // Empty state
+                    if (filtered.length === 0) {
+                        emptyState.classList.remove('hidden');
+                        emptyState.classList.add('flex');
+                    } else {
+                        emptyState.classList.add('hidden');
+                        emptyState.classList.remove('flex');
+                    }
+
+                    // Pagination controls
+                    if (filtered.length > PER_PAGE) {
+                        pagination.classList.remove('hidden');
+                        pagination.classList.add('flex');
+                        currentPageLabel.textContent = window.panelCurrentPage;
+                        totalPagesLabel.textContent = totalPages;
+                        paginationInfo.textContent = filtered.length + ' RESERVAS';
+                        prevBtn.disabled = window.panelCurrentPage === 1;
+                        nextBtn.disabled = window.panelCurrentPage === totalPages;
+                    } else {
+                        pagination.classList.add('hidden');
+                        pagination.classList.remove('flex');
+                    }
+                }
+
+                // Tab filter buttons
                 btns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        // Switch active class styles
                         btns.forEach(b => {
                             b.classList.remove('bg-white', 'text-surface-900', 'shadow-sm', 'active');
                             b.classList.add('text-surface-500', 'hover:bg-white/50');
                         });
                         btn.classList.add('bg-white', 'text-surface-900', 'shadow-sm', 'active');
                         btn.classList.remove('text-surface-500', 'hover:bg-white/50');
-
-                        const filter = btn.getAttribute('data-filter');
-                        let count = 0;
-                        
-                        cards.forEach(card => {
-                            const status = card.getAttribute('data-status');
-                            if(filter === 'all' || filter === status) {
-                                card.style.display = 'flex';
-                                card.classList.add('animate-fade-in-up');
-                                count++;
-                            } else {
-                                card.style.display = 'none';
-                                card.classList.remove('animate-fade-in-up');
-                            }
-                        });
-
-                        if(count === 0) {
-                            emptyState.classList.remove('hidden');
-                            emptyState.classList.add('flex');
-                        } else {
-                            emptyState.classList.add('hidden');
-                            emptyState.classList.remove('flex');
-                        }
+                        currentFilter = btn.getAttribute('data-filter');
+                        window.panelCurrentPage = 1;
+                        renderPage();
                     });
                 });
+
+                // Initial render
+                renderPage();
             });
         </script>
     </main>
