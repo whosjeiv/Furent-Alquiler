@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class ReviewService {
@@ -35,6 +36,14 @@ public class ReviewService {
         return reviewRepository.findByProductIdOrderByCreatedAtDesc(productId);
     }
 
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    public long countUnanswered() {
+        return reviewRepository.countByAdminResponseIsNull();
+    }
+
     @Caching(evict = {
         @CacheEvict(value = "reviews", key = "#review.productId"),
         @CacheEvict(value = "product-detail", key = "#review.productId"),
@@ -53,10 +62,28 @@ public class ReviewService {
         return saved;
     }
 
-    /**
-     * Recalculates a product's average rating and review count
-     * from all actual reviews in the database.
-     */
+    @Caching(evict = {
+        @CacheEvict(value = "reviews", allEntries = true),
+        @CacheEvict(value = "product-detail", allEntries = true),
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "featured-products", allEntries = true)
+    })
+    public void deleteReview(String id) {
+        reviewRepository.findById(id).ifPresent(review -> {
+            String productId = review.getProductId();
+            reviewRepository.deleteById(id);
+            updateProductRatingStats(productId);
+        });
+    }
+
+    public void respondToReview(String id, String response) {
+        reviewRepository.findById(id).ifPresent(review -> {
+            review.setAdminResponse(response);
+            review.setRespondedAt(LocalDateTime.now());
+            reviewRepository.save(review);
+        });
+    }
+
     private void updateProductRatingStats(String productId) {
         List<Review> allReviews = reviewRepository.findByProductIdOrderByCreatedAtDesc(productId);
         productRepository.findById(productId).ifPresent(product -> {

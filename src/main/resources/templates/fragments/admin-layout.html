@@ -38,7 +38,6 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script th:src="@{/js/app.js}"></script>
     <!-- Alpine JS plugins -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <!-- Alpine JS framework -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -314,7 +313,7 @@
         html.dark .custom-calendar .fc-daygrid-day { border-color: #1e1e22 !important; }
         html.dark .custom-calendar .fc-col-header-cell { background: #111113 !important; border-color: #1e1e22 !important; }
         html.dark .custom-calendar .fc-col-header-cell-cushion { color: #71717a !important; }
-        html.dark .custom-calendar .fc-daygrid-day-number { color: #a1a1aa !important; }
+html.dark .custom-calendar .fc-daygrid-day-number { color: #a1a1aa !important; }
         html.dark .custom-calendar .fc-day-today { background: #1e1e22 !important; }
         html.dark .custom-calendar .fc-day-today .fc-daygrid-day-number { background: #f4f4f5; color: #18181b; }
         html.dark .fc-theme-standard td, html.dark .fc-theme-standard th { border-color: #1e1e22 !important; }
@@ -325,137 +324,114 @@
         html.dark .from-surface-100 { --tw-gradient-from: #27272a !important; }
         html.dark .to-surface-200 { --tw-gradient-to: #3f3f46 !important; }
     </style>
-    <!-- Prevent Layout Shift (FOUC) and startup animations on the sidebar -->
-    <style>
-        body.preload-transitions * { transition: none !important; }
-    </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Restore transitions shortly after Alpine.js injects and renders the layout
-            setTimeout(function() { document.body.classList.remove('preload-transitions'); }, 100);
-        });
-    </script>
 </head>
-<body x-data="{ sidebarCollapsed: $persist(false).as('furent_sidebar_minified') }" class="text-surface-800 min-h-screen flex antialiased preload-transitions">
+<body class="text-surface-800 min-h-screen flex antialiased">
 
     <!-- Premium Dark Sidebar -->
-    <aside :class="sidebarCollapsed ? 'w-[88px]' : 'w-[280px]'" class="sidebar text-white fixed h-full flex flex-col z-50 shadow-2xl transition-all duration-300">
-        <div class="flex items-center transition-all duration-300 overflow-hidden" :class="sidebarCollapsed ? 'px-4 py-8 flex-col gap-4' : 'px-6 py-8 gap-4'">
+    <aside class="sidebar w-[280px] text-white fixed h-full flex flex-col z-50 shadow-2xl transition-all duration-300">
+        <div class="p-8 flex items-center gap-4">
             <img th:src="@{/images/furent-logo.png}" alt="Furent Logo" class="w-10 h-10 rounded-[0.8rem] object-cover shadow-lg shadow-furent-500/30 border border-surface-800 shrink-0">
-            <div x-show="!sidebarCollapsed" x-transition.opacity.duration.200ms style="display: none;" class="truncate flex-1">
+            <div class="truncate flex-1">
                 <h1 class="text-xl font-bold tracking-tight text-white m-0 leading-none">Furent</h1>
                 <span class="text-[10px] font-medium text-furent-400 uppercase tracking-widest mt-1 block">Panel de Admin</span>
             </div>
-            
-            <!-- Integrated Toggle Button -->
-            <button @click="sidebarCollapsed = !sidebarCollapsed" class="flex items-center justify-center p-2 rounded-lg bg-transparent hover:bg-surface-800/80 text-surface-400 hover:text-white cursor-pointer transition-all border-none outline-none shrink-0" :title="sidebarCollapsed ? 'Expandir Sidebar' : 'Minimizar Sidebar'">
-                <svg class="w-6 h-6 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14.6 18.2L7.4 12l7.2-6.2c.4-.3.8-.1.8.4v11.6c0 .5-.4.7-.8.4z"/>
-                </svg>
-            </button>
         </div>
 
-        <nav class="flex-1 px-3 py-6 flex flex-col gap-4 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <nav class="flex-1 px-4 py-6 flex flex-col gap-4 overflow-y-auto">
             
             <!-- GROUP: GENERAL -->
             <div x-data="{ expanded: true }" class="flex flex-col gap-1">
-                <button @click="!sidebarCollapsed ? expanded = !expanded : expanded = true" class="flex items-center px-3 py-2 w-full group cursor-pointer outline-none bg-transparent hover:bg-surface-800/50 rounded-lg transition-all border-none" :class="sidebarCollapsed ? 'justify-center' : 'justify-between'" :title="sidebarCollapsed ? 'General' : 'Colapsar/Expandir sección'">
-                    <span x-show="!sidebarCollapsed" style="display: none;" class="text-[10px] font-bold text-surface-500 group-hover:text-surface-300 uppercase tracking-widest transition-colors whitespace-nowrap">General</span>
-                    <span x-show="sidebarCollapsed" class="text-[10px] font-bold text-surface-600">--</span>
-                    <svg x-show="!sidebarCollapsed" style="display: none;" class="w-4 h-4 text-surface-500 group-hover:text-surface-300 transition-transform duration-300 shrink-0" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                <button @click="expanded = !expanded" class="flex items-center justify-between px-3 py-2 w-full group cursor-pointer outline-none bg-transparent hover:bg-surface-800/50 rounded-lg transition-all border-none" title="Colapsar/Expandir sección">
+                    <span class="text-[10px] font-bold text-surface-500 group-hover:text-surface-300 uppercase tracking-widest transition-colors">General</span>
+                    
+                    <svg class="w-4 h-4 text-surface-500 group-hover:text-surface-300 transition-transform duration-300" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                 </button>
-                <div x-show="expanded || sidebarCollapsed" x-collapse class="flex flex-col gap-1 mt-1">
-                    <a th:href="@{/admin}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}" title="Resumen">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Resumen</span>
+                <div x-show="expanded" x-collapse class="flex flex-col gap-1 mt-1">
+                    <a th:href="@{/admin}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'dashboard' ? 'active' : ''}" title="Resumen">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+                        <span class="font-medium text-sm">Resumen</span>
                     </a>
                 </div>
             </div>
             
             <!-- GROUP: INVENTARIO & VENTAS -->
             <div x-data="{ expanded: true }" class="flex flex-col gap-1 border-t border-surface-800/60 pt-4">
-                <button @click="!sidebarCollapsed ? expanded = !expanded : expanded = true" class="flex items-center px-3 py-2 w-full group cursor-pointer outline-none bg-transparent hover:bg-surface-800/50 rounded-lg transition-all border-none" :class="sidebarCollapsed ? 'justify-center' : 'justify-between'" :title="sidebarCollapsed ? 'Inventario & Ventas' : 'Colapsar/Expandir sección'">
-                    <span x-show="!sidebarCollapsed" style="display: none;" class="text-[10px] font-bold text-surface-500 group-hover:text-surface-300 uppercase tracking-widest transition-colors whitespace-nowrap">Inventario & Ventas</span>
-                    <span x-show="sidebarCollapsed" class="text-[10px] font-bold text-surface-600">--</span>
-                    <svg x-show="!sidebarCollapsed" style="display: none;" class="w-4 h-4 text-surface-500 group-hover:text-surface-300 transition-transform duration-300 shrink-0" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                <button @click="expanded = !expanded" class="flex items-center justify-between px-3 py-2 w-full group cursor-pointer outline-none bg-transparent hover:bg-surface-800/50 rounded-lg transition-all border-none" title="Colapsar/Expandir sección">
+                    <span class="text-[10px] font-bold text-surface-500 group-hover:text-surface-300 uppercase tracking-widest transition-colors">Inventario & Ventas</span>
+                    
+                    <svg class="w-4 h-4 text-surface-500 group-hover:text-surface-300 transition-transform duration-300" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                 </button>
-                <div x-show="expanded || sidebarCollapsed" x-collapse class="flex flex-col gap-1 mt-1">
-                    <a th:href="@{/admin/reservas}" class="nav-link flex items-center px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden relative" :class="sidebarCollapsed ? 'justify-center mx-1' : 'justify-between mx-2'" th:classappend="${activeMenu == 'reservas' ? 'active' : ''}" title="Reservas">
+                <div x-show="expanded" x-collapse class="flex flex-col gap-1 mt-1">
+                    <a th:href="@{/admin/reservas}" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden relative" th:classappend="${activeMenu == 'reservas' ? 'active' : ''}" title="Reservas">
                         <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg>
-                            <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Reservas</span>
+                            <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" /></svg>
+                            <span class="font-medium text-sm">Reservas</span>
                         </div>
-                        <span class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shadow-red-500/30 group-hover:animate-pulse shrink-0" th:if="${pendientesCount != null and pendientesCount > 0}" :class="sidebarCollapsed ? 'absolute top-1 right-2 w-4 h-4 text-[8px]' : ''" th:text="${pendientesCount}">!</span>
+                        <span class="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shadow-red-500/30 group-hover:animate-pulse shrink-0" th:if="${pendientesCount != null and pendientesCount > 0}"  th:text="${pendientesCount}">!</span>
                     </a>
-                    <a th:href="@{/admin/mobiliarios}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'mobiliarios' ? 'active' : ''}" title="Catálogo">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.48 4.642a.5.5 0 0 1 .52 0l7.5 4.5a.5.5 0 0 1 0 .858l-7.5 4.5a.5.5 0 0 1-.52 0l-7.5-4.5a.5.5 0 0 1 0-.858l7.5-4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="m2.598 11.5 6.882 4.133a.5.5 0 0 0 .52 0l6.882-4.133" /><path stroke-linecap="round" stroke-linejoin="round" d="m2.598 15.5 6.882 4.133a.5.5 0 0 0 .52 0l6.882-4.133" /></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Catálogo</span>
+                    <a th:href="@{/admin/mobiliarios}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'mobiliarios' ? 'active' : ''}" title="Catálogo">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.48 4.642a.5.5 0 0 1 .52 0l7.5 4.5a.5.5 0 0 1 0 .858l-7.5 4.5a.5.5 0 0 1-.52 0l-7.5-4.5a.5.5 0 0 1 0-.858l7.5-4.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="m2.598 11.5 6.882 4.133a.5.5 0 0 0 .52 0l6.882-4.133" /><path stroke-linecap="round" stroke-linejoin="round" d="m2.598 15.5 6.882 4.133a.5.5 0 0 0 .52 0l6.882-4.133" /></svg>
+                        <span class="font-medium text-sm">Catálogo</span>
                     </a>
-                    <a th:href="@{/admin/categorias}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'categorias' ? 'active' : ''}" title="Colecciones">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Colecciones</span>
+                    <a th:href="@{/admin/categorias}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'categorias' ? 'active' : ''}" title="Colecciones">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/></svg>
+                        <span class="font-medium text-sm">Colecciones</span>
                     </a>
-                    <a th:href="@{/admin/logistica}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'logistica' ? 'active' : ''}" title="Logística">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008z" /></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Logística</span>
+                    <a th:href="@{/admin/logistica}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'logistica' ? 'active' : ''}" title="Logística">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008z" /></svg>
+                        <span class="font-medium text-sm">Logística</span>
                     </a>
-                    <a th:href="@{/admin/predicciones}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'predicciones' ? 'active' : ''}" title="Predicciones">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17.25l6.75-6.75 4.5 4.5L21 8.25" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18v15H3z" /></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Predicciones</span>
+                    <a th:href="@{/admin/predicciones}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'predicciones' ? 'active' : ''}" title="Predicciones">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17.25l6.75-6.75 4.5 4.5L21 8.25" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18v15H3z" /></svg>
+                        <span class="font-medium text-sm">Predicciones</span>
                     </a>
                 </div>
             </div>
             
             <!-- GROUP: COMUNIDAD -->
             <div x-data="{ expanded: true }" class="flex flex-col gap-1 border-t border-surface-800/60 pt-4">
-                <button @click="!sidebarCollapsed ? expanded = !expanded : expanded = true" class="flex items-center px-3 py-2 w-full group cursor-pointer outline-none bg-transparent hover:bg-surface-800/50 rounded-lg transition-all border-none" :class="sidebarCollapsed ? 'justify-center' : 'justify-between'" :title="sidebarCollapsed ? 'Comunidad' : 'Colapsar/Expandir sección'">
-                    <span x-show="!sidebarCollapsed" style="display: none;" class="text-[10px] font-bold text-surface-500 group-hover:text-surface-300 uppercase tracking-widest transition-colors whitespace-nowrap">Comunidad</span>
-                    <span x-show="sidebarCollapsed" class="text-[10px] font-bold text-surface-600">--</span>
-                    <svg x-show="!sidebarCollapsed" style="display: none;" class="w-4 h-4 text-surface-500 group-hover:text-surface-300 transition-transform duration-300 shrink-0" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                <button @click="expanded = !expanded" class="flex items-center justify-between px-3 py-2 w-full group cursor-pointer outline-none bg-transparent hover:bg-surface-800/50 rounded-lg transition-all border-none" title="Colapsar/Expandir sección">
+                    <span class="text-[10px] font-bold text-surface-500 group-hover:text-surface-300 uppercase tracking-widest transition-colors">Comunidad</span>
+                    
+                    <svg class="w-4 h-4 text-surface-500 group-hover:text-surface-300 transition-transform duration-300" :class="{'rotate-180': expanded}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
                 </button>
-                <div x-show="expanded || sidebarCollapsed" x-collapse class="flex flex-col gap-1 mt-1">
-                    <a th:href="@{/admin/usuarios}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'usuarios' ? 'active' : ''}" title="Directorio">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Directorio</span>
+                <div x-show="expanded" x-collapse class="flex flex-col gap-1 mt-1">
+                    <a th:href="@{/admin/usuarios}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'usuarios' ? 'active' : ''}" title="Directorio">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                        <span class="font-medium text-sm">Directorio</span>
                     </a>
-                    <a th:href="@{/admin/mensajes}" class="nav-link flex items-center px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden relative" :class="sidebarCollapsed ? 'justify-center mx-1' : 'justify-between mx-2'" th:classappend="${activeMenu == 'mensajes' ? 'active' : ''}" title="Mensajes">
+                    <a th:href="@{/admin/mensajes}" class="nav-link flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden relative" th:classappend="${activeMenu == 'mensajes' ? 'active' : ''}" title="Mensajes">
                         <div class="flex items-center gap-3">
-                            <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                            <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Mensajes</span>
+                            <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                            <span class="font-medium text-sm">Mensajes & Reseñas</span>
                         </div>
-                        <span class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shrink-0" th:if="${mensajesNoLeidos != null and mensajesNoLeidos > 0}" :class="sidebarCollapsed ? 'absolute top-1 right-2 w-4 h-4 text-[8px]' : ''" th:text="${mensajesNoLeidos}">0</span>
+                        <span class="w-5 h-5 rounded-full bg-furent-500 text-white flex items-center justify-center text-[10px] font-black shadow-lg shadow-furent-500/30 group-hover:animate-bounce shrink-0" th:if="${notificacionesMensajesCount != null and notificacionesMensajesCount > 0}" th:text="${notificacionesMensajesCount}">!</span>
                     </a>
-                    <a th:href="@{/admin/cupones}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'cupones' ? 'active' : ''}" title="Cupones">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Cupones</span>
+                    <a th:href="@{/admin/cupones}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'cupones' ? 'active' : ''}" title="Cupones">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
+                        <span class="font-medium text-sm">Cupones</span>
                     </a>
-                    <a th:href="@{/admin/pagos-trabajadores}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" :class="sidebarCollapsed ? 'justify-center mx-1' : 'mx-2'" th:classappend="${activeMenu == 'pagos-trabajadores' ? 'active' : ''}" title="Pagos Trabajadores">
-                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 1.343-3 3v5h6v-5c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 11h14M7 21h10a2 2 0 0 0 2-2v-1H5v1a2 2 0 0 0 2 2zM9 5h6m-5-2h4"/></svg>
-                        <span x-show="!sidebarCollapsed" style="display: none;" class="whitespace-nowrap font-medium text-sm transition-opacity duration-200">Pagos Trabajadores</span>
+                    <a th:href="@{/admin/pagos-trabajadores}" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group overflow-hidden" th:classappend="${activeMenu == 'pagos-trabajadores' ? 'active' : ''}" title="Pagos Trabajadores">
+                        <svg class="w-5 h-5 opacity-80 group-hover:opacity-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 1.343-3 3v5h6v-5c0-1.657-1.343-3-3-3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 11h14M7 21h10a2 2 0 0 0 2-2v-1H5v1a2 2 0 0 0 2 2zM9 5h6m-5-2h4"/></svg>
+                        <span class="font-medium text-sm">Pagos Trabajadores</span>
                     </a>
                 </div>
             </div>
         </nav>
 
-        <div class="transition-all duration-300" :class="sidebarCollapsed ? 'p-2' : 'p-6'">
-            <div class="rounded-2xl bg-surface-900 border border-surface-800 transition-all duration-300" :class="sidebarCollapsed ? 'p-2 bg-transparent border-transparent' : 'p-4'">
-                <div class="flex items-center mb-4 transition-all duration-300" :class="sidebarCollapsed ? 'gap-0 justify-center' : 'gap-3'">
-                    <img th:src="@{https://ui-avatars.com/api/(name=${currentUser != null and currentUser.nombre != null ? currentUser.nombre : 'A'},background='E07A3A',color='fff')}" class="w-10 h-10 rounded-full object-cover border-2 border-surface-800 shrink-0">
-                    <div class="min-w-0" x-show="!sidebarCollapsed" x-transition.opacity.duration.200ms style="display: none;">
+        <div class="p-6">
+            <div class="p-4 rounded-2xl bg-surface-900 border border-surface-800">
+                <div class="flex items-center gap-3 mb-4">
+                    <img th:src="@{https://ui-avatars.com/api/(name=${currentUser != null and currentUser.nombre != null ? currentUser.nombre : 'A'},background='E07A3A',color='fff')}" class="w-10 h-10 rounded-full object-cover border-2 border-surface-800">
+                    <div class="min-w-0">
                         <p class="text-sm font-semibold text-white truncate" th:text="${currentUser != null ? currentUser.nombre : 'Admin'}">Admin</p>
                         <p class="text-[10px] text-surface-400 truncate" th:text="${currentUser != null ? currentUser.email : 'admin@furent.com'}">admin@furent.com</p>
                     </div>
                 </div>
-                <div class="flex gap-2" :class="sidebarCollapsed ? 'flex-col' : ''">
-                    <a th:href="@{/}" class="flex-1 text-center py-2 bg-surface-800 hover:bg-surface-700 text-white text-xs font-semibold rounded-lg transition-colors" :class="sidebarCollapsed ? 'px-2' : ''" :title="sidebarCollapsed ? 'Ver sitio' : ''">
-                        <span x-show="!sidebarCollapsed" style="display: none;">Ver sitio</span>
-                        <svg x-show="sidebarCollapsed" class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-                    </a>
+                <div class="flex gap-2 mt-4">
+                    <a th:href="@{/}" class="flex-1 text-center py-2 bg-surface-800 hover:bg-surface-700 text-white text-xs font-semibold rounded-lg transition-colors">Ver sitio</a>
                     <form th:action="@{/logout}" method="post" class="flex-1 m-0">
-                        <button type="submit" class="w-full text-center py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold rounded-lg transition-colors" :class="sidebarCollapsed ? 'px-2' : ''" :title="sidebarCollapsed ? 'Salir' : ''">
-                            <span x-show="!sidebarCollapsed" style="display: none;">Salir</span>
-                            <svg x-show="sidebarCollapsed" class="w-4 h-4 mx-auto text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
-                        </button>
+                        <button type="submit" class="w-full text-center py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold rounded-lg transition-colors">Salir</button>
                     </form>
                 </div>
             </div>
@@ -463,7 +439,7 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main :class="sidebarCollapsed ? 'ml-[88px]' : 'ml-[280px]'" class="flex-1 min-h-screen pb-12 bg-[#fafafa] dark:bg-[#0f0f11] transition-all duration-300">
+    <main class="flex-1 min-h-screen pb-12 bg-[#fafafa] dark:bg-[#0f0f11] ml-[280px]">
         <!-- Content gets injected here -->
         <div th:replace="${content}"></div>
     </main>

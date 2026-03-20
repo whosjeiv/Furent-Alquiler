@@ -1,68 +1,356 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'mensajes')}">
+<head>
+    <title>Mensajes & Reseñas — Furent Admin</title>
+</head>
 <body>
-<th:block th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::section}, 'mensajes')}">
-    <title>Mensajes — Admin Furent</title>
-    <section>
-        <!-- Header -->
-        <div class="px-10 pt-10 pb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-surface-900 tracking-tight">Mensajes de Contacto</h1>
-                    <p class="text-surface-500 mt-1">Gestión de mensajes recibidos desde el formulario de contacto</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-semibold text-sm"
-                          th:text="${noLeidos} + ' sin leer'">0 sin leer</span>
-                    <span class="px-4 py-2 bg-surface-100 text-surface-600 rounded-xl font-semibold text-sm"
-                          th:text="${#lists.size(mensajes)} + ' totales'">0 totales</span>
-                </div>
-            </div>
-        </div>
+    <main>
+        <div class="px-10 py-8 max-w-[90rem] mx-auto relative font-['Outfit']" x-data="{ 
+            activeTab: 'mensajes', 
+            searchQuery: '',
+            filterMessageStatus: 'todos',
+            filterReviewRating: 'todos',
+            
+            openReplyModal: false, 
+            replyType: '', 
+            replyId: '', 
+            replyRecipient: '', 
+            replySubject: '', 
+            replyContent: '',
+            openDeleteModal: false,
+            deleteId: '',
+            deleteType: '',
+            deleteTitle: '',
+            deleteDesc: '',
 
-        <!-- Messages List -->
-        <div class="px-10">
-            <div th:if="${#lists.isEmpty(mensajes)}" class="text-center py-20">
-                <svg class="w-16 h-16 text-surface-300 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                <p class="text-surface-400 text-lg">No hay mensajes todavía</p>
+            executeDelete() {
+                if (!this.deleteId) return;
+                const csrfHeader = document.querySelector('meta[name=_csrf_header]').content;
+                const csrfToken = document.querySelector('meta[name=_csrf]').content;
+                const url = this.deleteType === 'mensaje' ? `/admin/mensajes/eliminar/${this.deleteId}` : `/admin/resenas/eliminar/${this.deleteId}`;
+                fetch(url, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                }).then(() => window.location.reload());
+            },
+
+            markAsRead(id) {
+                if (!id) return;
+                const csrfHeader = document.querySelector('meta[name=_csrf_header]').content;
+                const csrfToken = document.querySelector('meta[name=_csrf]').content;
+                fetch(`/admin/mensajes/leer/${id}`, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                }).then(() => window.location.reload());
+            },
+
+            shouldShowMessage(row) {
+                const text = (row.dataset.search || '').toLowerCase();
+                const term = this.searchQuery.toLowerCase();
+                const leido = row.dataset.leido === 'true';
+                
+                const matchesSearch = text.includes(term);
+                let matchesStatus = true;
+                if (this.filterMessageStatus === 'no-leidos') matchesStatus = !leido;
+                if (this.filterMessageStatus === 'leidos') matchesStatus = leido;
+                
+                return matchesSearch && matchesStatus;
+            },
+
+            shouldShowReview(row) {
+                const text = (row.dataset.search || '').toLowerCase();
+                const term = this.searchQuery.toLowerCase();
+                const rating = row.dataset.rating;
+                const tieneRespuesta = row.dataset.respondido === 'true';
+                
+                const matchesSearch = text.includes(term);
+                let matchesStatus = true;
+                if (this.filterReviewRating === 'sin-respuesta') matchesStatus = !tieneRespuesta;
+                if (this.filterReviewRating === '5-estrellas') matchesStatus = rating === '5';
+                if (this.filterReviewRating === '1-3-estrellas') matchesStatus = parseInt(rating) <= 3;
+                
+                return matchesSearch && matchesStatus;
+            }
+        }">
+            
+            <!-- Header section -->
+            <div class="mb-10 text-center lg:text-left">
+                <h1 class="text-3xl font-black tracking-tight text-surface-900 leading-none">Bandeja de Entrada</h1>
+                <p class="text-sm font-medium text-surface-400 mt-2">Gestiona mensajes de contacto y reseñas de productos.</p>
             </div>
 
-            <div class="space-y-4" th:unless="${#lists.isEmpty(mensajes)}">
-                <div th:each="msg : ${mensajes}"
-                     class="bg-white rounded-2xl border p-6 transition-all duration-200 hover:shadow-soft"
-                     th:classappend="${!msg.leido ? 'border-blue-200 bg-blue-50/30' : 'border-surface-200'}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <span th:if="${!msg.leido}" class="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
-                                <h3 class="font-bold text-surface-900 text-lg" th:text="${msg.asunto}">Asunto</h3>
-                            </div>
-                            <div class="flex items-center gap-4 text-sm text-surface-500 mb-3">
-                                <span class="font-medium" th:text="${msg.nombre}">Nombre</span>
-                                <span th:text="${msg.email}">email@test.com</span>
-                                <span th:if="${msg.telefono != null and !msg.telefono.isEmpty()}" th:text="${msg.telefono}"></span>
-                                <span th:text="${#temporals.format(msg.fechaCreacion, 'dd/MM/yyyy HH:mm')}" th:if="${msg.fechaCreacion != null}">Fecha</span>
-                            </div>
-                            <p class="text-surface-700 leading-relaxed" th:text="${msg.mensaje}">Contenido del mensaje...</p>
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
+                <!-- Tab Navigation -->
+                <div class="inline-flex items-center gap-1.5 p-1.5 bg-surface-100/50 rounded-2xl border border-surface-100 shadow-sm mx-auto lg:mx-0">
+                    <button @click="activeTab = 'mensajes'; searchQuery = '';" 
+                        :class="activeTab === 'mensajes' ? 'bg-white text-surface-900 shadow-md border-surface-200' : 'text-surface-500 hover:text-surface-700 border-transparent'" 
+                        class="px-6 py-3 rounded-[1.25rem] text-sm font-bold transition-all flex items-center gap-3 border whitespace-nowrap min-w-[180px] justify-center">
+                        <svg class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                        <span>Mensajes</span>
+                        <span th:if="${noLeidos != null and noLeidos > 0}" class="ml-1 px-2 py-0.5 bg-furent-500 text-white text-[10px] rounded-lg font-black" th:text="${noLeidos}">0</span>
+                    </button>
+                    <button @click="activeTab = 'resenas'; searchQuery = '';" 
+                        :class="activeTab === 'resenas' ? 'bg-white text-surface-900 shadow-md border-surface-200' : 'text-surface-500 hover:text-surface-700 border-transparent'" 
+                        class="px-6 py-3 rounded-[1.25rem] text-sm font-bold transition-all flex items-center gap-3 border whitespace-nowrap min-w-[180px] justify-center">
+                        <svg class="size-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                        <span>Reseñas</span>
+                        <span th:if="${resenas != null and !resenas.isEmpty()}" class="ml-1 px-2 py-0.5 bg-surface-200 text-surface-600 text-[10px] rounded-lg font-black" th:text="${resenas.size()}">0</span>
+                    </button>
+                </div>
+
+                <!-- Search & Filter Bar -->
+                <div class="flex items-center gap-3 flex-1 lg:max-w-xl">
+                    <div class="relative flex-1">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                        <input type="text" x-model="searchQuery" placeholder="Buscar por nombre, email o contenido..." class="w-full pl-12 pr-4 py-3.5 bg-white border border-surface-200 rounded-2xl text-sm font-bold text-surface-900 focus:outline-none focus:ring-4 focus:ring-furent-500/5 focus:border-furent-400 transition-all shadow-sm transform transition-all active:scale-[0.995]">
+                    </div>
+                    
+                    <!-- Messages Filter Dropdown -->
+                    <div class="relative" x-show="activeTab === 'mensajes'" x-data="{ open: false }">
+                        <button @click="open = !open" type="button" class="flex items-center gap-2 pl-4 pr-3 py-3.5 bg-white border border-surface-200 rounded-2xl text-sm font-bold text-surface-700 hover:border-surface-300 transition-all shadow-sm whitespace-nowrap">
+                            <span class="flex items-center gap-2">
+                                <svg class="size-4.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
+                                <span x-text="filterMessageStatus === 'todos' ? 'Todos' : (filterMessageStatus === 'no-leidos' ? 'No Leídos' : 'Leídos')"></span>
+                            </span>
+                            <svg class="size-4 text-surface-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-52 bg-white border border-surface-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden animate-[fade-in-down_0.2s_ease-out]">
+                            <button @click="filterMessageStatus = 'todos'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-surface-700 hover:bg-surface-50 flex items-center gap-3 transition-colors">
+                                <div class="size-2 rounded-full bg-surface-300"></div> 
+                                Todos
+                            </button>
+                            <button @click="filterMessageStatus = 'no-leidos'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 flex items-center gap-3 transition-colors">
+                                <div class="size-2 rounded-full bg-blue-500"></div> 
+                                No leídos
+                            </button>
+                            <button @click="filterMessageStatus = 'leidos'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-surface-500 hover:bg-surface-50 flex items-center gap-3 transition-colors">
+                                <div class="size-2 rounded-full bg-surface-500"></div> 
+                                Leídos
+                            </button>
                         </div>
-                        <div class="flex items-center gap-2 ml-4">
-                            <form th:if="${!msg.leido}" th:action="@{/admin/mensajes/leer/{id}(id=${msg.id})}" method="post">
-                                <button type="submit" class="px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors" title="Marcar como leído">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                </button>
-                            </form>
-                            <form th:action="@{/admin/mensajes/eliminar/{id}(id=${msg.id})}" method="post"
-                                  onsubmit="return confirm('¿Eliminar este mensaje?')">
-                                <button type="submit" class="px-3 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors" title="Eliminar">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
-                                </button>
-                            </form>
+                    </div>
+
+                    <!-- Reviews Filter Dropdown (Healed Icons) -->
+                    <div class="relative" x-show="activeTab === 'resenas'" x-data="{ open: false }">
+                        <button @click="open = !open" type="button" class="flex items-center gap-2 pl-4 pr-3 py-3.5 bg-white border border-surface-200 rounded-2xl text-sm font-bold text-surface-700 hover:border-surface-300 transition-all shadow-sm whitespace-nowrap">
+                            <span class="flex items-center gap-2">
+                                <svg class="size-4.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
+                                <span x-text="filterReviewRating === 'todos' ? 'Todas' : (filterReviewRating === 'sin-respuesta' ? 'Pendientes' : (filterReviewRating === '5-estrellas' ? 'Excelentes' : 'Baja Calidad'))"></span>
+                            </span>
+                            <svg class="size-4 text-surface-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-56 bg-white border border-surface-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden animate-[fade-in-down_0.2s_ease-out]">
+                            <button @click="filterReviewRating = 'todos'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-surface-500 hover:bg-surface-50 flex items-center gap-3 transition-colors">
+                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                                Todas las reseñas
+                            </button>
+                            <button @click="filterReviewRating = 'sin-respuesta'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-furent-500 hover:bg-furent-50 flex items-center gap-3 transition-colors">
+                                <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                                Sin respuesta
+                            </button>
+                            <button @click="filterReviewRating = '5-estrellas'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-amber-500 hover:bg-amber-50 flex items-center gap-3 transition-colors">
+                                <svg class="size-4 fill-amber-500" viewBox="0 0 24 24"><path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z"/></svg>
+                                Excelentes (5 Estrellas)
+                            </button>
+                            <button @click="filterReviewRating = '1-3-estrellas'; open = false" class="w-full text-left px-4 py-3 text-[11px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors">
+                                <svg class="size-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Baja puntuación (1-3)
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Tab Content: Mensajes -->
+            <div x-show="activeTab === 'mensajes'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white rounded-[2.5rem] shadow-glass border border-surface-100 overflow-hidden" style="display: none;">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-50/50 border-b border-surface-100">
+                        <tr>
+                            <th class="px-8 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Remitente</th>
+                            <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Asunto & Contenido</th>
+                            <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Fecha</th>
+                            <th class="px-8 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-surface-100/50">
+                        <tr th:each="m : ${mensajes}" 
+                            th:data-search="${#strings.toLowerCase(m.nombre + ' ' + m.email + ' ' + m.asunto + ' ' + m.mensaje)}"
+                            th:data-leido="${m.leido}"
+                            x-show="shouldShowMessage($el)"
+                            class="group hover:bg-surface-50/40 transition-colors">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="size-11 rounded-[15px] bg-surface-50 flex items-center justify-center font-bold text-surface-700 border border-surface-200 shadow-sm" th:text="${m.nombre != null and m.nombre.length() > 0 ? #strings.substring(m.nombre,0,1) : 'A'}">A</div>
+                                    <div class="flex flex-col">
+                                        <p class="text-sm font-black text-surface-900 leading-tight" th:text="${m.nombre}">Nombre</p>
+                                        <p class="text-[11px] text-surface-400 font-bold mt-1" th:text="${m.email}">email@furent.com</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 max-w-md">
+                                <div class="flex items-center gap-2 mb-1.5" th:title="${m.asunto}">
+                                    <span th:if="${!m.leido}" class="px-2 py-0.5 bg-furent-500 text-white text-[9px] font-black rounded-lg shadow-sm">NUEVO</span>
+                                    <p class="text-sm font-black text-surface-900 truncate" th:text="${m.asunto}">Asunto</p>
+                                </div>
+                                <p class="text-xs text-surface-500 line-clamp-2 leading-relaxed font-bold" th:text="${m.mensaje}">Contenido...</p>
+                            </td>
+                            <td class="px-6 py-5">
+                                <div class="flex flex-col">
+                                    <p class="text-xs font-black text-surface-800" th:text="${m.fechaCreacion != null ? #temporals.format(m.fechaCreacion, 'dd/MM/yyyy') : 'N/A'}">01/01/2026</p>
+                                    <p class="text-[10px] text-surface-400 font-bold mt-0.5" th:text="${m.fechaCreacion != null ? #temporals.format(m.fechaCreacion, 'HH:mm') : '--:--'}">12:00</p>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-right min-w-[150px]">
+                                <div class="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <button th:if="${!m.leido}" th:data-id="${m.id}" @click="markAsRead($el.dataset.id)" 
+                                        class="size-11 flex items-center justify-center bg-white border border-surface-100 rounded-2xl text-blue-500 shadow-sm hover:shadow-md hover:border-blue-200 transition-all hover:scale-110 active:scale-95" title="Marcar como leído">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                    </button>
+                                    <button th:data-id="${m.id}" th:data-email="${m.email}" th:data-asunto="${m.asunto}" @click="replyType='mensaje'; replyId=$el.dataset.id; replyRecipient=$el.dataset.email; replySubject='RE: ' + $el.dataset.asunto; openReplyModal=true" 
+                                        class="size-11 flex items-center justify-center bg-white border border-surface-100 rounded-2xl text-surface-400 hover:text-furent-500 shadow-sm hover:shadow-md hover:border-furent-200 transition-all hover:scale-110 active:scale-95" title="Responder">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                    </button>
+                                    <button th:data-id="${m.id}" @click="deleteId=$el.dataset.id; deleteType='mensaje'; deleteTitle='¿Eliminar Mensaje?'; deleteDesc='Esta acción no se puede deshacer y el mensaje se perderá permanentemente.'; openDeleteModal=true" 
+                                        class="size-11 flex items-center justify-center bg-white border border-surface-100 rounded-2xl text-surface-400 hover:text-red-500 shadow-sm hover:shadow-md hover:border-red-200 transition-all hover:scale-110 active:scale-95" title="Eliminar">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr x-show="!$el.parentElement.children.length || ![...$el.parentElement.children].some(c => c.style.display !== 'none')" style="display: none;">
+                            <td colspan="4" class="py-24 text-center">
+                                <div class="size-20 bg-surface-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-surface-100 shadow-inner text-surface-200">
+                                    <svg class="size-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                                </div>
+                                <h3 class="text-base font-black text-surface-900">Sin resultados</h3>
+                                <p class="text-sm font-medium text-surface-400 mt-2">No encontramos nada que coincida con tu búsqueda o filtros.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab Content: Reseñas -->
+            <div x-show="activeTab === 'resenas'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="bg-white rounded-[2.5rem] shadow-glass border border-surface-100 overflow-hidden" style="display: none;">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-surface-50/50 border-b border-surface-100">
+                        <tr>
+                            <th class="px-8 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Cliente & Producto</th>
+                            <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Comentario & Feedback</th>
+                            <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Fecha</th>
+                            <th class="px-8 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-surface-100/50">
+                        <tr th:each="r : ${resenas}" 
+                            th:data-search="${#strings.toLowerCase(r.userName + ' ' + (productNames[r.productId] ?: '') + ' ' + r.comment)}"
+                            th:data-rating="${r.rating}"
+                            th:data-respondido="${r.adminResponse != null}"
+                            x-show="shouldShowReview($el)"
+                            class="group hover:bg-surface-50/40 transition-colors">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="size-11 rounded-[15px] bg-surface-50 flex items-center justify-center font-bold text-surface-700 border border-surface-200 shadow-sm" th:text="${r.userName != null and r.userName.length() > 0 ? #strings.substring(r.userName,0,1) : 'U'}">U</div>
+                                    <div class="flex flex-col">
+                                        <p class="text-sm font-black text-surface-900 leading-tight" th:text="${r.userName}">Usuario</p>
+                                        <p class="text-[10px] font-black text-furent-500 uppercase tracking-tighter mt-0.5" th:text="${productNames[r.productId] ?: 'Mobiliario #' + r.productId}">Mobiliario</p>
+                                        <div class="flex items-center gap-0.5 mt-1.5 text-amber-500">
+                                            <svg th:each="i : ${#numbers.sequence(1, 5)}" class="size-3" th:classappend="${i <= r.rating ? 'fill-current' : 'text-surface-200'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 max-w-lg">
+                                <p class="text-xs font-black text-surface-800 italic leading-relaxed" th:text="'&quot;' + ${r.comment} + '&quot;'">"Comentario..."</p>
+                                <div th:if="${r.adminResponse != null}" class="mt-4 p-4 bg-furent-50/50 rounded-[1.5rem] border border-furent-100 flex items-start gap-3">
+                                    <div class="size-2 bg-furent-500 rounded-full shrink-0 mt-1.5 shadow-[0_0_8px_rgba(var(--furent-500-rgb),0.5)]"></div>
+                                    <p class="text-[11px] text-furent-900 font-bold leading-relaxed" th:text="${r.adminResponse}">Respuesta...</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <div class="flex flex-col">
+                                    <p class="text-xs font-black text-surface-800" th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy') : 'N/A'}">01/01/2026</p>
+                                    <p class="text-[11px] text-surface-400 font-bold mt-0.5" th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'HH:mm') : '--:--'}">12:00</p>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-right min-w-[150px]">
+                                <div class="flex items-center justify-end gap-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <button th:data-id="${r.id}" th:data-user="${r.userName}" th:data-resp="${r.adminResponse ?: ''}" @click="replyType='resena'; replyId=$el.dataset.id; replyRecipient=$el.dataset.user; replyContent=$el.dataset.resp; openReplyModal=true" 
+                                        class="size-11 flex items-center justify-center bg-white border border-surface-100 rounded-2xl text-surface-400 hover:text-furent-500 shadow-sm hover:shadow-md hover:border-furent-200 transition-all hover:scale-110 active:scale-95" th:title="${r.adminResponse != null ? 'Editar respuesta' : 'Responder'}">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
+                                    </button>
+                                    <button th:data-id="${r.id}" @click="deleteId=$el.dataset.id; deleteType='resena'; deleteTitle='¿Eliminar Reseña?'; deleteDesc='Se borrará la calificación del producto y el comentario del cliente.'; openDeleteModal=true" 
+                                        class="size-11 flex items-center justify-center bg-white border border-surface-100 rounded-2xl text-surface-400 hover:text-red-500 shadow-sm hover:shadow-md hover:border-red-200 transition-all hover:scale-110 active:scale-95" title="Eliminar">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr x-show="!$el.parentElement.children.length || ![...$el.parentElement.children].some(c => c.style.display !== 'none')" style="display: none;">
+                            <td colspan="4" class="py-24 text-center">
+                                <div class="size-20 bg-surface-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-surface-100 shadow-inner text-surface-200">
+                                    <svg class="size-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                                </div>
+                                <h3 class="text-base font-black text-surface-900">Sin resultados</h3>
+                                <p class="text-sm font-medium text-surface-400 mt-2">No encontramos reseñas que coincidan con tu búsqueda.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Reply Modal -->
+            <div x-show="openReplyModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface-950/40 backdrop-blur-sm" style="display: none;">
+                <div @click.away="openReplyModal = false" class="bg-white rounded-[3rem] w-full max-w-xl shadow-2xl border border-surface-100 overflow-hidden transform transition-all">
+                    <div class="px-8 pt-10 pb-4 border-b border-surface-100 bg-surface-50/20">
+                        <div class="flex items-center gap-5 mb-5">
+                            <div class="size-16 rounded-[2rem] bg-furent-500 flex items-center justify-center text-white border border-furent-400 shadow-xl shadow-furent-500/20">
+                                <svg class="size-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785 0.534 0.534 0 00.511.9c1.922-.303 3.657-1.144 5.053-2.31.258-.214.58-.33.91-.33.28 0 .565.067.834.195a9.04 9.04 0 003.743.834z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-black text-surface-900 leading-tight" x-text="replyType === 'mensaje' ? 'Responder Mensaje' : (replyContent ? 'Editar Respuesta' : 'Responder Reseña')">Acción</h3>
+                                <p class="text-[11px] font-black text-furent-500 uppercase tracking-widest mt-1" x-text="'Para: ' + replyRecipient">Destinatario</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form :action="replyType === 'mensaje' ? '/admin/mensajes/leer/' + replyId : '/admin/resenas/responder/' + replyId" method="post" class="p-10 bg-white">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <div class="mb-10">
+                            <label class="block text-[11px] font-black text-surface-400 uppercase tracking-widest ml-1 mb-4">Redactar Respuesta</label>
+                            <textarea name="respuesta" x-model="replyContent" rows="6" class="w-full px-7 py-6 bg-surface-50 border-2 border-surface-100 rounded-[2rem] text-sm font-bold text-surface-900 focus:ring-8 focus:ring-furent-500/5 focus:border-furent-400 transition-all outline-none resize-none placeholder:text-surface-300" placeholder="Escribe aquí tu respuesta profesional..."></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <button type="button" @click="openReplyModal = false" class="px-8 py-5 bg-surface-50 text-surface-900 rounded-2xl text-sm font-black transition-all hover:bg-surface-100">Cancelar</button>
+                            <button type="submit" class="px-8 py-5 bg-furent-500 text-white hover:bg-furent-600 rounded-2xl text-sm font-black shadow-xl shadow-furent-500/40 transition-all flex items-center justify-center gap-3">
+                                <span x-text="replyContent && replyType === 'resena' ? 'Actualizar' : 'Enviar'">Enviar</span>
+                                <svg class="size-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3.75"/></svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Custom Delete Confirmation Modal (TailwindPlus) -->
+            <div x-show="openDeleteModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface-950/40 backdrop-blur-sm" style="display: none;">
+                <div @click.away="openDeleteModal = false" class="bg-white rounded-[4rem] w-full max-w-sm shadow-2xl border border-surface-100 overflow-hidden transform transition-all text-center p-12">
+                    <div class="size-28 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-10 border-4 border-white shadow-xl shadow-red-500/10">
+                        <div class="size-20 rounded-full bg-red-500 flex items-center justify-center text-white animate-pulse shadow-lg shadow-red-500/20">
+                            <svg class="size-10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+                        </div>
+                    </div>
+                    <h3 class="text-3xl font-black text-surface-900 leading-tight mb-4" x-text="deleteTitle">¿Eliminar?</h3>
+                    <p class="text-sm font-bold text-surface-400 leading-relaxed mb-12 px-2" x-text="deleteDesc">Descripción...</p>
+                    <div class="space-y-3">
+                        <button type="button" @click="executeDelete()" class="w-full px-8 py-5 bg-red-500 text-white rounded-[1.5rem] text-sm font-black shadow-xl shadow-red-500/40 hover:bg-red-600 hover:scale-[1.02] active:scale-95 transition-all">Eliminar permanentemente</button>
+                        <button type="button" @click="openDeleteModal = false" class="w-full px-8 py-5 bg-surface-50 text-surface-900 hover:bg-surface-100 rounded-[1.5rem] text-sm font-black transition-all">Mantenerlo</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </section>
-</th:block>
+
+    </main>
 </body>
 </html>

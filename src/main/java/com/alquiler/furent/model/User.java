@@ -1,5 +1,6 @@
 package com.alquiler.furent.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -21,6 +22,7 @@ public class User {
     @Indexed(unique = true)
     private String email;
 
+    @JsonIgnore
     private String password;
     private String nombre;
     private String apellido;
@@ -43,6 +45,7 @@ public class User {
     private boolean notificacionesEmail = true;
 
     // 2FA (Google Authenticator)
+    @JsonIgnore
     private String totpSecret;
     private boolean totpEnabled = false;
 

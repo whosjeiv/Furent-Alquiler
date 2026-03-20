@@ -5,206 +5,140 @@
 </head>
 <body>
     <main>
-        <div class="px-10 py-8 max-w-[90rem] mx-auto relative">
+        <div class="px-10 py-8 max-w-[90rem] mx-auto relative font-['Outfit']" x-data="{ 
+            filterDropdownInfo: false, 
+            selectedRole: 'ALL', 
+            selectedStatus: 'ALL', 
+            sortDate: 'NEWEST',
+            
+            openDetailsModal: false,
+            loadingDetails: false,
+            details: null,
+
+            updateFilters() { window.applyTableAdvancedFilters(this.selectedRole, this.selectedStatus); }, 
+            sortUsers() { window.sortTableByDate(this.sortDate); },
+
+            async fetchUserDetails(id) {
+                this.loadingDetails = true;
+                this.openDetailsModal = true;
+                this.details = null;
+                try {
+                    const res = await fetch(`/admin/usuarios/detalles/${id}`);
+                    this.details = await res.json();
+                } catch (e) {
+                    console.error('Error fetching details', e);
+                } finally {
+                    this.loadingDetails = false;
+                }
+            }
+        }">
             
             <div class="flex items-center justify-between mb-8">
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Directorio de Usuarios</h1>
-                    <p class="text-sm font-medium text-surface-500 mt-1">Administra los clientes y sus niveles de acceso.</p>
+                    <h1 class="text-3xl font-black tracking-tight text-surface-900 leading-none">Directorio de Usuarios</h1>
+                    <p class="text-sm font-medium text-surface-500 mt-2">Administra los clientes y sus niveles de acceso.</p>
                 </div>
             </div>
 
             <!-- Main Table Panel -->
-            <div x-data="{ filterDropdownInfo: false, selectedRole: 'ALL', selectedStatus: 'ALL', sortDate: 'NEWEST', updateFilters() { window.applyTableAdvancedFilters(this.selectedRole, this.selectedStatus); }, sortUsers() { window.sortTableByDate(this.sortDate); } }" class="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-surface-200 overflow-visible relative z-10 flex flex-col pt-5">
+            <div class="bg-white rounded-[2.5rem] shadow-glass border border-surface-100 overflow-visible relative z-10 flex flex-col pt-8">
                 
-                <!-- Toolbar with Search and TailwindPlus Filter -->
-                <div class="px-8 pb-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-100/80">
-                    <!-- Buscador integrado -->
-                    <div class="relative w-full sm:max-w-xs">
-                        <input id="userSearchInputBox" type="text" placeholder="Buscar cliente por nombre, email..." class="w-full pl-11 pr-4 py-3 bg-surface-50 hover:bg-surface-100 border border-transparent rounded-xl text-sm font-medium text-surface-900 focus:outline-none focus:ring-4 focus:ring-furent-500/10 focus:border-furent-400 focus:bg-white transition-all shadow-sm">
-                        <svg class="w-5 h-5 text-surface-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                <!-- Toolbar with Search and Filters -->
+                <div class="px-10 pb-8 flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-surface-50">
+                    <div class="relative w-full lg:max-w-md">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-surface-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                        <input id="userSearchInputBox" type="text" placeholder="Buscar por nombre, email o ID..." class="w-full pl-12 pr-4 py-4 bg-surface-50/50 border border-transparent rounded-2xl text-sm font-bold text-surface-900 focus:outline-none focus:ring-4 focus:ring-furent-500/5 focus:border-furent-200 focus:bg-white transition-all shadow-sm">
                     </div>
 
-                    <!-- Botón de Dropdown TailwindPlus con Emojis -->
-                    <div class="relative w-full sm:w-auto">
-                        <button @click="filterDropdownInfo = !filterDropdownInfo" @click.away="filterDropdownInfo = false" class="w-full sm:w-auto overflow-hidden flex items-center justify-between gap-3 px-5 py-3 bg-white border border-surface-200 hover:bg-surface-50 hover:border-surface-300 rounded-xl text-sm font-bold text-surface-700 transition-all shadow-sm focus:outline-none focus:ring-4 focus:ring-surface-200/50">
-                            <span class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
+                    <div class="relative w-full lg:w-auto">
+                        <button @click="filterDropdownInfo = !filterDropdownInfo" class="w-full lg:w-auto flex items-center justify-between gap-3 px-6 py-4 bg-white border border-surface-200 rounded-2xl text-sm font-black text-surface-700 hover:border-surface-300 hover:bg-surface-50 transition-all shadow-sm active:scale-95">
+                            <span class="flex items-center gap-2.5">
+                                <svg class="size-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
                                 Filtrar Resultados
                             </span>
-                            <svg class="w-4 h-4 text-surface-400 transition-transform duration-300" :class="{'rotate-180': filterDropdownInfo}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                            <svg class="size-4 transition-transform duration-300" :class="filterDropdownInfo ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                         </button>
 
-                        <!-- Dropdown Panel -->
-                        <div x-show="filterDropdownInfo" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-2 scale-95" class="absolute right-0 z-[100] mt-3 w-72 bg-white rounded-2xl shadow-[0_15px_60px_-15px_rgba(0,0,0,0.3)] border border-surface-100/80 overflow-hidden" style="display: none;">
-                            
-                            <!-- Filter Group: Credencial -->
-                            <div class="px-5 py-4 border-b border-surface-100/50">
-                                <h4 class="text-[11px] font-black text-surface-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><span>🛠️</span> Credencial</h4>
-                                <div class="space-y-1.5 flex flex-col">
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 cursor-pointer transition-colors group relative">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="selectedRole" @change="updateFilters()" value="ALL" name="f-role" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-surface-200 peer-checked:border-furent-500 peer-checked:bg-furent-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-furent-700">Todos</span>
-                                    </label>
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 cursor-pointer transition-colors group relative">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="selectedRole" @change="updateFilters()" value="ADMIN" name="f-role" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-surface-200 peer-checked:border-furent-500 peer-checked:bg-furent-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-furent-700">Administradores</span>
-                                            <span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">👑 Staff</span>
-                                        </div>
-                                    </label>
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 cursor-pointer transition-colors group relative">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="selectedRole" @change="updateFilters()" value="USER" name="f-role" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-surface-200 peer-checked:border-furent-500 peer-checked:bg-furent-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-furent-700">Clientela (USER)</span>
-                                    </label>
+                        <div x-show="filterDropdownInfo" @click.away="filterDropdownInfo = false" x-transition.opacity class="absolute right-0 z-[100] mt-3 w-72 bg-white rounded-[2rem] shadow-2xl border border-surface-100 overflow-hidden py-4" style="display: none;">
+                            <div class="px-6 py-2 border-b border-surface-50">
+                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4">Credencial</p>
+                                <div class="space-y-1 mb-4">
+                                    <template x-for="r in [{v:'ALL', n:'Todos'}, {v:'ADMIN', n:'Staff (Admin)'}, {v:'USER', n:'Cliente'}]">
+                                        <button @click="selectedRole = r.v; updateFilters()" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between" :class="selectedRole === r.v ? 'bg-furent-50 text-furent-600' : 'text-surface-700 hover:bg-surface-50'">
+                                            <span x-text="r.n"></span>
+                                            <div x-show="selectedRole === r.v" class="size-1.5 rounded-full bg-furent-500 shadow-[0_0_8px_rgba(224,122,58,0.6)]"></div>
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
-
-                            <!-- Filter Group: Estado -->
-                            <div class="px-5 py-4 bg-surface-50/30">
-                                <h4 class="text-[11px] font-black text-surface-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><span>📍</span> Estado de la Cuenta</h4>
-                                <div class="space-y-1.5 flex flex-col">
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 cursor-pointer transition-colors group relative">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="selectedStatus" @change="updateFilters()" value="ALL" name="f-status" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-surface-200 peer-checked:border-furent-500 peer-checked:bg-furent-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-furent-700">Mostrar Todos</span>
-                                    </label>
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 cursor-pointer transition-colors group relative">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="selectedStatus" @change="updateFilters()" value="ACTIVO" name="f-status" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-green-500/40 peer-checked:border-green-500 peer-checked:bg-green-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-                                            <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-green-700">Cuentas Activas</span>
-                                        </div>
-                                    </label>
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 cursor-pointer transition-colors group relative">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="selectedStatus" @change="updateFilters()" value="SUSPENDIDO" name="f-status" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-red-500/40 peer-checked:border-red-500 peer-checked:bg-red-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"></span>
-                                            <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-red-700">Suspendidos</span>
-                                        </div>
-                                    </label>
+                            <div class="px-6 py-6 border-b border-surface-50">
+                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4">Estado</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button @click="selectedStatus = 'ACTIVO'; updateFilters()" class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all" :class="selectedStatus === 'ACTIVO' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-surface-50 border-transparent text-surface-500'">Activos</button>
+                                    <button @click="selectedStatus = 'SUSPENDIDO'; updateFilters()" class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all" :class="selectedStatus === 'SUSPENDIDO' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-surface-50 border-transparent text-surface-500'">Baneados</button>
                                 </div>
                             </div>
-
-                            <!-- Filter Group: Fecha de Registro -->
-                            <div class="px-5 py-4 bg-surface-50 border-t border-surface-100">
-                                <h4 class="text-[11px] font-black text-surface-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><span>📅</span> Fecha de Registro</h4>
-                                <div class="space-y-1.5 flex flex-col">
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white cursor-pointer transition-colors group relative border border-transparent hover:border-surface-200 shadow-sm">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="sortDate" @change="sortUsers()" value="NEWEST" name="f-sort" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-surface-200 peer-checked:border-furent-500 peer-checked:bg-furent-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-furent-700">Más recientes primero</span>
-                                    </label>
-                                    <label class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white cursor-pointer transition-colors group relative border border-transparent hover:border-surface-200 shadow-sm">
-                                        <div class="relative flex items-center justify-center shrink-0">
-                                            <input type="radio" x-model="sortDate" @change="sortUsers()" value="OLDEST" name="f-sort" class="peer sr-only">
-                                            <div class="w-5 h-5 rounded-[0.4rem] border-2 border-surface-200 peer-checked:border-furent-500 peer-checked:bg-furent-500 transition-all flex items-center justify-center shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                                            </div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-surface-700 group-hover:text-surface-900 group-has-[:checked]:text-furent-700">Más antiguos primero</span>
-                                    </label>
-                                </div>
+                            <div class="px-6 py-4 pt-6">
+                                <button @click="selectedRole = 'ALL'; selectedStatus = 'ALL'; updateFilters(); filterDropdownInfo = false;" class="w-full py-3 rounded-xl bg-surface-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-surface-800 transition-colors">Limpiar Filtros</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto mt-2">
-                    <table id="tablaUsuarios" class="w-full premium-table text-left border-collapse whitespace-nowrap">
-                        <thead class="bg-surface-50/50 border-b-2 border-surface-100">
+                <div class="overflow-x-auto">
+                    <table id="tablaUsuarios" class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead class="bg-surface-50/50 border-b border-surface-100">
                             <tr>
-                                <th class="pl-8">Cuenta de Usuario</th>
-                                <th>Información de Contacto</th>
-                                <th>Credencial</th>
-                                <th>Estado Actual</th>
-                                <th class="text-right">F. Registro</th>
-                                <th class="text-right pr-8">Acciones</th>
+                                <th class="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Cuenta de Usuario</th>
+                                <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Contacto</th>
+                                <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400 text-center">Nivel</th>
+                                <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Estado</th>
+                                <th class="px-8 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-surface-100/50">
-                            <tr th:each="u : ${usuarios}" class="usuario-fila group hover:bg-surface-50/80 transition-colors" th:data-search="${#strings.toLowerCase((u.nombre ?: '') + ' ' + (u.apellido ?: '') + ' ' + (u.email ?: ''))}" th:data-role="${u.role}" th:data-status="${u.activo ? 'ACTIVO' : 'SUSPENDIDO'}" th:data-date="${u.fechaCreacion != null ? #temporals.format(u.fechaCreacion, 'yyyyMMddHHmmss') : '00000000000000'}">
-                                <td class="pl-8 py-4 align-middle">
+                            <tr th:each="u : ${usuarios}" class="usuario-fila group hover:bg-surface-50/40 transition-colors" th:data-search="${#strings.toLowerCase((u.nombre ?: '') + ' ' + (u.apellido ?: '') + ' ' + (u.email ?: ''))}" th:data-role="${u.role}" th:data-status="${u.activo ? 'ACTIVO' : 'SUSPENDIDO'}" th:data-date="${u.fechaCreacion != null ? #temporals.format(u.fechaCreacion, 'yyyyMMddHHmmss') : '00000000000000'}">
+                                <td class="px-10 py-5">
                                     <div class="flex items-center gap-4">
-                                        <div class="relative">
-                                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-surface-100 to-surface-200 flex items-center justify-center text-lg font-bold text-surface-600 shadow-sm border border-surface-200" th:text="${u.nombre != null and u.nombre.length() > 0 ? #strings.substring(u.nombre,0,1) : 'U'}">U</div>
-                                            
-                                            <div th:if="${u.role == 'ADMIN'}" class="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-r from-furent-500 to-furent-600 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-                                                <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
-                                            </div>
-                                        </div>
+                                        <div class="size-12 rounded-[18px] bg-white border border-surface-200 shadow-sm flex items-center justify-center font-black text-surface-700" th:text="${u.nombre != null and u.nombre.length() > 0 ? #strings.substring(u.nombre,0,1) : 'U'}">U</div>
                                         <div>
-                                            <p class="text-sm font-bold text-surface-900 group-hover:text-furent-600 transition-colors" th:text="${u.nombreCompleto ?: u.nombre}">Nombre Completo</p>
-                                            <p class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mt-1" th:text="'ID: ' + ${u.id != null and u.id.length() >= 8 ? #strings.substring(u.id, 0, 8) : u.id}">ID: 000</p>
+                                            <p class="text-sm font-black text-surface-900 group-hover:text-furent-500 transition-colors leading-tight" th:text="${u.nombreCompleto ?: u.nombre}">Nombre</p>
+                                            <p class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mt-1" th:text="'ID: ' + ${#strings.substring(u.id, 0, 8)}">ID</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 align-middle">
-                                    <div class="flex flex-col gap-1.5">
-                                        <div class="flex items-center gap-2 text-sm font-medium text-surface-600" title="Email">
-                                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                                            <span th:text="${u.email}">email</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 text-sm font-medium text-surface-600" title="Teléfono" th:if="${u.telefono != null}">
-                                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.896-1.596-5.48-4.08-7.074-6.97l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
-                                            <span th:text="${u.telefono}">tel</span>
-                                        </div>
+                                <td class="px-6 py-5">
+                                    <div class="flex flex-col gap-1">
+                                        <p class="text-xs font-black text-surface-800" th:text="${u.email}">Email</p>
+                                        <p class="text-[10px] font-bold text-surface-400" th:text="${u.telefono ?: 'Sin teléfono'}">Tel</p>
                                     </div>
                                 </td>
-                                <td class="py-4 align-middle">
-                                    <span th:class="${u.role == 'ADMIN' ? 'bg-gradient-to-r from-furent-50 to-furent-100 text-furent-800 border-furent-200 shadow-furent-500/10 shadow-sm' : 'bg-surface-50 text-surface-600 border-surface-200'} + ' inline-flex items-center justify-center px-4 py-1.5 rounded-xl text-[10px] font-extrabold tracking-widest uppercase border'" th:text="${u.role}">USER</span>
+                                <td class="px-6 py-5 text-center">
+                                    <span th:class="${u.role == 'ADMIN' ? 'bg-furent-500 text-white shadow-furent-500/20' : 'bg-surface-100 text-surface-500'} + ' inline-flex items-center justify-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm'" th:text="${u.role}">USER</span>
                                 </td>
-                                <td class="py-4 align-middle">
-                                    <div class="flex items-center gap-2 bg-surface-50 w-max px-3 py-1.5 rounded-lg border border-surface-100">
-                                        <span th:class="${u.activo ? 'bg-green-500' : 'bg-red-500'} + ' w-2 h-2 rounded-full ' + ${u.activo ? 'animate-pulse' : ''}"></span>
-                                        <span class="text-xs font-bold text-surface-700 uppercase" th:text="${u.activo ? 'Activo' : 'Suspendido'}">Activo</span>
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-2">
+                                        <div th:class="${u.activo ? 'bg-green-500' : 'bg-red-500'} + ' size-2 rounded-full ' + ${u.activo ? 'animate-pulse' : ''}"></div>
+                                        <span class="text-[11px] font-black text-surface-700 uppercase" th:text="${u.activo ? 'Activo' : 'Suspendido'}">Activo</span>
                                     </div>
                                 </td>
-                                <td class="py-4 align-middle text-right">
-                                    <p class="text-sm font-bold text-surface-900" th:text="${u.fechaCreacion != null ? #temporals.format(u.fechaCreacion, 'dd MMM yyyy') : 'N/A'}">01 ENE 2026</p>
-                                    <p class="text-[10px] font-medium text-surface-400 uppercase mt-0.5" th:text="${u.fechaCreacion != null ? #temporals.format(u.fechaCreacion, 'HH:mm') : ''}">00:00</p>
-                                </td>
-                                <td class="py-4 pr-8 align-middle text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button th:data-id="${u.id}" th:data-role="${u.role}" onclick="changeRole(this.getAttribute('data-id'), this.getAttribute('data-role'))" class="p-2 text-surface-500 hover:text-furent-600 hover:bg-furent-50 rounded-lg transition-colors" title="Cambiar nivel de acceso">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+                                <td class="px-8 py-5 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <!-- NUEVO BOTÓN: VER INFO -->
+                                        <button th:data-id="${u.id}" @click="fetchUserDetails($el.dataset.id)" 
+                                            class="size-10 flex items-center justify-center bg-white border border-surface-100 rounded-[14px] text-surface-400 hover:text-blue-500 shadow-sm hover:shadow-md hover:border-blue-200 transition-all hover:scale-110 active:scale-95" title="Ver detalles extendidos">
+                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.399 8.049 7.234 4.534 12 4.534c4.766 0 8.601 3.515 9.964 7.144a1.012 1.012 0 010 .644C20.6 15.95 16.766 19.466 12 19.466c-4.766 0-8.601-3.515-9.964-7.144z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                         </button>
-                                        <button th:data-id="${u.id}" th:data-activo="${u.activo}" onclick="toggleStatus(this.getAttribute('data-id'), this.getAttribute('data-activo') === 'true')" th:class="${u.activo ? 'hover:text-amber-600 hover:bg-amber-50 text-amber-500' : 'hover:text-green-600 hover:bg-green-50 text-green-500'} + ' p-2 rounded-lg transition-colors'" th:title="${u.activo ? 'Suspender cuenta' : 'Reactivar cuenta'}">
-                                            <svg th:if="${u.activo}" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                            <svg th:unless="${u.activo}" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        
+                                        <button th:data-id="${u.id}" th:data-role="${u.role}" onclick="changeRole(this.getAttribute('data-id'), this.getAttribute('data-role'))" 
+                                            class="size-10 flex items-center justify-center bg-white border border-surface-100 rounded-[14px] text-surface-400 hover:text-furent-500 shadow-sm hover:shadow-md hover:border-furent-200 transition-all hover:scale-110 active:scale-95" title="Cambiar rol">
+                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+                                        </button>
+
+                                        <button th:data-id="${u.id}" th:data-activo="${u.activo}" onclick="toggleStatus(this.getAttribute('data-id'), this.getAttribute('data-activo') === 'true')" 
+                                            class="size-10 flex items-center justify-center bg-white border border-surface-100 rounded-[14px] shadow-sm hover:shadow-md transition-all hover:scale-110 active:scale-95" :class="$el.getAttribute('data-activo') === 'true' ? 'text-surface-400 hover:text-amber-500 hover:border-amber-200' : 'text-green-500 border-green-100 hover:bg-green-50'" th:title="${u.activo ? 'Suspender' : 'Activar'}">
+                                            <svg th:if="${u.activo}" class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                            <svg th:unless="${u.activo}" class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         </button>
                                     </div>
                                 </td>
@@ -213,20 +147,105 @@
                     </table>
                 </div>
 
-                <div id="empty-state-filter" style="display: none;" class="text-center py-20 bg-surface-50/50">
-                    <div class="w-16 h-16 bg-white shadow-soft rounded-2xl flex items-center justify-center mx-auto mb-4 text-surface-300">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                <div id="empty-state-filter" style="display: none;" class="px-10 py-32 text-center">
+                    <div class="size-20 bg-surface-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-surface-100 shadow-inner text-surface-200">
+                        <svg class="size-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
                     </div>
-                    <h3 class="text-lg font-bold text-surface-900 mb-1">Sin coincidencias</h3>
-                    <p class="text-sm font-medium text-surface-500">Ningún usuario coincide con los filtros aplicados.</p>
+                    <h3 class="text-base font-black text-surface-900">Sin coincidencias</h3>
+                    <p class="text-sm font-medium text-surface-400 mt-2">Prueba cambiando los criterios de búsqueda o filtros.</p>
                 </div>
+            </div>
 
-                <div th:if="${#lists.isEmpty(usuarios)}" class="text-center py-20 bg-surface-50/50 relative z-20">
-                    <div class="w-16 h-16 bg-white shadow-soft rounded-2xl flex items-center justify-center mx-auto mb-4 text-surface-300">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+            <!-- MODAL DE DETALLES EXTENDIDOS (TailwindPlus Style) -->
+            <div x-show="openDetailsModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface-950/40 backdrop-blur-sm" style="display: none;">
+                <div @click.away="openDetailsModal = false" class="bg-white rounded-[3.5rem] w-full max-w-2xl shadow-2xl border border-surface-100 overflow-hidden transform transition-all relative">
+                    <!-- Close button -->
+                    <button @click="openDetailsModal = false" class="absolute right-8 top-8 z-50 p-3 bg-surface-50 text-surface-400 hover:text-surface-900 rounded-2xl transition-all hover:bg-surface-100">
+                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+
+                    <!-- Loader -->
+                    <div x-show="loadingDetails" class="px-12 py-32 text-center">
+                        <div class="size-14 border-4 border-furent-500/20 border-t-furent-500 rounded-full animate-spin mx-auto mb-6"></div>
+                        <p class="text-xs font-black text-surface-400 uppercase tracking-widest">Sincronizando expedientes...</p>
                     </div>
-                    <h3 class="text-lg font-bold text-surface-900 mb-1">Sin Usuarios Activos</h3>
-                    <p class="text-sm font-medium text-surface-500">Ningún usuario se ha registrado en la plataforma aún.</p>
+
+                    <!-- Content -->
+                    <div x-show="!loadingDetails && details" x-transition class="p-12">
+                        <div class="flex items-start gap-8 mb-12">
+                            <div class="size-24 rounded-[2.5rem] bg-gradient-to-br from-surface-100 to-surface-200 flex items-center justify-center text-4xl font-black text-surface-400 border-4 border-white shadow-xl" x-text="details ? details.user.nombre.substring(0,1) : 'U'"></div>
+                            <div class="flex-1 pt-2">
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h3 class="text-3xl font-black text-surface-900 leading-tight" x-text="details ? (details.user.nombre + ' ' + details.user.apellido) : ''">Nombre Usuario</h3>
+                                    <span class="px-3 py-1 bg-furent-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest" x-text="details ? details.user.role : 'USER'">USER</span>
+                                </div>
+                                <p class="text-sm font-bold text-surface-400" x-text="details ? details.user.email : ''">email@example.com</p>
+                                <div class="flex items-center gap-4 mt-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-2 rounded-full" :class="details && details.user.activo ? 'bg-green-500' : 'bg-red-500'"></div>
+                                        <span class="text-[11px] font-black text-surface-600 uppercase tracking-wide" x-text="details && details.user.activo ? 'Cuenta Verificada' : 'Cuenta Suspendida'">Activo</span>
+                                    </div>
+                                    <span class="text-[11px] font-black text-surface-300 uppercase">|</span>
+                                    <span class="text-[11px] font-black text-surface-400 uppercase tracking-wide" x-text="'Se unió: ' + (details ? new Date(details.user.fechaCreacion).toLocaleDateString('es-ES', { month: 'short', year: 'numeric'}) : '')">Registro</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-3 gap-6 mb-12">
+                            <div class="p-6 bg-surface-50/50 rounded-[2rem] border border-surface-100">
+                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">Reservas Totales</p>
+                                <p class="text-2xl font-black text-surface-900" x-text="details ? details.totalReservas : '0'">0</p>
+                            </div>
+                            <div class="p-6 bg-surface-50/50 rounded-[2rem] border border-surface-100">
+                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">Inversión (Pagos)</p>
+                                <p class="text-2xl font-black text-furent-600" x-text="details ? '$' + details.totalInvertido.toLocaleString() : '$0'">$0</p>
+                            </div>
+                            <div class="p-6 bg-surface-50/50 rounded-[2rem] border border-surface-100">
+                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">Favoritos ❤️</p>
+                                <p class="text-2xl font-black text-surface-900" x-text="details ? details.favoritosCount : '0'">0</p>
+                            </div>
+                        </div>
+
+                        <!-- Tabs sections (Información / Seguridad / Preferencias) -->
+                        <div class="space-y-6">
+                            <!-- Security -->
+                            <div class="p-8 bg-blue-50/30 rounded-[2.5rem] border border-blue-100/50">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="size-10 rounded-2xl bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                                    </div>
+                                    <h4 class="text-base font-black text-blue-900">Seguridad de la Cuenta</h4>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-blue-100">
+                                        <span class="text-xs font-bold text-blue-800">MFA (2FA TOTP)</span>
+                                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase" :class="details && details.user.totpEnabled ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-400'" x-text="details && details.user.totpEnabled ? 'Habilitado' : 'Inactivo'"></span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-blue-100">
+                                        <span class="text-xs font-bold text-blue-800">Email Marketing</span>
+                                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase" :class="details && details.user.notificacionesEmail ? 'bg-blue-100 text-blue-700' : 'bg-surface-100 text-surface-400'" x-text="details && details.user.notificacionesEmail ? 'Suscrito' : 'Off'"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preferences -->
+                            <div class="p-8 bg-surface-50 rounded-[2.5rem] border border-surface-100">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="size-10 rounded-2xl bg-surface-900 flex items-center justify-center text-white">
+                                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 13.5V3.75m0 9.75a1.5 1.5 0 010 3m0-3a1.5 1.5 0 000 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 010 3m0-3a1.5 1.5 0 000 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 010 3m0-3a1.5 1.5 0 000 3m0 9.75V10.5"/></svg>
+                                    </div>
+                                    <h4 class="text-base font-black text-surface-900">Configuración & Paneles</h4>
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest text-surface-400">
+                                    <div class="px-3 py-1.5 bg-white rounded-lg border border-surface-100" x-text="'Idioma: ' + (details ? details.user.idioma : 'es')"></div>
+                                    <div class="px-3 py-1.5 bg-white rounded-lg border border-surface-100" x-text="'Moneda: ' + (details ? details.user.moneda : 'COP')"></div>
+                                    <div class="px-3 py-1.5 bg-white rounded-lg border border-surface-100" x-text="'Tema: ' + (details ? details.user.apariencia : 'light')"></div>
+                                    <div class="px-3 py-1.5 bg-white rounded-lg border border-surface-100" x-text="'Notificaciones: ' + (details && details.user.notificacionesEmail ? 'On' : 'Off')"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -234,6 +253,8 @@
             <div class="absolute top-[10%] left-[20%] w-[30rem] h-[30rem] bg-purple-300/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
             <div class="absolute bottom-[20%] right-0 w-[40rem] h-[30rem] bg-furent-300/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
         </div>
+
+    <!-- Paginator already included in app.js -->
     <script>
         // Pagination for users table
         const userPaginator = new FurentPaginator({
@@ -268,10 +289,7 @@
                 }
             });
             
-            // Re-append to DOM matching sorted order
             rows.forEach(row => tableBody.appendChild(row));
-            
-            // Resync pagination to avoid glitchy re-renders
             if (typeof userPaginator !== 'undefined' && userPaginator) {
                 if(typeof userPaginator.update === 'function') userPaginator.update();
             }
@@ -284,7 +302,7 @@
         }
 
         function triggerFullFilter() {
-            const searchTerm = userSearchInput ? userSearchInput.value.toLowerCase() : '';
+            const searchTerm = userSearchInput ? userSearchInput.value.toLowerCase().trim() : '';
             const allRows = document.querySelectorAll('.usuario-fila');
             let hasVisibleElements = false;
             
@@ -298,33 +316,19 @@
                 let matchesStatus = currentStatusFilter === 'ALL' || status === currentStatusFilter;
                 
                 if (matchesSearch && matchesRole && matchesStatus) {
-                    row.style.display = '';
                     row.classList.remove('hidden-by-filter');
                     hasVisibleElements = true;
                 } else {
-                    row.style.display = 'none';
                     row.classList.add('hidden-by-filter');
                 }
             });
 
-            // Resync paginator manually since we alter styles manually
             if (typeof userPaginator !== 'undefined' && userPaginator) {
-                // If FurentPaginator allows update, we call update or override its view
-                if(typeof userPaginator.update === 'function') {
-                    userPaginator.update();
-                } else if(typeof userPaginator.filterBySearch === 'function') {
-                    // Trigger a re-render from the paginator's perspective
-                    userPaginator.filterBySearch(searchTerm);
-                }
+                if(userPaginator.currentPage) userPaginator.currentPage = 1;
+                if(typeof userPaginator.update === 'function') userPaginator.update();
             }
-            
-            // Show/Hide Empty state
             const emptyStateEl = document.getElementById('empty-state-filter');
             if (emptyStateEl) emptyStateEl.style.display = hasVisibleElements ? 'none' : 'block';
-        }
-
-        function csrfAuth() {
-            // Include if using CSRF tokens in fetched POST requests, Furent currently has CSRF disabled.
         }
 
         function changeRole(id, currentRole) {
@@ -341,9 +345,8 @@
                                 <p class="text-sm font-bold text-surface-900">Modificar permisos de acceso</p>
                             </div>
                         </div>
-
                         <div class="space-y-3">
-                            <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Elegir nuevo rol para el usuario</label>
+                            <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Elegir nuevo rol</label>
                             <div class="grid grid-cols-2 gap-3">
                                 <label class="relative flex items-center justify-center p-4 rounded-2xl border-2 border-surface-100 cursor-pointer transition-all hover:bg-surface-50 has-[:checked]:border-furent-500 has-[:checked]:bg-furent-50/30 group">
                                     <input type="radio" name="role-select" value="USER" class="sr-only" ${currentRole === 'USER' ? 'checked' : ''}>
@@ -361,19 +364,12 @@
                                 </label>
                             </div>
                         </div>
-
-                        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
-                            <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-                            <p class="text-[11px] font-medium text-amber-700 leading-tight">Nota: Los cambios afectarán la base de datos de inmediato. El usuario deberá reiniciar su sesión para aplicar los permisos.</p>
-                        </div>
                     </div>
                 `,
                 showCancelButton: true,
                 confirmButtonColor: '#18181b',
                 confirmButtonText: 'Aplicar Credencial',
                 cancelButtonText: 'Cancelar',
-                showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
-                hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' },
                 customClass: {
                     popup: 'rounded-[3rem] p-8 shadow-2xl border border-surface-100',
                     confirmButton: 'rounded-2xl text-sm font-bold px-8 py-4',
@@ -386,25 +382,12 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Swal.fire({ title: 'Sincronizando con base de datos...', didOpen: () => { Swal.showLoading(); } });
+                    Swal.fire({ title: 'Sincronizando...', didOpen: () => { Swal.showLoading(); } });
                     fetch(`/admin/usuarios/rol/${id}?role=${result.value}`, {
                         method: 'POST',
                         headers: { [document.querySelector('meta[name="_csrf_header"]').content]: document.querySelector('meta[name="_csrf"]').content }
                     })
-                    .then(res => {
-                        if (res.ok) {
-                            Swal.fire({
-                                title: '<span class="text-surface-900">¡Actualizado!</span>',
-                                text: 'La credencial se ha modificado correctamente en la base de datos.',
-                                icon: 'success',
-                                timer: 1500,
-                                showConfirmButton: false,
-                                customClass: { popup: 'rounded-[2.5rem]' }
-                            }).then(() => window.location.reload());
-                        } else {
-                            alert('Error al sincronizar rol');
-                        }
-                    });
+                    .then(res => res.ok ? window.location.reload() : alert('Error al sincronizar rol'));
                 }
             });
         }
@@ -415,116 +398,64 @@
                     title: '<span class="text-surface-900 font-extrabold">Gestionar Suspensión</span>',
                     html: `
                         <div class="px-2 text-left space-y-4 py-2">
-                            <p class="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Detalles del bloqueo</p>
-                            
                             <div class="space-y-2">
-                                <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Motivo de la sanción</label>
-                                <input id="swal-razon" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" placeholder="Ej: Comportamiento inapropiado, fraude...">
+                                <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Motivo</label>
+                                <input id="swal-razon" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-red-500/10 outline-none transition-all" placeholder="Ej: Pago pendiente, comportamiento...">
                             </div>
-
-                            <div class="grid grid-cols-2 gap-4 mt-4">
-                                <div class="space-y-2">
-                                    <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Fecha Inicio</label>
-                                    <input id="swal-fecha-inicio" type="date" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium outline-none transition-all focus:border-furent-500" value="${new Date().toISOString().split('T')[0]}">
-                                </div>
-                                <div class="space-y-2" id="fecha-fin-container">
-                                    <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Fecha Fin</label>
-                                    <input id="swal-fecha-fin" type="date" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium outline-none transition-all focus:border-furent-500">
-                                </div>
-                            </div>
-
                             <div class="flex items-center gap-3 mt-4 p-4 bg-surface-50 rounded-2xl border border-surface-100">
-                                <div class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="swal-permanente" class="sr-only peer" onchange="document.getElementById('fecha-fin-container').style.opacity = this.checked ? '0.4' : '1'; document.getElementById('swal-fecha-fin').disabled = this.checked;">
-                                    <div class="w-11 h-6 bg-surface-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-                                </div>
+                                <input type="checkbox" id="swal-permanente" class="size-5 accent-red-500 rounded-lg">
                                 <div>
                                     <p class="text-sm font-bold text-surface-900">Suspensión Permanente</p>
-                                    <p class="text-[10px] font-medium text-surface-500">El usuario no podrá recuperar su cuenta jamás.</p>
+                                    <p class="text-[10px] font-medium text-surface-500 text-pretty">El usuario perderá el acceso a Furent definitivamente.</p>
                                 </div>
                             </div>
                         </div>
                     `,
                     showCancelButton: true,
                     confirmButtonColor: '#ef4444',
-                    confirmButtonText: 'Aplicar Bloqueo',
-                    cancelButtonText: 'Cerrar',
-                    showClass: { popup: 'animate__animated animate__fadeInUp animate__faster' },
-                    hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' },
+                    confirmButtonText: 'Banear Cliente',
+                    cancelButtonText: 'Cancelar',
                     customClass: {
-                        popup: 'rounded-[2.5rem] p-6 shadow-2xl border border-surface-100',
-                        confirmButton: 'rounded-2xl text-sm font-bold px-8 py-3.5 order-2',
-                        cancelButton: 'rounded-2xl text-sm font-bold px-8 py-3.5 bg-surface-100 text-surface-600 border-none order-1'
+                        popup: 'rounded-[3rem] p-10',
+                        confirmButton: 'rounded-2xl px-8 py-4',
+                        cancelButton: 'rounded-2xl px-8 py-4'
                     },
                     preConfirm: () => {
                         return {
                             razon: document.getElementById('swal-razon').value,
-                            inicio: document.getElementById('swal-fecha-inicio').value,
-                            fin: document.getElementById('swal-fecha-fin').value,
                             permanente: document.getElementById('swal-permanente').checked
                         }
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        const { razon, inicio, fin, permanente } = result.value;
-                        const url = `/admin/usuarios/estado/${id}?activo=false&razon=${encodeURIComponent(razon)}&fechaInicio=${inicio}&fechaFin=${fin}&permanente=${permanente}`;
-                        
-                        Swal.fire({
-                            title: 'Procesando...',
-                            didOpen: () => { Swal.showLoading(); }
-                        });
-
+                        const { razon, permanente } = result.value;
+                        const url = `/admin/usuarios/estado/${id}?activo=false&razon=${encodeURIComponent(razon)}&permanente=${permanente}`;
+                        Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                         fetch(url, {
                             method: 'POST',
                             headers: { [document.querySelector('meta[name="_csrf_header"]').content]: document.querySelector('meta[name="_csrf"]').content }
-                        })
-                        .then(res => res.ok ? window.location.reload() : alert('Error al procesar la suspensión'));
+                        }).then(res => res.ok ? window.location.reload() : alert('Error'));
                     }
                 });
             } else {
                 Swal.fire({
                     title: '<span class="text-surface-900 font-extrabold text-2xl">Restaurar Acceso</span>',
-                    html: `
-                        <div class="px-2 py-4">
-                            <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-100 shadow-sm animate__animated animate__bounceIn">
-                                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </div>
-                            <p class="text-sm font-bold text-surface-900 mb-2">¿Confirmas la reactivación de la cuenta?</p>
-                            <p class="text-xs font-medium text-surface-500 px-8 leading-relaxed">El usuario podrá volver a realizar reservas, acceder a su panel y utilizar todas las funciones del sistema de inmediato.</p>
-                        </div>
-                    `,
+                    text: '¿Confirmas la reactivación de la cuenta? El usuario podrá reservar de inmediato.',
                     showCancelButton: true,
                     confirmButtonColor: '#22c55e',
-                    confirmButtonText: 'Sí, reactivar ahora',
+                    confirmButtonText: 'Reactivar ahora',
                     cancelButtonText: 'Mantener bloqueado',
-                    showClass: { popup: 'animate__animated animate__fadeInUp animate__faster' },
-                    hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' },
                     customClass: {
-                        popup: 'rounded-[3rem] p-8 shadow-2xl border border-surface-100',
-                        confirmButton: 'rounded-2xl text-sm font-bold px-8 py-4 order-2',
-                        cancelButton: 'rounded-2xl text-sm font-bold px-8 py-4 bg-surface-50 text-surface-400 border-none order-1'
+                        popup: 'rounded-[3rem] p-10 shadow-2xl',
+                        confirmButton: 'rounded-2xl px-8 py-4',
+                        cancelButton: 'rounded-2xl px-8 py-4 bg-surface-50 text-surface-400 border-none'
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
                         fetch(`/admin/usuarios/estado/${id}?activo=true`, {
                             method: 'POST',
                             headers: { [document.querySelector('meta[name="_csrf_header"]').content]: document.querySelector('meta[name="_csrf"]').content }
-                        })
-                        .then(res => {
-                            if (res.ok) {
-                                Swal.fire({
-                                    title: '<span class="text-surface-900">¡Acceso Restaurado!</span>',
-                                    text: 'La cuenta ha sido reactivada con éxito.',
-                                    icon: 'success',
-                                    timer: 1500,
-                                    showConfirmButton: false,
-                                    customClass: { popup: 'rounded-[2.5rem]' }
-                                }).then(() => window.location.reload());
-                            } else {
-                                alert('Error al reactivar cuenta');
-                            }
-                        });
+                        }).then(res => res.ok ? window.location.reload() : alert('Error'));
                     }
                 });
             }

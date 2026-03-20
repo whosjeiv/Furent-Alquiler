@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findByProductIdOrderByCreatedAtDesc(String productId);
+    List<Review> findAllByOrderByCreatedAtDesc();
+    long countByAdminResponseIsNull();
 }

@@ -1,7 +1,10 @@
 package com.alquiler.furent.controller.admin;
 
+import com.alquiler.furent.dto.UserAdminDetailsDTO;
+import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.User;
 import com.alquiler.furent.service.AuditLogService;
+import com.alquiler.furent.service.ReservationService;
 import com.alquiler.furent.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -15,10 +18,12 @@ import java.time.LocalDateTime;
 public class AdminUsuariosController {
 
     private final UserService userService;
+    private final ReservationService reservationService;
     private final AuditLogService auditLogService;
 
-    public AdminUsuariosController(UserService userService, AuditLogService auditLogService) {
+    public AdminUsuariosController(UserService userService, ReservationService reservationService, AuditLogService auditLogService) {
         this.userService = userService;
+        this.reservationService = reservationService;
         this.auditLogService = auditLogService;
     }
 
@@ -79,5 +84,23 @@ public class AdminUsuariosController {
                 : "Usuario suspendido: " + user.getEmail() + " | Razón: " + user.getRazonSuspension();
         auditLogService.log(authentication.getName(), action, "USUARIO", id, detail);
         return "OK";
+    }
+
+    @GetMapping("/usuarios/detalles/{id}")
+    @ResponseBody
+    public UserAdminDetailsDTO getDetalles(@PathVariable String id) {
+        User user = userService.findById(id).orElseThrow();
+        java.util.List<Reservation> userReservas = reservationService.getByUsuarioId(id);
+        
+        long totalReservas = userReservas.size();
+        java.math.BigDecimal totalInvertido = userReservas.stream()
+                .filter(r -> "COMPLETADA".equals(r.getEstado()) || "CONFIRMADA".equals(r.getEstado()) || "ENTREGADA".equals(r.getEstado()))
+                .map(Reservation::getTotal)
+                .filter(t -> t != null)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        
+        long favoritosCount = user.getFavoritos() != null ? user.getFavoritos().size() : 0;
+        
+        return new UserAdminDetailsDTO(user, totalReservas, totalInvertido, favoritosCount);
     }
 }

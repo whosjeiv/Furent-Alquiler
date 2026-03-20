@@ -19,6 +19,8 @@ public class Review {
     private int rating; // 1 to 5
     private String comment;
     private LocalDateTime createdAt;
+    private String adminResponse;
+    private LocalDateTime respondedAt;
 
     public Review() {
         this.createdAt = LocalDateTime.now();
@@ -95,5 +97,21 @@ public class Review {
 
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    public String getAdminResponse() {
+        return adminResponse;
+    }
+
+    public void setAdminResponse(String adminResponse) {
+        this.adminResponse = adminResponse;
+    }
+
+    public LocalDateTime getRespondedAt() {
+        return respondedAt;
+    }
+
+    public void setRespondedAt(LocalDateTime respondedAt) {
+        this.respondedAt = respondedAt;
     }
 }
