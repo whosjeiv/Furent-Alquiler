@@ -5,86 +5,122 @@
 </head>
 <body>
 <main>
-    <div class="px-4 sm:px-6 lg:px-8 py-6 max-w-[92rem] mx-auto opacity-0 animate-[fadeIn_0.45s_ease-out_forwards]">
-        <div class="bg-white border border-surface-200 rounded-3xl p-5 sm:p-6 shadow-sm mb-5">
-            <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-black text-surface-900 tracking-tight">Centro de Logística</h1>
-                    <p class="text-sm font-medium text-surface-500 mt-1">Vista operativa compacta para entregas, retornos y seguimiento diario</p>
+    <div class="px-6 sm:px-10 py-8 max-w-[90rem] mx-auto">
+
+        <!-- Page Header -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Centro de Logística</h1>
+                <p class="text-sm font-medium text-surface-500 mt-1">Entregas, retornos y seguimiento operativo diario</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <button type="button" onclick="refreshToday(this)" id="btnRefresh" class="px-4 py-2.5 bg-white border border-surface-200 text-surface-700 rounded-xl text-xs font-bold hover:bg-surface-50 transition-colors flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                    Actualizar
+                </button>
+                <button type="button" onclick="window.print()" class="px-4 py-2.5 bg-white border border-surface-200 text-surface-700 rounded-xl text-xs font-bold hover:bg-surface-50 transition-colors flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.872a9.124 9.124 0 012.845-2.845m0 0a9.124 9.124 0 012.845 2.845m-2.845-2.845V19.5m0 0h-6.75m6.75 0h6.75M3.375 5.25h17.25M3.75 6v13.5A2.25 2.25 0 006 21.75h12a2.25 2.25 0 002.25-2.25V6m-18 0l1.35-2.7a2.25 2.25 0 011.83-1.05h1.14a2.25 2.25 0 011.83 1.05l1.35 2.7"/></svg>
+                    Imprimir
+                </button>
+                <button type="button" onclick="generateRouteSheet()" class="px-4 py-2.5 bg-surface-900 text-white rounded-xl text-xs font-bold hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5A3.375 3.375 0 0010.125 2.25H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625A1.125 1.125 0 004.5 3.375v17.25a1.125 1.125 0 001.125 1.125h12.75a1.125 1.125 0 001.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
+                    Exportar hoja de ruta
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-surface-200 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
                 </div>
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <div class="inline-flex items-center p-1 rounded-full border border-surface-200 bg-surface-100">
-                        <button id="viewCal" type="button" onclick="toggleView('cal')" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide bg-white text-surface-900 border border-surface-200">Calendario</button>
-                        <button id="viewList" type="button" onclick="toggleView('list')" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide text-surface-600 hover:text-surface-900">Lista mes</button>
-                    </div>
-                    <button type="button" onclick="refreshToday(this)" id="btnRefresh" class="px-4 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-full text-[11px] font-black tracking-wide hover:bg-surface-50 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-                        Actualizar
-                    </button>
-                    <button type="button" onclick="window.print()" class="px-4 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-full text-[11px] font-black tracking-wide hover:bg-surface-50 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 8.25V6A2.25 2.25 0 019 3.75h6A2.25 2.25 0 0117.25 6v2.25M6.75 15.75h10.5M6.75 12h10.5M5.25 8.25h13.5A2.25 2.25 0 0121 10.5v6A2.25 2.25 0 0118.75 18.75H5.25A2.25 2.25 0 013 16.5v-6a2.25 2.25 0 012.25-2.25Z"/></svg>
-                        Imprimir
-                    </button>
-                    <button type="button" onclick="generateRouteSheet()" class="px-4 py-2.5 bg-surface-900 border border-surface-900 text-white rounded-full text-[11px] font-black tracking-wide hover:bg-surface-800 transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5A3.375 3.375 0 0010.125 2.25H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625A1.125 1.125 0 004.5 3.375v17.25a1.125 1.125 0 001.125 1.125h12.75a1.125 1.125 0 001.125-1.125V11.25a9 9 0 00-9-9z"></path></svg>
-                        Exportar hoja de ruta
-                    </button>
+                <div>
+                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">Entregas</p>
+                    <p id="entregasHoyCount" class="text-2xl font-extrabold text-surface-900 leading-none mt-1">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-surface-200 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">Retornos</p>
+                    <p id="retornosHoyCount" class="text-2xl font-extrabold text-surface-900 leading-none mt-1">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-surface-200 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider">Total operaciones</p>
+                    <p id="totalHoyCount" class="text-2xl font-extrabold text-surface-900 leading-none mt-1">0</p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
-            <section class="xl:col-span-4 space-y-5">
-                <div class="grid grid-cols-3 gap-3">
-                    <article class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                        <p class="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-2">Entregas</p>
-                        <p id="entregasHoyCount" class="text-3xl font-black text-blue-900 leading-none">0</p>
-                    </article>
-                    <article class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                        <p class="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">Retornos</p>
-                        <p id="retornosHoyCount" class="text-3xl font-black text-amber-900 leading-none">0</p>
-                    </article>
-                    <article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                        <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-2">Total</p>
-                        <p id="totalHoyCount" class="text-3xl font-black text-emerald-900 leading-none">0</p>
-                    </article>
-                </div>
+        <!-- Main Content Grid: Calendar + Sidebar -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-                <div class="bg-white border border-surface-200 rounded-3xl shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-surface-200 bg-surface-50">
-                        <h2 class="text-sm font-black text-surface-900 tracking-wide">Operaciones del día</h2>
-                        <p class="text-xs font-semibold text-surface-500 mt-1">Filtra por fecha, tipo y cliente para reducir tiempos de búsqueda</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
-                            <input id="logisticaDate" type="date" class="h-10 rounded-xl border border-surface-300 px-3 text-xs font-bold text-surface-800 bg-white focus:outline-none focus:ring-2 focus:ring-surface-300" />
-                            <select id="logisticaTipoFiltro" class="h-10 rounded-xl border border-surface-300 px-3 text-xs font-bold text-surface-800 bg-white focus:outline-none focus:ring-2 focus:ring-surface-300">
-                                <option value="todos">Todos los tipos</option>
-                                <option value="entregas">Solo entregas</option>
-                                <option value="retornos">Solo retornos</option>
-                            </select>
+            <!-- Calendar (main, takes most space) -->
+            <section class="xl:col-span-8">
+                <div class="bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden">
+                    <!-- Calendar toolbar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-b border-surface-100">
+                        <div class="flex items-center gap-3">
+                            <h2 id="calendarTitle" class="text-lg font-extrabold text-surface-900 tracking-tight capitalize"></h2>
                         </div>
-                        <div class="mt-2.5">
-                            <input id="logisticaSearch" type="text" placeholder="Buscar por cliente, dirección o código..." class="h-10 w-full rounded-xl border border-surface-300 px-3 text-xs font-semibold text-surface-700 bg-white focus:outline-none focus:ring-2 focus:ring-surface-300" />
+                        <div class="flex items-center gap-2">
+                            <button id="calPrev" type="button" class="w-9 h-9 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 flex items-center justify-center text-surface-600 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                            </button>
+                            <button id="calToday" type="button" class="px-4 py-2 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 text-xs font-bold text-surface-700 transition-colors">
+                                Hoy
+                            </button>
+                            <button id="calNext" type="button" class="w-9 h-9 rounded-lg border border-surface-200 bg-white hover:bg-surface-50 flex items-center justify-center text-surface-600 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                            </button>
+                            <div class="ml-2 inline-flex items-center p-1 rounded-lg border border-surface-200 bg-surface-50">
+                                <button id="viewCal" type="button" onclick="toggleView('cal')" class="px-3 py-1.5 rounded-md text-[11px] font-bold bg-white text-surface-900 shadow-sm border border-surface-200 transition-all">Mes</button>
+                                <button id="viewList" type="button" onclick="toggleView('list')" class="px-3 py-1.5 rounded-md text-[11px] font-bold text-surface-500 hover:text-surface-700 transition-all">Lista</button>
+                            </div>
                         </div>
                     </div>
-                    <div id="todayOperations" class="max-h-[58vh] overflow-y-auto p-4 space-y-3 custom-scrollbar bg-surface-50/60">
-                        <div class="text-center py-12">
-                            <div class="w-8 h-8 rounded-full border-2 border-surface-300 border-t-surface-800 animate-spin mx-auto mb-3"></div>
-                            <p class="text-[11px] font-black text-surface-500 uppercase tracking-widest">Cargando agenda...</p>
-                        </div>
-                    </div>
+                    <!-- Calendar body -->
+                    <div id="calendar" class="custom-calendar"></div>
                 </div>
             </section>
 
-            <section class="xl:col-span-8">
-                <div class="bg-white border border-surface-200 rounded-3xl shadow-sm p-4 sm:p-5 h-full min-h-[42rem] flex flex-col">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-surface-200">
-                        <h2 class="text-base sm:text-lg font-black text-surface-900 tracking-tight">Calendario de despliegue operativo</h2>
-                        <div class="inline-flex items-center gap-4 rounded-full border border-surface-200 bg-surface-50 px-4 py-2 text-[11px] font-black tracking-wide text-surface-600">
-                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>Entrega</span>
-                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Retorno</span>
+            <!-- Side Panel: Day Operations -->
+            <section class="xl:col-span-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden sticky top-6">
+                    <div class="px-5 py-4 border-b border-surface-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-sm font-extrabold text-surface-900 tracking-tight">Agenda del día</h2>
+                            <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
+                                <span class="flex items-center gap-1.5 text-blue-600"><span class="w-2 h-2 rounded-full bg-blue-600"></span>Entrega</span>
+                                <span class="flex items-center gap-1.5 text-amber-500"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Retorno</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <input id="logisticaDate" type="date" class="h-9 w-full rounded-lg border border-surface-200 px-3 text-xs font-semibold text-surface-800 bg-surface-50 focus:outline-none focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all" />
+                            <div class="grid grid-cols-2 gap-2">
+                                <select id="logisticaTipoFiltro" class="h-9 rounded-lg border border-surface-200 px-3 text-xs font-semibold text-surface-800 bg-surface-50 focus:outline-none focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all">
+                                    <option value="todos">Todos</option>
+                                    <option value="entregas">Entregas</option>
+                                    <option value="retornos">Retornos</option>
+                                </select>
+                                <input id="logisticaSearch" type="text" placeholder="Buscar..." class="h-9 rounded-lg border border-surface-200 px-3 text-xs font-semibold text-surface-700 bg-surface-50 focus:outline-none focus:ring-2 focus:ring-furent-500/20 focus:border-furent-500 transition-all" />
+                            </div>
                         </div>
                     </div>
-                    <div id="calendar" class="custom-calendar mt-4 rounded-2xl border border-surface-100 overflow-hidden flex-1"></div>
+                    <div id="todayOperations" class="max-h-[calc(100vh-380px)] overflow-y-auto p-3 space-y-2.5 custom-scrollbar">
+                        <div class="text-center py-12">
+                            <div class="w-8 h-8 rounded-full border-2 border-surface-300 border-t-surface-800 animate-spin mx-auto mb-3"></div>
+                            <p class="text-[11px] font-bold text-surface-400 uppercase tracking-widest">Cargando agenda...</p>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -95,31 +131,165 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
 
     <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 7px; }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+        /* ============================== */
+        /* FULLCALENDAR — TAILWIND STYLE  */
+        /* ============================== */
         .custom-calendar { font-family: 'Outfit', sans-serif !important; }
-        .custom-calendar .fc-toolbar { margin-bottom: .85rem !important; }
-        .custom-calendar .fc-toolbar-title { font-size: 1.05rem !important; font-weight: 900 !important; color: #18181b !important; letter-spacing: .02em; text-transform: capitalize !important; }
-        .custom-calendar .fc-button-primary { background: #fff !important; color: #27272a !important; border: 1px solid #d4d4d8 !important; border-radius: 9999px !important; text-transform: uppercase !important; font-weight: 800 !important; font-size: .68rem !important; letter-spacing: .06em !important; padding: .45rem .95rem !important; box-shadow: none !important; }
-        .custom-calendar .fc-button-primary:hover { background: #f4f4f5 !important; border-color: #a1a1aa !important; }
-        .custom-calendar .fc-button-primary:disabled { opacity: .45 !important; }
-        .custom-calendar .fc-button-active { background: #18181b !important; border-color: #18181b !important; color: #fff !important; }
-        .custom-calendar .fc-col-header-cell { background: #fafafa !important; border-color: #e4e4e7 !important; }
-        .custom-calendar .fc-col-header-cell-cushion { color: #71717a !important; font-size: .67rem !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: .08em !important; padding: .6rem 0 !important; }
-        .custom-calendar .fc-daygrid-day, .custom-calendar .fc-scrollgrid td, .custom-calendar .fc-scrollgrid th { border-color: #e4e4e7 !important; }
-        .custom-calendar .fc-daygrid-day-top { justify-content: flex-end; }
-        .custom-calendar .fc-daygrid-day-number { color: #18181b !important; font-weight: 800 !important; font-size: .8rem !important; padding: .25rem .45rem !important; border-radius: 9999px !important; }
-        .custom-calendar .fc-day-today { background: #f8fafc !important; }
-        .custom-calendar .fc-day-today .fc-daygrid-day-number { background: #18181b !important; color: #fff !important; }
-        .custom-calendar .fc-event { border: none !important; border-radius: 9999px !important; padding: 3px 8px !important; margin: 2px 6px !important; font-size: .68rem !important; font-weight: 800 !important; letter-spacing: .02em; }
-        .custom-calendar .fc-list-day-cushion { background: #fafafa !important; }
-        .custom-calendar .fc-list-event-title { font-weight: 700 !important; }
-        .custom-calendar .fc-list-event-time { color: #71717a !important; font-size: .74rem !important; }
-        .swal-logistica-popup { border-radius: 1.5rem !important; border: 1px solid #e4e4e7 !important; overflow: hidden !important; padding: 0 !important; }
+
+        /* Hide default toolbar (we built our own) */
+        .custom-calendar .fc-toolbar { display: none !important; }
+
+        /* Table / Grid */
+        .custom-calendar .fc-scrollgrid { border: none !important; }
+        .custom-calendar .fc-scrollgrid td,
+        .custom-calendar .fc-scrollgrid th { border-color: #f4f4f5 !important; }
+
+        /* Day header (Mon, Tue, Wed...) */
+        .custom-calendar .fc-col-header-cell {
+            background: #fff !important;
+            border-bottom: 1px solid #e4e4e7 !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-top: none !important;
+        }
+        .custom-calendar .fc-col-header-cell-cushion {
+            color: #71717a !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            text-transform: capitalize !important;
+            letter-spacing: 0.02em !important;
+            padding: 0.75rem 0 !important;
+            text-decoration: none !important;
+        }
+
+        /* Day cells */
+        .custom-calendar .fc-daygrid-day {
+            border-color: #f4f4f5 !important;
+            min-height: 6.5rem !important;
+            transition: background 0.15s;
+        }
+        .custom-calendar .fc-daygrid-day:hover {
+            background: #fafafa !important;
+        }
+        .custom-calendar .fc-daygrid-day-top {
+            padding: 0.4rem 0.5rem 0 !important;
+        }
+        .custom-calendar .fc-daygrid-day-number {
+            color: #27272a !important;
+            font-weight: 600 !important;
+            font-size: 0.8rem !important;
+            text-decoration: none !important;
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem !important;
+        }
+
+        /* Today highlight */
+        .custom-calendar .fc-day-today {
+            background: #fff !important;
+        }
+        .custom-calendar .fc-day-today .fc-daygrid-day-number {
+            background: #6366f1 !important;
+            color: #fff !important;
+            border-radius: 0.5rem !important;
+        }
+
+        /* Other month days */
+        .custom-calendar .fc-day-other .fc-daygrid-day-number {
+            color: #d4d4d8 !important;
+        }
+
+        /* Weekend highlight */
+        .custom-calendar .fc-day-sat,
+        .custom-calendar .fc-day-sun {
+            /* subtle weekend hint */
+        }
+        .custom-calendar .fc-day-sat .fc-daygrid-day-number,
+        .custom-calendar .fc-day-sun .fc-daygrid-day-number {
+            color: #ef4444 !important;
+        }
+        .custom-calendar .fc-day-other.fc-day-sat .fc-daygrid-day-number,
+        .custom-calendar .fc-day-other.fc-day-sun .fc-daygrid-day-number {
+            color: #fca5a5 !important;
+        }
+
+        /* Events */
+        .custom-calendar .fc-event {
+            border: none !important;
+            border-radius: 0.375rem !important;
+            padding: 2px 6px !important;
+            margin: 1px 4px !important;
+            font-size: 0.7rem !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .custom-calendar .fc-event:hover {
+            opacity: 0.85;
+        }
+        .custom-calendar .fc-daygrid-event-dot {
+            display: none !important;
+        }
+
+        /* More link */
+        .custom-calendar .fc-daygrid-more-link {
+            font-size: 0.68rem !important;
+            font-weight: 700 !important;
+            color: #6366f1 !important;
+            padding: 2px 6px !important;
+        }
+
+        /* List view */
+        .custom-calendar .fc-list-day-cushion {
+            background: #fafafa !important;
+            border-color: #f4f4f5 !important;
+        }
+        .custom-calendar .fc-list-event-title {
+            font-weight: 600 !important;
+            font-size: 0.8rem !important;
+        }
+        .custom-calendar .fc-list-event-time {
+            color: #71717a !important;
+            font-size: 0.75rem !important;
+        }
+        .custom-calendar .fc-list-event:hover td {
+            background: #f8fafc !important;
+        }
+
+        /* Outer border cleanup */
+        .custom-calendar .fc-scrollgrid-section > * {
+            border: none !important;
+        }
+        .custom-calendar table {
+            border: none !important;
+        }
+
+        /* SweetAlert custom */
+        .swal-logistica-popup { border-radius: 1.25rem !important; border: 1px solid #e4e4e7 !important; overflow: hidden !important; padding: 0 !important; }
         .swal-logistica-plain { border-radius: 1rem !important; }
+
+        /* Dark mode calendar overrides */
+        html.dark .custom-calendar .fc-col-header-cell { background: #18181b !important; border-bottom-color: #27272a !important; }
+        html.dark .custom-calendar .fc-col-header-cell-cushion { color: #71717a !important; }
+        html.dark .custom-calendar .fc-daygrid-day { border-color: #1e1e22 !important; }
+        html.dark .custom-calendar .fc-daygrid-day:hover { background: #1e1e22 !important; }
+        html.dark .custom-calendar .fc-daygrid-day-number { color: #a1a1aa !important; }
+        html.dark .custom-calendar .fc-day-today { background: #111113 !important; }
+        html.dark .custom-calendar .fc-day-today .fc-daygrid-day-number { background: #6366f1 !important; color: #fff !important; }
+        html.dark .custom-calendar .fc-day-other .fc-daygrid-day-number { color: #3f3f46 !important; }
+        html.dark .custom-calendar .fc-scrollgrid td,
+        html.dark .custom-calendar .fc-scrollgrid th { border-color: #1e1e22 !important; }
+        html.dark .custom-calendar .fc-list-day-cushion { background: #111113 !important; border-color: #27272a !important; }
+        html.dark .custom-calendar .fc-list-event:hover td { background: #1e1e22 !important; }
     </style>
 
     <script th:inline="javascript">
@@ -150,6 +320,13 @@
             return toDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
         }
 
+        function updateCalendarTitle() {
+            const titleEl = document.getElementById('calendarTitle');
+            if (calendar && titleEl) {
+                titleEl.textContent = calendar.view.title;
+            }
+        }
+
         function buildEventDetailsModal(event) {
             const r = event.extendedProps.reservation || {};
             const isEntrega = event.extendedProps.type === 'entrega';
@@ -164,16 +341,16 @@
                 ? items.map(i => `
                     <tr class="border-b last:border-b-0 border-surface-100">
                         <td class="px-4 py-2.5 text-xs font-bold text-surface-800">${escapeHtml(i.productoNombre || 'Producto')}</td>
-                        <td class="px-4 py-2.5 text-center text-xs font-black text-surface-900">${escapeHtml(i.cantidad || 0)}</td>
+                        <td class="px-4 py-2.5 text-center text-xs font-extrabold text-surface-900">${escapeHtml(i.cantidad || 0)}</td>
                     </tr>
                 `).join('')
-                : `<tr><td colspan="2" class="px-4 py-5 text-center text-xs font-bold text-surface-400">Sin inventario registrado</td></tr>`;
+                : `<tr><td colspan="2" class="px-4 py-5 text-center text-xs font-semibold text-surface-400">Sin inventario registrado</td></tr>`;
 
             Swal.fire({
                 title: '',
                 showConfirmButton: false,
                 showCloseButton: true,
-                width: 760,
+                width: 700,
                 padding: 0,
                 customClass: {
                     popup: 'swal-logistica-popup',
@@ -181,53 +358,55 @@
                 },
                 html: `
                     <div class="text-left bg-white">
-                        <div class="${typeClass} px-5 py-4 flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/80">Operación logística</p>
-                                <h3 class="text-xl font-black text-white mt-1">${typeName}</h3>
-                                <p class="text-xs text-white/90 font-semibold mt-1">${escapeHtml(r.usuarioNombre || 'Cliente no identificado')}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[10px] font-black uppercase tracking-[0.15em] text-white/75">Fecha</p>
-                                <p class="text-sm font-black text-white mt-1">${escapeHtml(date)}</p>
+                        <div class="${typeClass} px-6 py-5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70">Operación logística</p>
+                                    <h3 class="text-xl font-extrabold text-white mt-1">${typeName}</h3>
+                                    <p class="text-sm text-white/90 font-medium mt-1">${escapeHtml(r.usuarioNombre || 'Cliente no identificado')}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70">Fecha</p>
+                                    <p class="text-sm font-bold text-white mt-1">${escapeHtml(date)}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="p-5 space-y-4">
+                        <div class="p-6 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div class="rounded-xl border border-surface-200 p-3 bg-surface-50">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Cliente</p>
-                                    <p class="text-sm font-black text-surface-900 mt-1">${escapeHtml(r.usuarioNombre || 'Sin nombre')}</p>
-                                    <p class="text-xs font-semibold text-surface-600 mt-1">${escapeHtml(r.usuarioEmail || 'Sin email')}</p>
-                                    <p class="text-xs font-semibold text-surface-600">${escapeHtml(r.usuarioTelefono || 'Sin teléfono')}</p>
+                                <div class="rounded-xl border border-surface-200 p-3.5 bg-surface-50">
+                                    <p class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1">Cliente</p>
+                                    <p class="text-sm font-bold text-surface-900">${escapeHtml(r.usuarioNombre || 'Sin nombre')}</p>
+                                    <p class="text-xs text-surface-500 mt-1">${escapeHtml(r.usuarioEmail || 'Sin email')}</p>
+                                    <p class="text-xs text-surface-500">${escapeHtml(r.usuarioTelefono || 'Sin teléfono')}</p>
                                 </div>
-                                <div class="rounded-xl border border-surface-200 p-3 bg-surface-50">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Reserva</p>
-                                    <p class="text-xs font-black text-surface-900 mt-1">${escapeHtml(r.id || '-')}</p>
-                                    <p class="text-xs font-semibold text-surface-600 mt-1">Estado: <span class="font-black">${escapeHtml(r.estado || '-')}</span></p>
-                                    ${isEntrega && r.horaEntrega ? `<p class="text-xs font-semibold text-surface-600">Hora preferida: <span class="font-black">${escapeHtml(r.horaEntrega)}</span></p>` : ''}
+                                <div class="rounded-xl border border-surface-200 p-3.5 bg-surface-50">
+                                    <p class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1">Reserva</p>
+                                    <p class="text-xs font-bold text-surface-900">${escapeHtml(r.id || '-')}</p>
+                                    <p class="text-xs text-surface-500 mt-1">Estado: <span class="font-bold">${escapeHtml(r.estado || '-')}</span></p>
+                                    ${isEntrega && r.horaEntrega ? `<p class="text-xs text-surface-500">Hora: <span class="font-bold">${escapeHtml(r.horaEntrega)}</span></p>` : ''}
                                 </div>
                             </div>
 
-                            <div class="rounded-xl border border-surface-200 p-3">
-                                <div class="flex items-center justify-between gap-2">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Dirección</p>
-                                    ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" class="text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900">Abrir mapa</a>` : ''}
+                            <div class="rounded-xl border border-surface-200 p-3.5">
+                                <div class="flex items-center justify-between mb-1">
+                                    <p class="text-[10px] font-bold uppercase tracking-widest text-surface-400">Dirección</p>
+                                    ${mapsUrl ? `<a href="${mapsUrl}" target="_blank" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider">Abrir mapa ↗</a>` : ''}
                                 </div>
-                                <p class="text-sm font-bold text-surface-800 mt-1">${escapeHtml(r.direccionEvento || 'Dirección no disponible')}</p>
+                                <p class="text-sm font-semibold text-surface-800">${escapeHtml(r.direccionEvento || 'Dirección no disponible')}</p>
                             </div>
 
-                            <div class="rounded-xl border border-surface-200 p-3">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-surface-500">Notas</p>
-                                <p class="text-sm font-semibold text-surface-700 mt-1 whitespace-pre-line">${escapeHtml(r.notasEvento || 'Sin notas operativas')}</p>
+                            <div class="rounded-xl border border-surface-200 p-3.5">
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-1">Notas</p>
+                                <p class="text-sm text-surface-600 whitespace-pre-line">${escapeHtml(r.notasEvento || 'Sin notas operativas')}</p>
                             </div>
 
                             <div class="rounded-xl border border-surface-200 overflow-hidden">
                                 <table class="w-full">
                                     <thead class="bg-surface-50">
                                         <tr>
-                                            <th class="px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-surface-500">Producto</th>
-                                            <th class="px-4 py-2.5 text-center text-[10px] font-black uppercase tracking-widest text-surface-500">Cant.</th>
+                                            <th class="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-surface-400">Producto</th>
+                                            <th class="px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-widest text-surface-400">Cant.</th>
                                         </tr>
                                     </thead>
                                     <tbody>${itemsRows}</tbody>
@@ -235,8 +414,8 @@
                             </div>
 
                             <div class="flex justify-end gap-2.5 pt-1">
-                                <button type="button" onclick="Swal.close()" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide bg-white border border-surface-300 text-surface-700 hover:bg-surface-50">Cerrar</button>
-                                ${waUrl ? `<a href="${waUrl}" target="_blank" class="px-4 py-2 rounded-full text-[11px] font-black tracking-wide bg-[#1fa952] text-white hover:bg-[#15803d]">WhatsApp</a>` : ''}
+                                <button type="button" onclick="Swal.close()" class="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-surface-200 text-surface-700 hover:bg-surface-50 transition-colors">Cerrar</button>
+                                ${waUrl ? `<a href="${waUrl}" target="_blank" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#1fa952] text-white hover:bg-[#15803d] transition-colors">WhatsApp</a>` : ''}
                             </div>
                         </div>
                     </div>
@@ -286,9 +465,10 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-12">
-                        <svg class="w-9 h-9 text-surface-300 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5m-7.5 4.5h7.5m-10.5 9h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12A2.25 2.25 0 005.25 20.25z"/></svg>
-                        <p class="text-[11px] font-black uppercase tracking-widest text-surface-500">Sin operaciones para este filtro</p>
+                    <div class="text-center py-14">
+                        <svg class="w-10 h-10 text-surface-200 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008z"/></svg>
+                        <p class="text-xs font-bold text-surface-400">Sin operaciones programadas</p>
+                        <p class="text-[11px] text-surface-300 mt-1">Selecciona otra fecha o modifica los filtros</p>
                     </div>
                 `;
                 return;
@@ -298,30 +478,30 @@
             filtered.forEach(function(event) {
                 const r = event.extendedProps.reservation || {};
                 const isEntrega = event.extendedProps.type === 'entrega';
-                const colorBlock = isEntrega ? 'bg-blue-600' : 'bg-amber-500';
+                const colorDot = isEntrega ? 'bg-blue-600' : 'bg-amber-500';
                 const typeText = isEntrega ? 'Entrega' : 'Retorno';
-                const typeStyle = isEntrega ? 'text-blue-700 bg-blue-50 border-blue-200' : 'text-amber-700 bg-amber-50 border-amber-200';
+                const typeBg = isEntrega ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700';
                 const dateText = event.start ? event.start.toLocaleDateString('es-CO', { weekday: 'short', day: '2-digit', month: 'short' }) : '';
                 const timeBadge = isEntrega && r.horaEntrega
-                    ? `<span class="inline-flex items-center rounded-full bg-surface-100 px-2 py-1 text-[10px] font-black text-surface-600">${escapeHtml(r.horaEntrega)}</span>`
+                    ? `<span class="text-[10px] font-bold text-surface-500">${escapeHtml(r.horaEntrega)}</span>`
                     : '';
 
                 const card = `
-                    <button type="button" onclick="openEventDetails('${escapeHtml(event.id)}')" class="w-full text-left rounded-2xl border border-surface-200 bg-white p-3 hover:shadow-md hover:border-surface-300 transition-all">
+                    <button type="button" onclick="openEventDetails('${escapeHtml(event.id)}')" class="w-full text-left rounded-xl border border-surface-100 bg-white p-3.5 hover:border-surface-300 hover:shadow-sm transition-all group">
                         <div class="flex items-start gap-3">
-                            <span class="w-1.5 self-stretch rounded-full ${colorBlock}"></span>
+                            <span class="w-1 self-stretch rounded-full ${colorDot} flex-shrink-0 mt-0.5"></span>
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-widest ${typeStyle}">${typeText}</span>
-                                    <span class="text-[10px] font-black uppercase tracking-widest text-surface-400">${escapeHtml(dateText)}</span>
+                                    <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${typeBg}">${typeText}</span>
+                                    <div class="flex items-center gap-2">
+                                        ${timeBadge}
+                                        <span class="text-[10px] font-semibold text-surface-400">${escapeHtml(dateText)}</span>
+                                    </div>
                                 </div>
-                                <h3 class="text-sm font-black text-surface-900 truncate mt-2">${escapeHtml(r.usuarioNombre || 'Cliente')}</h3>
-                                <p class="text-xs font-semibold text-surface-500 truncate mt-1" title="${escapeHtml(r.direccionEvento || '')}">${escapeHtml(r.direccionEvento || 'Dirección pendiente')}</p>
-                                <div class="flex items-center justify-between mt-2">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-400">${escapeHtml(r.id || '-')}</p>
-                                    ${timeBadge}
-                                </div>
+                                <h3 class="text-sm font-bold text-surface-900 truncate mt-1.5">${escapeHtml(r.usuarioNombre || 'Cliente')}</h3>
+                                <p class="text-xs text-surface-500 truncate mt-0.5">${escapeHtml(r.direccionEvento || 'Dirección pendiente')}</p>
                             </div>
+                            <svg class="w-4 h-4 text-surface-300 group-hover:text-surface-500 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                         </div>
                     </button>
                 `;
@@ -336,17 +516,18 @@
 
             if (viewType === 'list') {
                 calendar.changeView('listMonth');
-                btnList.classList.add('bg-white', 'text-surface-900', 'border', 'border-surface-200');
-                btnList.classList.remove('text-surface-600');
-                btnCal.classList.remove('bg-white', 'text-surface-900', 'border', 'border-surface-200');
-                btnCal.classList.add('text-surface-600');
+                btnList.classList.add('bg-white', 'text-surface-900', 'shadow-sm', 'border', 'border-surface-200');
+                btnList.classList.remove('text-surface-500');
+                btnCal.classList.remove('bg-white', 'text-surface-900', 'shadow-sm', 'border', 'border-surface-200');
+                btnCal.classList.add('text-surface-500');
             } else {
                 calendar.changeView('dayGridMonth');
-                btnCal.classList.add('bg-white', 'text-surface-900', 'border', 'border-surface-200');
-                btnCal.classList.remove('text-surface-600');
-                btnList.classList.remove('bg-white', 'text-surface-900', 'border', 'border-surface-200');
-                btnList.classList.add('text-surface-600');
+                btnCal.classList.add('bg-white', 'text-surface-900', 'shadow-sm', 'border', 'border-surface-200');
+                btnCal.classList.remove('text-surface-500');
+                btnList.classList.remove('bg-white', 'text-surface-900', 'shadow-sm', 'border', 'border-surface-200');
+                btnList.classList.add('text-surface-500');
             }
+            updateCalendarTitle();
         }
 
         function openEventDetails(eventId) {
@@ -365,10 +546,16 @@
         }
 
         function refreshToday(btn) {
-            if (btn) btn.classList.add('animate-spin');
+            if (btn) {
+                const icon = btn.querySelector('svg');
+                if (icon) icon.classList.add('animate-spin');
+            }
             setTimeout(function() {
                 renderTodayOperations(allCalendarEvents);
-                if (btn) btn.classList.remove('animate-spin');
+                if (btn) {
+                    const icon = btn.querySelector('svg');
+                    if (icon) icon.classList.remove('animate-spin');
+                }
             }, 280);
         }
 
@@ -384,8 +571,8 @@
                 confirmButtonColor: '#18181b',
                 customClass: {
                     popup: 'swal-logistica-plain',
-                    confirmButton: 'rounded-full font-black text-xs px-5 py-2.5',
-                    cancelButton: 'rounded-full font-black text-xs px-5 py-2.5'
+                    confirmButton: 'rounded-xl font-bold text-xs px-5 py-2.5',
+                    cancelButton: 'rounded-xl font-bold text-xs px-5 py-2.5'
                 },
                 inputValidator: function(value) {
                     if (!value) return 'Debes seleccionar una fecha válida';
@@ -443,17 +630,22 @@
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'es',
-                height: '100%',
+                height: 'auto',
                 contentHeight: 'auto',
-                headerToolbar: { left: 'title', center: '', right: 'prev,today,next' },
+                headerToolbar: false,
                 buttonText: { today: 'Hoy' },
                 events: events,
                 dayMaxEvents: 3,
+                firstDay: 1,
                 moreLinkContent: function(args) {
                     return '+' + args.num + ' más';
                 },
                 eventContent: function(arg) {
-                    return { html: `<div class="truncate px-1">${escapeHtml(arg.event.title)}</div>` };
+                    const isEntrega = arg.event.extendedProps.type === 'entrega';
+                    const time = isEntrega && arg.event.extendedProps.reservation?.horaEntrega
+                        ? arg.event.extendedProps.reservation.horaEntrega
+                        : '';
+                    return { html: `<div class="truncate px-0.5 flex items-center gap-1"><span class="truncate">${escapeHtml(arg.event.title)}</span>${time ? `<span class="opacity-70 text-[0.6rem] flex-shrink-0">${escapeHtml(time)}</span>` : ''}</div>` };
                 },
                 eventDidMount: function(info) {
                     const type = info.event.extendedProps.type === 'entrega' ? 'Entrega' : 'Retorno';
@@ -461,10 +653,20 @@
                 },
                 eventClick: function(info) {
                     buildEventDetailsModal(info.event);
+                },
+                datesSet: function() {
+                    updateCalendarTitle();
                 }
             });
             calendar.render();
             allCalendarEvents = calendar.getEvents();
+
+            // Custom navigation buttons
+            document.getElementById('calPrev').addEventListener('click', function() { calendar.prev(); updateCalendarTitle(); });
+            document.getElementById('calNext').addEventListener('click', function() { calendar.next(); updateCalendarTitle(); });
+            document.getElementById('calToday').addEventListener('click', function() { calendar.today(); updateCalendarTitle(); });
+
+            updateCalendarTitle();
 
             if (dateInput) dateInput.value = getLocalToday();
             if (dateInput) dateInput.addEventListener('change', function() { renderTodayOperations(allCalendarEvents); });

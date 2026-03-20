@@ -388,8 +388,12 @@ public class PageController {
     }
 
     @GetMapping("/configuracion")
-    public String settings(Model model) {
+    public String settings(Model model, Authentication auth) {
         model.addAttribute("pageTitle", "Configuración");
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            optUser.ifPresent(user -> model.addAttribute("currentUser", user));
+        }
         return "settings";
     }
 
