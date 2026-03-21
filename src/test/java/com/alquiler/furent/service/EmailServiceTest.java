@@ -52,6 +52,6 @@ class EmailServiceTest {
     void sendContactNotification_devMode_doesNotThrow() {
         ReflectionTestUtils.setField(emailService, "emailEnabled", false);
         assertDoesNotThrow(() -> emailService.sendContactNotification(
-                "admin@furent.com", "Juan Pérez", "Consulta sobre alquiler"));
+                "admin@furent.com", "Juan Pérez", "juan@test.com", "Consulta sobre alquiler", "Mensaje de prueba", "123456789"));
     }
 }
