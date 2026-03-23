@@ -106,6 +106,8 @@ public class PageController {
             model.addAttribute("selectedCategory", category != null ? category : "Todos");
         }
 
+        model.addAttribute("combos", productService.getActiveCombos());
+
         return "catalog";
     }
 
@@ -147,6 +149,25 @@ public class PageController {
             model.addAttribute("occupiedRanges", occupiedRanges);
 
             return "product-detail";
+        }
+        return "redirect:/catalogo";
+    }
+
+    @GetMapping("/combo/{id}")
+    public String comboDetail(@PathVariable String id, Model model) {
+        Optional<com.alquiler.furent.model.Combo> comboOpt = productService.getComboById(id);
+        if (comboOpt.isPresent()) {
+            com.alquiler.furent.model.Combo combo = comboOpt.get();
+            model.addAttribute("combo", combo);
+            
+            // Load related combos
+            List<com.alquiler.furent.model.Combo> relatedCombos = productService.getActiveCombos().stream()
+                    .filter(c -> !c.getId().equals(id))
+                    .limit(4)
+                    .collect(Collectors.toList());
+            model.addAttribute("relatedCombos", relatedCombos);
+
+            return "combo-detail";
         }
         return "redirect:/catalogo";
     }

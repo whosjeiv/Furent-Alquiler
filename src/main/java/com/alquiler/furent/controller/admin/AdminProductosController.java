@@ -1,6 +1,7 @@
 package com.alquiler.furent.controller.admin;
 
 import com.alquiler.furent.model.Category;
+import com.alquiler.furent.model.Combo;
 import com.alquiler.furent.model.Product;
 import com.alquiler.furent.service.AuditLogService;
 import com.alquiler.furent.service.ProductService;
@@ -41,6 +42,7 @@ public class AdminProductosController {
     public String listProducts(Model model) {
         model.addAttribute("productos", productService.getAllProducts());
         model.addAttribute("categorias", productService.getAllCategories());
+        model.addAttribute("combos", productService.getAllCombos());
         return "admin/mobiliarios";
     }
 
@@ -178,8 +180,104 @@ public class AdminProductosController {
 
     @PostMapping("/categorias/eliminar/{id}")
     public String deleteCategory(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
         productService.deleteCategory(id);
         redirectAttributes.addFlashAttribute("success", "Categoría eliminada");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/categorias";
+    }
+
+    // === COMBOS ===
+    @PostMapping("/combos/guardar")
+    public String saveCombo(@RequestParam String comboNombre,
+            @RequestParam String comboDescripcion,
+            @RequestParam BigDecimal comboPrice,
+            @RequestParam(required = false) List<String> comboProductoIds,
+            @RequestParam(required = false) List<Integer> comboCantidades,
+            @RequestParam(defaultValue = "true") boolean comboActivo,
+            @RequestParam(required = false) MultipartFile comboImagen,
+            @RequestParam(required = false) String comboId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        if (comboProductoIds == null || comboProductoIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Debes agregar al menos un producto al combo.");
+            return "redirect:/admin/mobiliarios";
+        }
+
+        Combo combo;
+        boolean isNew = (comboId == null || comboId.isEmpty());
+        if (!isNew) {
+            combo = productService.getComboById(comboId).orElse(new Combo());
+        } else {
+            combo = new Combo();
+        }
+
+        combo.setNombre(comboNombre);
+        combo.setDescripcion(comboDescripcion);
+        combo.setPrecioCombo(comboPrice);
+        combo.setActivo(comboActivo);
+
+        // Handle image upload
+        try {
+            if (comboImagen != null && !comboImagen.isEmpty()) {
+                java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads");
+                if (!java.nio.file.Files.exists(uploadDir)) {
+                    java.nio.file.Files.createDirectories(uploadDir);
+                }
+                String fileName = java.util.UUID.randomUUID().toString() + "_" +
+                        org.springframework.util.StringUtils.cleanPath(comboImagen.getOriginalFilename());
+                java.nio.file.Path filePath = uploadDir.resolve(fileName);
+                java.nio.file.Files.copy(comboImagen.getInputStream(), filePath,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                combo.setImagenUrl("/uploads/" + fileName);
+            }
+        } catch (Exception e) {
+            log.error("Error al subir imagen del combo: {}", e.getMessage());
+        }
+
+        // Build combo items from selected products
+        java.util.List<Combo.ComboItem> items = new java.util.ArrayList<>();
+        BigDecimal precioOriginal = BigDecimal.ZERO;
+
+        for (int i = 0; i < comboProductoIds.size(); i++) {
+            String prodId = comboProductoIds.get(i);
+            int qty = (comboCantidades != null && i < comboCantidades.size()) ? comboCantidades.get(i) : 1;
+            var productOpt = productService.getProductById(prodId);
+            if (productOpt.isPresent()) {
+                Product p = productOpt.get();
+                Combo.ComboItem item = new Combo.ComboItem(
+                        p.getId(), p.getNombre(), p.getImagenUrl(), p.getPrecioPorDia(), qty);
+                items.add(item);
+                precioOriginal = precioOriginal.add(p.getPrecioPorDia().multiply(BigDecimal.valueOf(qty)));
+            }
+        }
+
+        combo.setItems(items);
+        combo.setPrecioOriginal(precioOriginal);
+
+        // Calculate discount percentage
+        if (precioOriginal.compareTo(BigDecimal.ZERO) > 0) {
+            double discount = (1 - comboPrice.doubleValue() / precioOriginal.doubleValue()) * 100;
+            combo.setPorcentajeDescuento(Math.max(0, Math.round(discount * 10.0) / 10.0));
+        }
+
+        productService.saveCombo(combo);
+
+        String action = isNew ? "CREAR" : "ACTUALIZAR";
+        auditLogService.log(authentication.getName(), action, "COMBO", combo.getId(),
+                "Combo: " + comboNombre + " | Items: " + items.size());
+
+        redirectAttributes.addFlashAttribute("success", "Combo guardado exitosamente");
+        return "redirect:/admin/mobiliarios";
+    }
+
+    @PostMapping("/combos/eliminar/{id}")
+    public String deleteCombo(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        productService.deleteCombo(id);
+        redirectAttributes.addFlashAttribute("success", "Combo eliminado");
+        return "redirect:/admin/mobiliarios";
     }
 }

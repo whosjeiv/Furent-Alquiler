@@ -58,8 +58,26 @@
                 </button>
             </div>
 
-            <!-- Search Bar + Filters -->
-            <div class="flex flex-col md:flex-row items-center gap-3 mb-6">
+            <!-- ADMIN TABS -->
+            <div class="mb-6 border-b border-surface-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button class="admin-tab-btn active w-1/2 md:w-auto py-4 px-1 text-center border-b-2 font-bold text-sm whitespace-nowrap transition-colors border-furent-500 text-furent-600 focus:outline-none flex items-center gap-2 justify-center" data-target="adminProductosSection">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z"/></svg>
+                        Mobiliario Individual
+                        <span class="bg-furent-50 text-furent-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-furent-100" th:text="${#lists.size(productos)}">0</span>
+                    </button>
+                    <button class="admin-tab-btn w-1/2 md:w-auto py-4 px-1 text-center border-b-2 font-medium text-sm whitespace-nowrap transition-colors border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300 focus:outline-none flex items-center gap-2 justify-center" data-target="adminCombosSection">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                        Kits Mágicos
+                        <span class="bg-furent-50 text-furent-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-furent-100" th:text="${combos != null ? #lists.size(combos) : 0}">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- TAB 1: PRODUCTOS GENERALES -->
+            <div id="adminProductosSection" class="block transition-all duration-300">
+                <!-- Search Bar + Filters -->
+                <div class="flex flex-col md:flex-row items-center gap-3 mb-6">
                 <!-- Search -->
                 <div class="relative w-full md:max-w-md">
                     <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
@@ -297,6 +315,183 @@
                     Mostrando <span class="font-bold text-white" id="pagStart">1</span>-<span class="font-bold text-white" id="pagEnd">10</span> de <span class="font-bold text-white" id="pagTotal">0</span>
                 </p>
                 <div class="flex items-center gap-1" id="pagButtons"></div>
+            </div>
+            </div> <!-- End of adminProductosSection -->
+
+            <!-- TAB 2: COMBOS DE EVENTO (Admin) -->
+            <div class="mb-8 hidden" id="adminCombosSection">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-furent-500 to-furent-600 rounded-xl flex items-center justify-center shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-extrabold text-surface-900 tracking-tight">Combos de Evento</h2>
+                            <p class="text-xs text-surface-400 font-medium">Paquetes de mobiliario con precio especial para el catálogo</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openComboModal()" class="flex items-center gap-2 px-5 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Nuevo Combo
+                    </button>
+                </div>
+
+                <!-- Combo List -->
+                <div th:if="${combos != null and !combos.isEmpty()}" class="space-y-3">
+                    <div th:each="combo : ${combos}" class="bg-white rounded-2xl border border-surface-100 shadow-soft p-5 flex items-center gap-5 hover:shadow-hover transition-shadow">
+                        <!-- Combo Image -->
+                        <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-100">
+                            <img th:if="${combo.imagenUrl != null}" th:src="${combo.imagenUrl}" class="w-full h-full object-cover">
+                            <div th:unless="${combo.imagenUrl != null}" class="w-full h-full flex items-center justify-center">
+                                <svg class="w-7 h-7 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21"/></svg>
+                            </div>
+                        </div>
+                        <!-- Combo Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-extrabold text-surface-900 truncate" th:text="${combo.nombre}">Kit Boda Premium</h3>
+                                <span th:if="${combo.activo}" class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Activo</span>
+                                <span th:unless="${combo.activo}" class="text-[10px] font-bold text-surface-400 bg-surface-50 px-2 py-0.5 rounded-full border border-surface-200">Inactivo</span>
+                            </div>
+                            <p class="text-xs text-surface-400">
+                                <span th:text="${#lists.size(combo.items)}">3</span> productos · 
+                                Precio: <span class="font-bold text-furent-600" th:text="'$' + ${#numbers.formatInteger(combo.precioCombo, 1, 'POINT')}">$2.800.000</span>
+                                <span class="text-surface-300 mx-1">|</span>
+                                Original: <span class="line-through" th:text="'$' + ${#numbers.formatInteger(combo.precioOriginal, 1, 'POINT')}">$3.500.000</span>
+                                <span th:if="${combo.porcentajeDescuento > 0}" class="text-red-500 font-bold" th:text="'(-' + ${#numbers.formatInteger(combo.porcentajeDescuento, 1, 'POINT')} + '%)'">(-20%)</span>
+                            </p>
+                        </div>
+                        <!-- Actions -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="editCombo(this)"
+                                    th:data-id="${combo.id}"
+                                    th:data-nombre="${combo.nombre}"
+                                    th:data-descripcion="${combo.descripcion}"
+                                    th:data-precio="${combo.precioCombo}"
+                                    th:data-activo="${combo.activo}"
+                                    th:data-imagen="${combo.imagenUrl}"
+                                    class="w-9 h-9 rounded-xl bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900 flex items-center justify-center transition-all"
+                                    title="Editar combo">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                            </button>
+                            <form th:action="@{/admin/combos/eliminar/{id}(id=${combo.id})}" method="post"
+                                  onsubmit="return confirm('¿Eliminar este combo?')">
+                                <button type="submit"
+                                        class="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-all"
+                                        title="Eliminar combo">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:unless="${combos != null and !combos.isEmpty()}" class="flex flex-col items-center justify-center text-center py-16 bg-white rounded-2xl border border-surface-200">
+                    <div class="w-16 h-16 bg-surface-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-surface-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21"/></svg>
+                    </div>
+                    <h3 class="text-lg font-extrabold text-surface-900 mb-1">Sin Combos</h3>
+                    <p class="text-sm text-surface-400 max-w-xs">Crea tu primer combo de evento para ofrecer paquetes con descuento a tus clientes.</p>
+                </div>
+            </div>
+
+            <!-- Combo Modal -->
+            <div id="comboModal" class="fixed inset-0 bg-surface-900/60 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none" style="display:none;">
+                <div class="bg-white rounded-[2rem] w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-100 flex flex-col transform scale-95 transition-all duration-300">
+                    <div class="flex items-center justify-between px-8 py-5 border-b border-surface-50 bg-surface-50/30">
+                        <div>
+                            <h2 id="comboModalTitle" class="text-xl font-black text-surface-900 tracking-tight">Nuevo Combo</h2>
+                            <p class="text-[10px] uppercase tracking-widest font-bold text-surface-400">Paquete de Evento</p>
+                        </div>
+                        <button onclick="closeComboModal()" class="w-8 h-8 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-500 hover:text-surface-900 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="px-8 py-6 overflow-y-auto flex-1">
+                        <form id="comboForm" th:action="@{/admin/combos/guardar}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" id="comboId" name="comboId">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                <!-- Nombre -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Nombre del Combo</label>
+                                    <input type="text" id="comboNombre" name="comboNombre" required
+                                           class="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent outline-none"
+                                           placeholder="Kit Boda Premium">
+                                </div>
+                                <!-- Precio -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Precio Combo (por día)</label>
+                                    <input type="number" id="comboPrice" name="comboPrice" required step="0.01" min="0"
+                                           class="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent outline-none"
+                                           placeholder="2800000">
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="mb-6">
+                                <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Descripción</label>
+                                <textarea id="comboDescripcion" name="comboDescripcion" rows="2"
+                                          class="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent outline-none resize-none"
+                                          placeholder="Incluye 50 sillas doradas, 5 mesas imperiales y mantelería..."></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                <!-- Imagen -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Imagen del Combo</label>
+                                    <label class="flex items-center gap-2 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
+                                        <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>
+                                        <span id="comboFileName" class="text-sm text-surface-500">Subir imagen</span>
+                                        <input type="file" name="comboImagen" accept="image/*" class="hidden" onchange="document.getElementById('comboFileName').textContent = this.files[0]?.name || 'Subir imagen'">
+                                    </label>
+                                </div>
+                                <!-- Activo -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Estado</label>
+                                    <label class="flex items-center gap-3 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
+                                        <input type="checkbox" id="comboActivo" name="comboActivo" value="true" checked
+                                               class="w-4 h-4 text-furent-500 rounded focus:ring-furent-500">
+                                        <span id="comboActivoLabel" class="text-sm font-medium text-surface-700">Activo (visible en catálogo)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Product Selector -->
+                            <div class="mb-6">
+                                <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-2">Productos del Combo</label>
+                                <div class="flex gap-2 mb-3">
+                                    <select id="comboProductSelect" class="flex-1 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 outline-none">
+                                        <option value="">Seleccionar producto...</option>
+                                        <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" th:data-price="${p.precioPorDia}" th:data-image="${p.imagenUrl}"></option>
+                                    </select>
+                                    <input type="number" id="comboProductQty" min="1" value="1" class="w-20 px-3 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-center" placeholder="Cant.">
+                                    <button type="button" onclick="addComboProduct()" class="px-4 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-bold rounded-xl transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Selected Products List -->
+                                <div id="comboProductsList" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                                <p id="comboProductsEmpty" class="text-xs text-surface-400 italic text-center py-4">No se han agregado productos al combo.</p>
+                            </div>
+
+                            <!-- Hidden inputs for product IDs and quantities (populated by JS) -->
+                            <div id="comboHiddenInputs"></div>
+
+                            <!-- Footer -->
+                            <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-100">
+                                <button type="button" onclick="closeComboModal()" class="px-5 py-2.5 bg-surface-100 hover:bg-surface-200 text-surface-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
+                                <button type="submit" class="px-6 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+                                    <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    Guardar Combo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- Delete Confirmation Modal (Tailwind) -->
@@ -973,6 +1168,142 @@
             document.getElementById('f_maintMenu')?.classList.add('hidden');
             document.getElementById('f_maintChevron')?.classList.remove('rotate-180');
         }
+    });
+
+    // ═══════════════ COMBO MODAL FUNCTIONS ═══════════════
+    const comboModal = document.getElementById('comboModal');
+    const comboModalContent = comboModal?.querySelector('div');
+    let comboProducts = []; // {id, name, qty, price, image}
+
+    function openComboModal(titleText = 'Nuevo Combo') {
+        document.getElementById('comboModalTitle').textContent = titleText;
+        comboModal.style.display = 'flex';
+        setTimeout(() => {
+            comboModal.classList.remove('opacity-0', 'pointer-events-none');
+            if (comboModalContent) comboModalContent.classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeComboModal() {
+        comboModal.classList.add('opacity-0', 'pointer-events-none');
+        if (comboModalContent) comboModalContent.classList.add('scale-95');
+        setTimeout(() => {
+            comboModal.style.display = 'none';
+            document.getElementById('comboId').value = '';
+            document.getElementById('comboNombre').value = '';
+            document.getElementById('comboDescripcion').value = '';
+            document.getElementById('comboPrice').value = '';
+            document.getElementById('comboActivo').checked = true;
+            document.getElementById('comboFileName').textContent = 'Subir imagen';
+            comboProducts = [];
+            renderComboProducts();
+        }, 300);
+    }
+
+    function editCombo(btn) {
+        document.getElementById('comboId').value = btn.dataset.id;
+        document.getElementById('comboNombre').value = btn.dataset.nombre || '';
+        document.getElementById('comboDescripcion').value = btn.dataset.descripcion || '';
+        document.getElementById('comboPrice').value = btn.dataset.precio || '';
+        document.getElementById('comboActivo').checked = btn.dataset.activo === 'true';
+        comboProducts = [];
+        renderComboProducts();
+        openComboModal('Editar Combo');
+    }
+
+    function addComboProduct() {
+        const select = document.getElementById('comboProductSelect');
+        const qtyInput = document.getElementById('comboProductQty');
+        const id = select.value;
+        if (!id) return;
+        
+        const option = select.options[select.selectedIndex];
+        const name = option.text;
+        const price = option.dataset.price || '0';
+        const image = option.dataset.image || '';
+        const qty = parseInt(qtyInput.value) || 1;
+
+        // Check if already added
+        const existing = comboProducts.find(p => p.id === id);
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            comboProducts.push({ id, name, qty, price: parseFloat(price), image });
+        }
+
+        select.value = '';
+        qtyInput.value = 1;
+        renderComboProducts();
+    }
+
+    function removeComboProduct(id) {
+        comboProducts = comboProducts.filter(p => p.id !== id);
+        renderComboProducts();
+    }
+
+    function renderComboProducts() {
+        const list = document.getElementById('comboProductsList');
+        const empty = document.getElementById('comboProductsEmpty');
+        const hiddenInputs = document.getElementById('comboHiddenInputs');
+
+        if (comboProducts.length === 0) {
+            list.innerHTML = '';
+            empty.style.display = '';
+            hiddenInputs.innerHTML = '';
+            return;
+        }
+
+        empty.style.display = 'none';
+        list.innerHTML = comboProducts.map(p => `
+            <div class="flex items-center gap-3 p-2.5 bg-surface-50 rounded-xl border border-surface-100">
+                ${p.image ? `<img src="${p.image}" class="w-9 h-9 rounded-lg object-cover shrink-0">` : '<div class="w-9 h-9 rounded-lg bg-surface-200 shrink-0"></div>'}
+                <span class="text-sm font-medium text-surface-800 flex-1 truncate">${p.name}</span>
+                <span class="text-xs text-surface-400 font-bold bg-white px-2 py-0.5 rounded border border-surface-200">×${p.qty}</span>
+                <span class="text-xs font-bold text-surface-500">$${Math.round(p.price * p.qty).toLocaleString()}</span>
+                <button type="button" onclick="removeComboProduct('${p.id}')" class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        `).join('');
+
+        // Populate hidden inputs
+        hiddenInputs.innerHTML = comboProducts.map(p => `
+            <input type="hidden" name="comboProductoIds" value="${p.id}">
+            <input type="hidden" name="comboCantidades" value="${p.qty}">
+        `).join('');
+    }
+
+    // Close combo modal on outside click
+    if (comboModal) {
+        document.addEventListener('click', (e) => {
+            if (e.target === comboModal) closeComboModal();
+        });
+    }
+    
+    // ===== ADMIN TABS =====
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.admin-tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active styling
+                tabs.forEach(t => {
+                    t.classList.remove('active', 'border-furent-500', 'text-furent-600', 'font-bold');
+                    t.classList.add('border-transparent', 'text-surface-500', 'font-medium', 'hover:text-surface-700', 'hover:border-surface-300');
+                });
+                
+                // Add active styling
+                tab.classList.remove('border-transparent', 'text-surface-500', 'font-medium', 'hover:text-surface-700', 'hover:border-surface-300');
+                tab.classList.add('active', 'border-furent-500', 'text-furent-600', 'font-bold');
+                
+                // Hide all sections
+                document.getElementById('adminProductosSection')?.classList.add('hidden');
+                document.getElementById('adminCombosSection')?.classList.add('hidden');
+                
+                // Show target
+                const target = tab.dataset.target;
+                document.getElementById(target)?.classList.remove('hidden');
+            });
+        });
     });
     </script>
     </main>

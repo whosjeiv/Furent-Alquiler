@@ -1,8 +1,10 @@
 package com.alquiler.furent.service;
 
 import com.alquiler.furent.model.Category;
+import com.alquiler.furent.model.Combo;
 import com.alquiler.furent.model.Product;
 import com.alquiler.furent.repository.CategoryRepository;
+import com.alquiler.furent.repository.ComboRepository;
 import com.alquiler.furent.repository.ProductRepository;
 import com.alquiler.furent.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
 /**
- * Servicio de gestión de productos (mobiliarios) y categorías.
+ * Servicio de gestión de productos (mobiliarios), categorías y combos.
  * Incluye caching Redis para consultas frecuentes y métricas de rendimiento.
  *
  * Caches utilizados:
@@ -31,6 +33,8 @@ import java.util.regex.Pattern;
  * - "featured-products": productos destacados
  * - "categories": lista de categorías
  * - "product-count": conteo de productos
+ * - "combos": lista completa de combos
+ * - "active-combos": combos activos (públicos)
  *
  * @author Furent Team
  * @since 2.0
@@ -42,10 +46,13 @@ public class ProductService {
 
         private final ProductRepository productRepository;
         private final CategoryRepository categoryRepository;
+        private final ComboRepository comboRepository;
 
-        public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+        public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository,
+                        ComboRepository comboRepository) {
                 this.productRepository = productRepository;
                 this.categoryRepository = categoryRepository;
+                this.comboRepository = comboRepository;
         }
 
         // ═══════════════════════════════════════════════════════
@@ -188,5 +195,47 @@ public class ProductService {
 
         public long countCategories() {
                 return categoryRepository.count();
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // COMBOS - con Cache Redis
+        // ═══════════════════════════════════════════════════════
+
+        @Cacheable(value = "combos", unless = "#result.isEmpty()")
+        public List<Combo> getAllCombos() {
+                log.debug("Cache MISS: cargando todos los combos desde MongoDB");
+                return comboRepository.findAll();
+        }
+
+        @Cacheable(value = "active-combos", unless = "#result.isEmpty()")
+        public List<Combo> getActiveCombos() {
+                log.debug("Cache MISS: cargando combos activos desde MongoDB");
+                return comboRepository.findByActivoTrue();
+        }
+
+        public Optional<Combo> getComboById(String id) {
+                return comboRepository.findById(id);
+        }
+
+        @Caching(evict = {
+                @CacheEvict(value = "combos", allEntries = true),
+                @CacheEvict(value = "active-combos", allEntries = true)
+        })
+        public Combo saveCombo(Combo combo) {
+                log.info("Guardando combo: {} - invalidando caches", combo.getNombre());
+                return comboRepository.save(combo);
+        }
+
+        @Caching(evict = {
+                @CacheEvict(value = "combos", allEntries = true),
+                @CacheEvict(value = "active-combos", allEntries = true)
+        })
+        public void deleteCombo(String id) {
+                comboRepository.deleteById(id);
+                log.info("Combo eliminado: {} - invalidando caches", id);
+        }
+
+        public long countCombos() {
+                return comboRepository.count();
         }
 }
