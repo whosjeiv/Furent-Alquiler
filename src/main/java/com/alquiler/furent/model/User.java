@@ -38,6 +38,29 @@ public class User {
     // Favoritos (IDs de productos)
     private List<String> favoritos = new ArrayList<>();
 
+    // ===== NUEVOS CAMPOS DE PERFIL Y CONTACTO =====
+    private String tipoDocumento; // CC, CE, NIT, Pasaporte
+    private String documentoIdentidad;
+    private java.time.LocalDate fechaNacimiento;
+    private String genero;
+    private String empresa;
+    private String cargo;
+
+    // ===== DIRECCIÓN =====
+    private String direccion;
+    private String ciudad;
+    private String estadoProvincia;
+    private String codigoPostal;
+    private String pais;
+    private String estadoCivil;
+
+    // Lista de direcciones guardadas
+    private List<UserAddress> direcciones = new ArrayList<>();
+
+    // ===== METADATOS Y ADMINISTRACIÓN =====
+    private LocalDateTime ultimaSesion;
+    private String notasAdmin;
+
     // Preferencias de usuario
     private String idioma = "es";
     private String moneda = "COP";
@@ -236,5 +259,125 @@ public class User {
 
     public void setTotpEnabled(boolean totpEnabled) {
         this.totpEnabled = totpEnabled;
+    }
+
+    public String getTipoDocumento() {
+        return tipoDocumento;
+    }
+
+    public void setTipoDocumento(String tipoDocumento) {
+        this.tipoDocumento = tipoDocumento;
+    }
+
+    public String getDocumentoIdentidad() {
+        return documentoIdentidad;
+    }
+
+    public void setDocumentoIdentidad(String documentoIdentidad) {
+        this.documentoIdentidad = documentoIdentidad;
+    }
+
+    public java.time.LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(java.time.LocalDate fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public String getGenero() {
+        return genero;
+    }
+
+    public void setGenero(String genero) {
+        this.genero = genero;
+    }
+
+    public String getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(String empresa) {
+        this.empresa = empresa;
+    }
+
+    public String getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(String cargo) {
+        this.cargo = cargo;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public String getCiudad() {
+        return ciudad;
+    }
+
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
+    }
+
+    public String getEstadoProvincia() {
+        return estadoProvincia;
+    }
+
+    public void setEstadoProvincia(String estadoProvincia) {
+        this.estadoProvincia = estadoProvincia;
+    }
+
+    public String getCodigoPostal() {
+        return codigoPostal;
+    }
+
+    public void setCodigoPostal(String codigoPostal) {
+        this.codigoPostal = codigoPostal;
+    }
+
+    public String getPais() {
+        return pais;
+    }
+
+    public void setPais(String pais) {
+        this.pais = pais;
+    }
+
+    public String getEstadoCivil() {
+        return estadoCivil;
+    }
+
+    public void setEstadoCivil(String estadoCivil) {
+        this.estadoCivil = estadoCivil;
+    }
+
+    public List<UserAddress> getDirecciones() {
+        return direcciones;
+    }
+
+    public void setDirecciones(List<UserAddress> direcciones) {
+        this.direcciones = direcciones;
+    }
+
+    public LocalDateTime getUltimaSesion() {
+        return ultimaSesion;
+    }
+
+    public void setUltimaSesion(LocalDateTime ultimaSesion) {
+        this.ultimaSesion = ultimaSesion;
+    }
+
+    public String getNotasAdmin() {
+        return notasAdmin;
+    }
+
+    public void setNotasAdmin(String notasAdmin) {
+        this.notasAdmin = notasAdmin;
     }
 }

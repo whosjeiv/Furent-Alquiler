@@ -3,6 +3,7 @@ package com.alquiler.furent.controller;
 import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.User;
+import com.alquiler.furent.model.UserAddress;
 import com.alquiler.furent.model.Review;
 import com.alquiler.furent.repository.PendingCardPaymentRepository;
 import com.alquiler.furent.config.PayUProperties;
@@ -414,7 +415,6 @@ public class PageController {
 
     @PostMapping("/configuracion/perfil")
     public String updateProfile(@RequestParam String nombre, @RequestParam String apellido,
-            @RequestParam String telefono,
             Authentication auth, RedirectAttributes redirectAttributes) {
         if (auth != null) {
             Optional<User> optUser = userService.findByEmail(auth.getName());
@@ -422,9 +422,98 @@ public class PageController {
                 User user = optUser.get();
                 user.setNombre(nombre);
                 user.setApellido(apellido);
-                user.setTelefono(telefono);
                 userService.save(user);
-                redirectAttributes.addFlashAttribute("success", "Perfil actualizado correctamente");
+                redirectAttributes.addFlashAttribute("success", "Perfil básico actualizado correctamente");
+            }
+        }
+        return "redirect:/configuracion";
+    }
+
+    @PostMapping("/configuracion/personal")
+    public String updatePersonal(@RequestParam(required = false) String telefono,
+            @RequestParam(required = false) String tipoDocumento,
+            @RequestParam(required = false) String documentoIdentidad,
+            @RequestParam(required = false) String fechaNacimiento,
+            @RequestParam(required = false) String genero,
+            @RequestParam(required = false) String estadoCivil,
+            @RequestParam(required = false) String empresa,
+            @RequestParam(required = false) String cargo,
+            Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            if (optUser.isPresent()) {
+                User user = optUser.get();
+                user.setTelefono(telefono);
+                user.setTipoDocumento(tipoDocumento);
+                user.setDocumentoIdentidad(documentoIdentidad);
+                user.setGenero(genero);
+                user.setEstadoCivil(estadoCivil);
+                user.setEmpresa(empresa);
+                user.setCargo(cargo);
+
+                if (fechaNacimiento != null && !fechaNacimiento.trim().isEmpty()) {
+                    try {
+                        user.setFechaNacimiento(java.time.LocalDate.parse(fechaNacimiento));
+                    } catch (Exception e) {
+                        log.warn("Formato de fecha invalido: {}", fechaNacimiento);
+                    }
+                } else {
+                    user.setFechaNacimiento(null);
+                }
+
+                userService.save(user);
+                redirectAttributes.addFlashAttribute("successPersonal", "Información personal actualizada");
+            }
+        }
+        return "redirect:/configuracion";
+    }
+
+    @PostMapping("/configuracion/direccion/guardar")
+    public String saveAddress(@RequestParam String alias, @RequestParam String direccion,
+                              @RequestParam String ciudad, @RequestParam String estadoProvincia,
+                              @RequestParam String codigoPostal, @RequestParam String pais,
+                              @RequestParam(required = false) boolean isPredeterminada,
+                              Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            if (optUser.isPresent()) {
+                User user = optUser.get();
+                if (user.getDirecciones() == null) {
+                    user.setDirecciones(new ArrayList<>());
+                }
+                
+                // Si la nueva es por defecto, desmarcar las demas
+                if (isPredeterminada || user.getDirecciones().isEmpty()) {
+                    user.getDirecciones().forEach(d -> d.setPredeterminada(false));
+                    isPredeterminada = true;
+                }
+
+                UserAddress addr = new UserAddress(alias, direccion, ciudad, estadoProvincia, pais, codigoPostal, isPredeterminada);
+                user.getDirecciones().add(addr);
+                userService.save(user);
+                redirectAttributes.addFlashAttribute("success", "Dirección agregada correctamente");
+            }
+        }
+        return "redirect:/configuracion";
+    }
+
+    @PostMapping("/configuracion/direccion/eliminar/{id}")
+    public String deleteAddress(@PathVariable String id, Authentication auth, RedirectAttributes redirectAttributes) {
+        if (auth != null) {
+            Optional<User> optUser = userService.findByEmail(auth.getName());
+            if (optUser.isPresent()) {
+                User user = optUser.get();
+                if (user.getDirecciones() != null) {
+                    boolean removed = user.getDirecciones().removeIf(d -> d.getId().equals(id));
+                    if (removed) {
+                        // Ensure at least one default if we didn't remove the last one
+                        if (!user.getDirecciones().isEmpty() && user.getDirecciones().stream().noneMatch(UserAddress::isPredeterminada)) {
+                            user.getDirecciones().get(0).setPredeterminada(true);
+                        }
+                        userService.save(user);
+                        redirectAttributes.addFlashAttribute("success", "Dirección eliminada");
+                    }
+                }
             }
         }
         return "redirect:/configuracion";

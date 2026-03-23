@@ -6,6 +6,7 @@ import com.alquiler.furent.model.User;
 import com.alquiler.furent.service.AuditLogService;
 import com.alquiler.furent.service.ReservationService;
 import com.alquiler.furent.service.UserService;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,8 +29,18 @@ public class AdminUsuariosController {
     }
 
     @GetMapping("/usuarios")
-    public String listUsers(Model model) {
-        model.addAttribute("usuarios", userService.getAllUsers());
+    public String listUsers(@RequestParam(defaultValue = "0") int page,
+                            @RequestParam(defaultValue = "25") int size,
+                            Model model) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.max(10, Math.min(size, 100));
+
+        Page<User> usersPage = userService.getUsersPage(safePage, safeSize);
+        model.addAttribute("usuarios", usersPage.getContent());
+        model.addAttribute("currentPage", safePage);
+        model.addAttribute("pageSize", safeSize);
+        model.addAttribute("totalPages", usersPage.getTotalPages());
+        model.addAttribute("totalUsuarios", usersPage.getTotalElements());
         return "admin/usuarios";
     }
 

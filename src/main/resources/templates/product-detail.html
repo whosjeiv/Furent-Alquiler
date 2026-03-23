@@ -1027,6 +1027,28 @@
                                 <div class="pl-16">
                                     <p class="text-surface-600 leading-relaxed italic" th:text="'&quot;' + ${rev.comment} + '&quot;'"></p>
                                     <p class="text-[10px] font-black uppercase tracking-widest text-surface-400 mt-4" th:text="${#temporals.format(rev.createdAt, 'dd MMM. yyyy')}"></p>
+                                    
+                                    <!-- Admin Response -->
+                                    <div th:if="${rev.adminResponse != null && !rev.adminResponse.isEmpty()}" class="mt-4 p-5 bg-furent-50/50 rounded-2xl border border-furent-100/50 flex gap-4 relative">
+                                        <!-- Decorative notch -->
+                                        <div class="absolute -top-1.5 left-8 w-3 h-3 bg-furent-50 border-l border-t border-furent-100/50 rotate-45"></div>
+                                        
+                                        <div class="w-10 h-10 rounded-[14px] bg-gradient-to-br from-furent-500 to-furent-600 flex items-center justify-center shrink-0 shadow-md text-white">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1.5">
+                                                <p class="text-[11px] font-black text-furent-700 uppercase tracking-widest">Equipo Furent</p>
+                                                <svg class="w-3.5 h-3.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-surface-700 leading-relaxed" th:text="${rev.adminResponse}"></p>
+                                            <p class="text-[9px] font-bold uppercase tracking-widest text-surface-400 mt-3" th:if="${rev.respondedAt != null}" th:text="${#temporals.format(rev.respondedAt, 'dd MMM. yyyy')}"></p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
