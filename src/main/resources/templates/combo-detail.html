@@ -2,215 +2,1085 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/layout :: head}">
 </head>
-<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+<body class="bg-white font-sans text-surface-800 min-h-screen flex flex-col">
 
     <div th:replace="~{fragments/layout :: nav}"></div>
 
     <main class="flex-1 pt-[68px]">
+<!-- Premium Availability Calendar Styles -->
+    <style>
+        /* === Glassmorphism Calendar Container === */
+        .avail-glass {
+            background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,247,240,0.88));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(224,122,58,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        .avail-glass::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(ellipse at 20% 0%, rgba(224,122,58,0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 100%, rgba(34,197,94,0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-        <!-- Breadcrumb -->
-        <div class="bg-white border-b border-surface-100">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <nav class="flex items-center space-x-2 text-sm">
-                    <a th:href="@{/}" class="text-surface-400 hover:text-furent-500 transition-colors">Inicio</a>
-                    <svg class="w-4 h-4 text-surface-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    <a th:href="@{/catalogo}" class="text-surface-400 hover:text-furent-500 transition-colors">Catálogo</a>
-                    <svg class="w-4 h-4 text-surface-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    <span class="text-surface-700 font-medium" th:text="${combo.nombre}">Combo</span>
+        /* === Calendar Day Cells === */
+        .avail-cell {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+            border-radius: 14px;
+            transition: all 0.25s cubic-bezier(.4,0,.2,1);
+            cursor: default;
+            gap: 2px;
+            user-select: none;
+        }
+        .avail-cell-empty {
+            background: transparent;
+        }
+        .avail-cell-available {
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.35);
+            cursor: pointer;
+        }
+        .avail-cell-available:hover {
+            background: rgba(255,247,240,0.95);
+            border-color: rgba(224,122,58,0.35);
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(224,122,58,0.18);
+            z-index: 2;
+        }
+        .avail-cell-occupied {
+            background: rgba(254,226,226,0.45);
+            border: 1px solid rgba(248,113,113,0.2);
+        }
+        .avail-cell-past {
+            opacity: 0.3;
+        }
+        .avail-cell-today {
+            border: 2px solid #E07A3A !important;
+            box-shadow: 0 0 0 3px rgba(224,122,58,0.1), 0 2px 10px rgba(224,122,58,0.1);
+        }
+        .avail-cell-selected {
+            background: linear-gradient(135deg, rgba(224,122,58,0.1), rgba(224,122,58,0.04)) !important;
+            border-color: rgba(224,122,58,0.2) !important;
+        }
+        .avail-cell-sel-start,
+        .avail-cell-sel-end {
+            background: linear-gradient(135deg, #E07A3A, #C2630F) !important;
+            border-color: transparent !important;
+            box-shadow: 0 4px 20px rgba(224,122,58,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+            transform: scale(1.08) translateY(-1px);
+            z-index: 3;
+        }
+        .avail-cell-sel-start .avail-cell-num,
+        .avail-cell-sel-end .avail-cell-num {
+            color: white !important;
+            font-weight: 800;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .avail-cell-num {
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .avail-cell-past .avail-cell-num {
+            color: #BDBDBD;
+        }
+        .avail-cell-occupied .avail-cell-num {
+            color: #dc2626;
+            text-decoration: line-through;
+            text-decoration-color: rgba(220,38,38,0.3);
+        }
+        .avail-cell-today .avail-cell-num {
+            color: #E07A3A;
+            font-weight: 800;
+        }
+
+        /* === Dot Indicators === */
+        .avail-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            transition: all 0.25s ease;
+        }
+        .avail-dot-free {
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34,197,94,0.6);
+        }
+        .avail-dot-occ {
+            background: #f87171;
+            box-shadow: 0 0 8px rgba(248,113,113,0.6);
+        }
+        .avail-dot-past {
+            background: #d4d4d4;
+        }
+
+        /* === View Toggle Buttons === */
+        .avail-view-btn {
+            color: #94A3B8;
+            transition: all 0.3s cubic-bezier(.4,0,.2,1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avail-view-btn.active {
+            background: white;
+            color: #E07A3A;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 2px rgba(224,122,58,0.05);
+            transform: scale(1.05);
+        }
+        .avail-view-btn:not(.active):hover {
+            color: #64748B;
+            background: rgba(255,255,255,0.4);
+        }
+
+        /* === Bento Stat Cards === */
+        .bento-stat {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.4s cubic-bezier(.34,1.56,.64,1);
+            border: 1px solid rgba(255,255,255,0.5) !important;
+        }
+        .bento-stat:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            z-index: 10;
+        }
+        .bento-bg-green { background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.03)); }
+        .bento-bg-red { background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03)); }
+        .bento-bg-furent { background: linear-gradient(135deg, rgba(224,122,58,0.08), rgba(224,122,58,0.03)); }
+
+        .avail-day-header {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #94A3B8;
+            padding: 10px 0;
+            user-select: none;
+        }
+
+        /* === Ultra Compact View Styles === */
+        #availabilitySection.view-compact #premiumCalGrid {
+            gap: 2px;
+        }
+        #availabilitySection.view-compact .avail-cell {
+            aspect-ratio: auto;
+            border-radius: 6px;
+            padding: 2px 0;
+            min-height: 34px;
+            background: rgba(255,255,255,0.3);
+        }
+        #availabilitySection.view-compact .avail-dot {
+            display: block;
+            width: 4px;
+            height: 4px;
+            margin-top: 1px;
+        }
+        #availabilitySection.view-compact .avail-dot-free {
+            background: #22c55e !important;
+            box-shadow: 0 0 4px rgba(34,197,94,0.4) !important;
+        }
+        #availabilitySection.view-compact .avail-dot-occ {
+            background: #f87171 !important;
+            box-shadow: 0 0 4px rgba(248,113,113,0.4) !important;
+        }
+        #availabilitySection.view-compact .avail-dot-past {
+            background: #E2E8F0 !important;
+            box-shadow: none !important;
+        }
+        #availabilitySection.view-compact .avail-cell-sel-start .avail-dot,
+        #availabilitySection.view-compact .avail-cell-sel-end .avail-dot {
+            display: none;
+        }
+        #availabilitySection.view-compact .avail-cell-num {
+            font-size: 11px;
+            font-weight: 600;
+        }
+        #availabilitySection.view-compact .avail-day-header {
+            padding: 2px 0;
+            font-size: 8px;
+            letter-spacing: 0.05em;
+        }
+        #availabilitySection.view-compact .bento-stat {
+            padding: 8px 12px;
+        }
+        #availabilitySection.view-compact .bento-stat span:first-child {
+            font-size: 1rem;
+        }
+        #availabilitySection.view-compact .mt-8 {
+            margin-top: 1rem;
+        }
+        #availabilitySection.view-compact .mb-6 {
+            margin-bottom: 0.75rem;
+        }
+        #availabilitySection.view-compact #calSelectionBar {
+            padding: 8px 16px;
+            margin-top: 8px;
+            border-radius: 14px;
+        }
+        #availabilitySection.view-compact .sel-bar-content {
+            flex-direction: row;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        #availabilitySection.view-compact .avail-sel-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+        #availabilitySection.view-compact .avail-sel-icon svg { width: 16px; height: 16px; }
+        #availabilitySection.view-compact #calSelText { font-size: 13px; }
+        #availabilitySection.view-compact #calSelDays { font-size: 8px; margin-top: 0; margin-left: 4px; }
+        #availabilitySection.view-compact .sel-dates-text { flex-direction: row; align-items: center; }
+        
+        #availabilitySection.view-compact .sel-bar-action {
+            flex-direction: row;
+            gap: 10px;
+        }
+        #availabilitySection.view-compact .qty-selector-container {
+            flex-direction: row;
+            gap: 6px;
+        }
+        #availabilitySection.view-compact .qty-label { display: none; }
+        #availabilitySection.view-compact .bg-white\/50 {
+            padding: 1px;
+            border-radius: 10px;
+        }
+        #availabilitySection.view-compact #qtyDecrease, 
+        #availabilitySection.view-compact #qtyIncrease {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        #availabilitySection.view-compact #quantity {
+            width: 26px;
+            font-size: 12px;
+        }
+        #availabilitySection.view-compact #reserveNowBtn {
+            padding: 6px 16px;
+            font-size: 11px;
+            border-radius: 8px;
+        }
+        #availabilitySection.view-compact .total-label { display: none; }
+        #availabilitySection.view-compact #totalEstimate { font-size: 16px; }
+        #availabilitySection.view-compact #daysLabel { font-size: 8px; margin-top: 0; }
+        #availabilitySection.view-compact .sel-bar-summary { gap: 8px; }
+        #availabilitySection.view-compact .sel-bar-summary button { padding: 4px; border-radius: 8px; }
+        #availabilitySection.view-compact .sel-bar-summary button svg { width: 16px; height: 16px; }
+        
+        /* Orange Accent Styling */
+        .avail-sel-bg::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 8px;
+            background: #E07A3A;
+            z-index: 10;
+        }
+        #availabilitySection.view-compact .avail-sel-bg::before { width: 5px; }
+        
+        /* Legend Styling */
+        #availabilitySection.view-compact .avail-legend-border {
+            margin-top: 10px;
+            padding-top: 8px;
+        }
+
+        /* === Selection Bar & Booking UI === */
+        .avail-sel-bg {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 248, 242, 0.92));
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(224, 122, 58, 0.12) !important;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1), 0 4px 12px rgba(224,122,58,0.05);
+        }
+        .avail-sel-icon {
+            background: white !important;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.02), 0 8px 20px rgba(224,122,58,0.08);
+            border: 1px solid rgba(224,122,58,0.05);
+        }
+        #totalEstimate {
+            letter-spacing: -0.03em;
+            background: linear-gradient(to bottom, #0f172a, #334155);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .avail-sel-bg p[id="calSelDays"], .avail-sel-bg p[id="daysLabel"] {
+            letter-spacing: 0.15em;
+        }
+
+        /* === Selection Bar Animation === */
+        .avail-sel-bar {
+            animation: selBarSlideIn 0.3s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes selBarSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === Nav Buttons Soft UI === */
+        #calTitle {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1E293B;
+            letter-spacing: -0.02em;
+        }
+        .avail-nav-btn {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8);
+            transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+        }
+        .avail-nav-btn:hover {
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            transform: scale(1.15);
+            color: #E07A3A;
+        }
+        .avail-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* === Legend Pulse === */
+        .avail-legend-pulse {
+            animation: legendPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes legendPulse {
+            0%, 100% { opacity: 0.15; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(1.6); }
+        }
+
+        /* === Day Headers === */
+        .avail-day-header {
+            text-align: center;
+            padding: 6px 0;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9E9E9E;
+        }
+
+        /* === Bento Stat Backgrounds (class-based for dark override) === */
+        .bento-bg-green {
+            background: linear-gradient(135deg, rgba(220,252,231,0.55), rgba(187,247,208,0.25));
+        }
+        .bento-bg-red {
+            background: linear-gradient(135deg, rgba(254,226,226,0.55), rgba(254,202,202,0.25));
+        }
+        .bento-bg-furent {
+            background: linear-gradient(135deg, rgba(255,237,213,0.55), rgba(254,215,170,0.25));
+        }
+        .avail-view-toggle {
+            background: rgba(250,250,250,0.7);
+            backdrop-filter: blur(6px);
+        }
+        .avail-sel-icon {
+            background: rgba(224,122,58,0.1);
+        }
+        .avail-sel-bg {
+            background: linear-gradient(135deg, rgba(255,237,213,0.45), rgba(255,247,240,0.45));
+            backdrop-filter: blur(10px);
+        }
+        .avail-legend-border {
+            border-color: rgba(0,0,0,0.05);
+        }
+
+        /* ============================================= */
+        /* === DARK MODE OVERRIDES â€” Availability Cal === */
+        /* ============================================= */
+        .dark .avail-glass {
+            background: linear-gradient(135deg, rgba(30,30,30,0.92), rgba(24,24,24,0.88)) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(224,122,58,0.08), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+        }
+        .dark .avail-glass::before {
+            background: radial-gradient(ellipse at 20% 0%, rgba(224,122,58,0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 100%, rgba(34,197,94,0.06) 0%, transparent 50%) !important;
+        }
+        .dark .avail-cell-available {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+        }
+        .dark .avail-cell-available:hover {
+            background: rgba(224,122,58,0.12) !important;
+            border-color: rgba(224,122,58,0.3) !important;
+            box-shadow: 0 6px 20px rgba(224,122,58,0.2) !important;
+        }
+        .dark .avail-cell-occupied {
+            background: rgba(248,113,113,0.1) !important;
+            border: 1px solid rgba(248,113,113,0.15) !important;
+        }
+        .dark .avail-cell-selected {
+            background: linear-gradient(135deg, rgba(224,122,58,0.18), rgba(224,122,58,0.08)) !important;
+            border-color: rgba(224,122,58,0.3) !important;
+        }
+        .dark .avail-cell-num {
+            color: #e5e5e5 !important;
+        }
+        .dark .avail-cell-past .avail-cell-num {
+            color: #555 !important;
+        }
+        .dark .avail-cell-occupied .avail-cell-num {
+            color: #f87171 !important;
+        }
+        .dark .avail-cell-today .avail-cell-num {
+            color: #FB923C !important;
+        }
+        .dark .avail-dot-past {
+            background: #444 !important;
+        }
+        .dark .avail-view-btn {
+            color: #777 !important;
+        }
+        .dark .avail-view-btn.active {
+            background: rgba(255,255,255,0.08) !important;
+            color: #f0f0f0 !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+        }
+        .dark .avail-view-toggle {
+            background: rgba(30,30,30,0.7) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+        .dark .avail-nav-btn {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+        }
+        .dark .avail-nav-btn:hover {
+            background: rgba(255,255,255,0.1) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .dark .avail-nav-btn svg {
+            color: #ccc !important;
+        }
+        .dark .avail-day-header {
+            color: #666 !important;
+        }
+        .dark .bento-bg-green {
+            background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04)) !important;
+        }
+        .dark .bento-stat.bento-bg-green {
+            border-color: rgba(34,197,94,0.15) !important;
+        }
+        .dark .bento-bg-red {
+            background: linear-gradient(135deg, rgba(248,113,113,0.12), rgba(248,113,113,0.04)) !important;
+        }
+        .dark .bento-stat.bento-bg-red {
+            border-color: rgba(248,113,113,0.15) !important;
+        }
+        .dark .bento-bg-furent {
+            background: linear-gradient(135deg, rgba(224,122,58,0.12), rgba(224,122,58,0.04)) !important;
+        }
+        .dark .bento-stat.bento-bg-furent {
+            border-color: rgba(224,122,58,0.15) !important;
+        }
+        .dark .bento-stat:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
+        }
+        .dark .bento-stat .text-green-700 { color: #4ade80 !important; }
+        .dark .bento-stat .text-red-700 { color: #f87171 !important; }
+        .dark .bento-stat .text-furent-700 { color: #FB923C !important; }
+        .dark .bento-stat .text-green-600\/70 { color: rgba(74,222,128,0.7) !important; }
+        .dark .bento-stat .text-red-600\/70 { color: rgba(248,113,113,0.7) !important; }
+        .dark .bento-stat .text-furent-600\/70 { color: rgba(251,146,60,0.7) !important; }
+        .dark .avail-sel-bg {
+            background: linear-gradient(135deg, rgba(224,122,58,0.1), rgba(224,122,58,0.04)) !important;
+            border-color: rgba(224,122,58,0.15) !important;
+        }
+        .dark .avail-sel-icon {
+            background: rgba(224,122,58,0.15) !important;
+        }
+        .dark .avail-legend-border {
+            border-color: rgba(255,255,255,0.06) !important;
+        }
+    </style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+        <div class="bg-white">
+            <div class="pt-6">
+                <!-- Breadcrumb -->
+                <nav aria-label="Breadcrumb">
+                    <ol role="list" class="mx-auto flex max-w-2xl items-center space-x-2 px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+                        <li>
+                            <div class="flex items-center">
+                                <a th:href="@{/}" class="mr-2 text-sm font-medium text-surface-900 transition-colors hover:text-furent-600">Inicio</a>
+                                <svg viewBox="0 0 16 20" width="16" height="20" fill="currentColor" aria-hidden="true" class="h-5 w-4 text-surface-300">
+                                    <path d="M5.697 4.34L8.98 16.532h1.327L7.025 4.341H5.697z" />
+                                </svg>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <a th:href="@{/catalogo}" class="mr-2 text-sm font-medium text-surface-900 transition-colors hover:text-furent-600">Catálogo</a>
+                                <svg viewBox="0 0 16 20" width="16" height="20" fill="currentColor" aria-hidden="true" class="h-5 w-4 text-surface-300">
+                                    <path d="M5.697 4.34L8.98 16.532h1.327L7.025 4.341H5.697z" />
+                                </svg>
+                            </div>
+                        </li>
+                        <li class="text-sm">
+                            <a href="#" aria-current="page" class="font-medium text-surface-500 hover:text-surface-600 line-clamp-1" th:text="${combo.nombre}">Combo</a>
+                        </li>
+                    </ol>
                 </nav>
-            </div>
-        </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+                <!-- Image gallery -->
+                <div class="mx-auto mt-6 max-w-2xl sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:gap-8 lg:px-8">
+                    <!-- Item 1 (Left large) -> max-lg:hidden -->
+                    <div class="row-span-2 aspect-[3/4] size-full rounded-2xl overflow-hidden max-lg:hidden bg-surface-100 border border-surface-200 shadow-sm relative group">
+                        <img th:if="${#lists.size(combo.items) > 0 and combo.items[0].productoImagen != null}" th:src="${combo.items[0].productoImagen}" class="size-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div th:unless="${#lists.size(combo.items) > 0 and combo.items[0].productoImagen != null}" class="size-full flex justify-center items-center bg-surface-50">
+                            <svg class="w-10 h-10 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 (Middle Top) -> max-lg:hidden -->
+                    <div class="col-start-2 aspect-[3/2] size-full rounded-2xl overflow-hidden max-lg:hidden bg-surface-100 border border-surface-200 shadow-sm relative group">
+                        <img th:if="${#lists.size(combo.items) > 1 and combo.items[1].productoImagen != null}" th:src="${combo.items[1].productoImagen}" class="size-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div th:unless="${#lists.size(combo.items) > 1 and combo.items[1].productoImagen != null}" class="size-full flex justify-center items-center bg-surface-50">
+                            <svg class="w-10 h-10 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                        </div>
+                    </div>
 
-            <!-- Detail Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                    <!-- Item 3 (Middle Bottom) -> max-lg:hidden -->
+                    <div class="col-start-2 row-start-2 aspect-[3/2] size-full rounded-2xl overflow-hidden max-lg:hidden bg-surface-100 border border-surface-200 shadow-sm relative group">
+                        <img th:if="${#lists.size(combo.items) > 2 and combo.items[2].productoImagen != null}" th:src="${combo.items[2].productoImagen}" class="size-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div th:unless="${#lists.size(combo.items) > 2 and combo.items[2].productoImagen != null}" class="size-full flex justify-center items-center bg-surface-50">
+                            <svg class="w-10 h-10 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                        </div>
+                    </div>
 
-                <!-- Image Section -->
-                <div class="fade-in-up">
-                    <div class="bg-white rounded-[2rem] overflow-hidden shadow-soft border border-surface-100 sticky top-[90px] relative group">
-                        <img th:if="${combo.imagenUrl != null}" th:src="${combo.imagenUrl}" th:alt="${combo.nombre}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-700">
-                        <div th:unless="${combo.imagenUrl != null}" class="w-full aspect-square flex items-center justify-center bg-surface-100">
+                    <!-- Main Combo Image (Right side on desktop, main on mobile) -->
+                    <div class="row-span-2 aspect-[4/5] size-full sm:rounded-2xl lg:aspect-[3/4] overflow-hidden bg-surface-100 border border-surface-200 shadow-sm relative group">
+                        <img th:if="${combo.imagenUrl != null}" th:src="${combo.imagenUrl}" class="size-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div th:unless="${combo.imagenUrl != null}" class="size-full flex justify-center items-center bg-surface-50">
                             <svg class="w-20 h-20 text-surface-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
                         </div>
-                        
                         <!-- Badges -->
-                        <div class="absolute top-6 left-6">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-sm font-black text-surface-800 shadow-lg border border-white/50">
-                                <svg class="w-4 h-4 text-furent-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
-                                Kit Mágico
-                            </span>
+                        <div class="absolute top-4 left-4">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-xs font-black text-surface-900 shadow-sm border border-white/50">Kit Mágico</span>
                         </div>
-                        <div class="absolute top-6 right-6" th:if="${combo.porcentajeDescuento > 0}">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-rose-600 shadow-xl flex flex-col items-center justify-center text-white transform rotate-12 group-hover:rotate-0 transition-transform duration-500 border-4 border-white/20">
-                                <span class="text-xl font-black leading-none" th:text="'-' + ${#numbers.formatInteger(combo.porcentajeDescuento, 1, 'POINT')} + '%'">-20%</span>
-                                <span class="text-[9px] font-bold uppercase tracking-widest mt-0.5 opacity-90">DSCTO</span>
-                            </div>
+                        <div class="absolute top-4 right-4" th:if="${combo.porcentajeDescuento != null && combo.porcentajeDescuento > 0}">
+                            <span class="bg-gradient-to-br from-red-500 to-rose-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-lg" th:text="'-' + ${#numbers.formatInteger(combo.porcentajeDescuento, 1, 'POINT')} + '%'">-20%</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Info Section -->
-                <div class="fade-in-up stagger-2">
+                <!-- Product info -->
+                <div class="mx-auto max-w-2xl px-4 pt-10 pb-16 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto_auto_1fr] lg:gap-x-8 lg:px-8 lg:pt-16 lg:pb-24">
+                  
+                  <div class="lg:col-span-2 lg:border-r lg:border-surface-200 lg:pr-8">
+                    <h1 class="text-3xl font-black tracking-tight text-surface-900 sm:text-4xl" th:text="${combo.nombre}">Basic Tee 6-Pack</h1>
+                  </div>
+
+                  <!-- Options & Price Container -->
+                  <div class="mt-4 lg:row-span-3 lg:mt-0">
+                    <h2 class="sr-only">Información del combo</h2>
                     
-                    <!-- Title -->
-                    <h1 class="text-3xl md:text-4xl font-black text-surface-900 tracking-tight leading-tight mb-4" th:text="${combo.nombre}">Kit Boda Premium</h1>
-
-                    <!-- Price Block -->
-                    <div class="bg-gradient-to-br from-surface-50 to-white rounded-2xl p-6 mb-8 border border-surface-200/60 shadow-sm relative overflow-hidden">
-                        <!-- Decorative background -->
-                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-furent-500/5 rounded-full blur-2xl"></div>
-                        
-                        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative z-10">
-                            <div>
-                                <p class="text-sm font-bold text-surface-400 mb-1">Precio Especial del Paquete</p>
-                                <div class="flex items-baseline gap-2" th:if="${combo.precioCombo != null}">
-                                    <span class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-furent-600 to-furent-400" th:text="'$' + ${#numbers.formatInteger(combo.precioCombo, 1, 'POINT')}">$2.800.000</span>
-                                    <span class="text-surface-500 font-medium">/ día</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Savings computation -->
-                            <div class="bg-green-50 rounded-xl px-4 py-3 border border-green-100 flex flex-col items-end" th:if="${combo.precioOriginal != null and combo.precioCombo != null}">
-                                <span class="text-xs font-bold text-surface-400 line-through mb-1" th:text="'Precio Original: $' + ${#numbers.formatInteger(combo.precioOriginal, 1, 'POINT')}">Precio Original: $3.500.000</span>
-                                <div class="flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span class="text-sm font-black text-green-600" th:text="'Te ahorras $' + ${#numbers.formatInteger(combo.precioOriginal.subtract(combo.precioCombo), 1, 'POINT')}">Te ahorras $700.000</span>
-                                </div>
-                            </div>
+                    <div class="flex flex-col mb-6">
+                        <span class="text-sm font-bold text-surface-400 line-through" th:if="${combo.precioOriginal != null}" th:text="'Precio Individual: $' + ${#numbers.formatInteger(combo.precioOriginal, 1, 'POINT')}">$3.500.000</span>
+                        <div class="flex items-end gap-2 mt-1">
+                            <p class="text-4xl tracking-tight font-black text-furent-600" th:if="${combo.precioCombo != null}" th:text="'$' + ${#numbers.formatInteger(combo.precioCombo, 1, 'POINT')}">$192</p>
+                            <span class="text-surface-500 font-medium mb-1">/ día</span>
                         </div>
-                        
-                        <!-- Actions -->
-                        <div class="mt-6 pt-6 border-t border-surface-200/60 flex items-center justify-between gap-4">
-                            <!-- Add to Bag Button -->
-                            <button type="button" class="add-combo-to-bag-btn flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-furent-500 to-furent-600 hover:from-furent-600 hover:to-furent-700 text-white text-lg font-black rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
-                                    th:data-combo-id="${combo.id}"
-                                    th:data-combo-name="${combo.nombre}">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                                Agregar al Carrito
-                            </button>
-                            
-                            <!-- Hidden Data for JS to add everything to the bag easily -->
-                            <div class="combo-data-container hidden">
-                                <div th:each="item : ${combo.items}" class="combo-data-item"
-                                     th:data-id="${item.productoId}"
-                                     th:data-name="${item.productoNombre}"
-                                     th:data-price="${item.precioPorDia}"
-                                     th:data-image="${item.productoImagen}"
-                                     th:data-qty="${item.cantidad}">
-                                </div>
-                            </div>
+                        <!-- savings -->
+                        <div class="mt-2 text-sm font-medium text-surface-600" th:if="${combo.precioOriginal != null and combo.precioCombo != null}">
+                            Ahorras <span class="bg-green-100 text-green-700 px-2 rounded-md font-bold" th:text="'$' + ${#numbers.formatInteger(combo.precioOriginal.subtract(combo.precioCombo), 1, 'POINT')}">$700.000</span> al alquilar el paquete.
                         </div>
                     </div>
 
-                    <!-- Description -->
-                    <div class="mb-8">
-                        <h3 class="text-sm font-black text-surface-900 mb-3 uppercase tracking-widest">¿Qué incluye este paquete?</h3>
-                        <p class="text-surface-600 leading-relaxed text-base" th:text="${combo.descripcion}">Descripción del combo...</p>
-                    </div>
+                    <!-- Add to Bag Form -->
+                    <form class="mt-8 relative">
+                      
+                      <!-- Seguro o Info adicional -->
+                      <div class="flex items-start gap-4 p-4 mt-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+                          <svg class="w-6 h-6 shrink-0 text-blue-600 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                          <div>
+                              <h4 class="text-sm font-bold text-surface-900">Reserva Garantizada</h4>
+                              <p class="text-xs text-surface-500 mt-1 leading-relaxed">Aseguras todas las unidades incluidas en perfecto estado para tu evento. ¡Ahorra tiempo y presupuesto!</p>
+                          </div>
+                      </div>
 
-                    <!-- Items Included -->
-                    <div class="space-y-4 mb-8">
-                        <div th:each="item : ${combo.items}" class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-surface-200 shadow-sm hover:shadow-md transition-shadow group">
-                            <!-- Tooltip/Link to product if we want, or just visual -->
-                            <div class="w-16 h-16 rounded-xl overflow-hidden bg-surface-50 shrink-0">
-                                <img th:if="${item.productoImagen != null}" th:src="${item.productoImagen}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                <div th:unless="${item.productoImagen != null}" class="w-full h-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <a th:href="@{/producto/{id}(id=${item.productoId})}" class="text-base font-bold text-surface-900 hover:text-furent-500 transition-colors truncate block" th:text="${item.productoNombre}">Silla</a>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-sm font-medium text-surface-400" th:if="${item.precioPorDia != null}" th:text="'$' + ${#numbers.formatInteger(item.precioPorDia, 1, 'POINT')} + ' c/u'">$10.000 c/u</span>
-                                </div>
-                            </div>
-                            <!-- Quantity -->
-                            <div class="shrink-0 flexflex-col items-end">
-                                <span class="bg-surface-900 text-white font-black text-sm px-3 py-1.5 rounded-lg" th:text="'× ' + ${item.cantidad}">x 50</span>
-                            </div>
-                        </div>
-                    </div>
+                      <button type="button" class="add-combo-to-bag-btn mt-8 flex w-full items-center justify-center rounded-xl bg-furent-600 px-8 py-4 text-base font-bold text-white hover:bg-furent-700 focus:ring-2 focus:ring-furent-500 focus:ring-offset-2 focus:outline-hidden transition-all shadow-md active:scale-[0.98]"
+                              th:data-combo-id="${combo.id}"
+                              th:data-combo-name="${combo.nombre}">
+                          Agregar al Carrito
+                      </button>
+                      <p class="text-center text-xs text-surface-400 mt-3 font-medium">Un clic y agrega todo el paquete</p>
 
-                    <!-- Secure Banner -->
-                    <div class="flex items-center gap-4 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
-                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-surface-900">Reserva Garantizada</h4>
-                            <p class="text-xs text-surface-500 mt-0.5">Al reservar este combo, aseguras todas las unidades de mobiliario incluidas en perfectas condiciones para tu evento.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                      <!-- Hidden Data for JS -->
+                      <div class="combo-data-container hidden">
+                          <div th:each="item : ${combo.items}" class="combo-data-item"
+                               th:data-id="${item.productoId}"
+                               th:data-name="${item.productoNombre}"
+                               th:data-price="${item.precioPorDia}"
+                               th:data-image="${item.productoImagen}"
+                               th:data-qty="${item.cantidad}">
+                          </div>
+                      </div>
+                    </form>
+                  </div>
 
-            <!-- Related Combos -->
-            <div class="mt-20 fade-in-up stagger-3" th:if="${relatedCombos != null and !relatedCombos.isEmpty()}">
-                <div class="flex items-end justify-between mb-8">
+                  <!-- Details and Description Columns -->
+                  <div class="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-surface-200 lg:pt-6 lg:pr-8 lg:pb-16">
+                    
+                    <!-- Description and details -->
                     <div>
-                        <h2 class="text-2xl font-black text-surface-900 tracking-tight">Otros Combos Disponibles</h2>
-                        <p class="text-sm font-medium text-surface-400 mt-1">Más opciones increíbles para tu evento</p>
+                      <h3 class="sr-only">Descripción</h3>
+                      <div class="space-y-6">
+                        <p class="text-base text-surface-600 leading-relaxed" th:text="${combo.descripcion}">The Basic Tee 6-Pack allows you to fully express your vibrant personality...</p>
+                      </div>
                     </div>
-                    <a th:href="@{/catalogo}" class="text-sm font-bold text-furent-600 hover:text-furent-700 transition-colors hidden sm:block">Ver todos →</a>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Standardize Combo Cards with the Catalog page -->
-                    <div th:each="rc : ${relatedCombos}" th:if="${rc != null and rc.id != null}" class="group bg-white rounded-2xl overflow-hidden border border-surface-200 shadow-sm hover:shadow-hover transition-all duration-300 flex flex-col relative shrink-0">
-                        <a th:href="@{/combo/{id}(id=${rc.id})}" class="absolute inset-0 z-10 w-full h-full"></a>
-                        
-                        <!-- Image -->
-                        <div class="relative h-48 overflow-hidden bg-surface-100">
-                            <img th:if="${rc.imagenUrl != null and !rc.imagenUrl.isEmpty()}" th:src="${rc.imagenUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <div th:unless="${rc.imagenUrl != null and !rc.imagenUrl.isEmpty()}" class="w-full h-full flex items-center justify-center">
-                                <svg class="w-10 h-10 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+
+                    <!-- Highlights (Items Included) -->
+                    <div class="mt-10">
+                      <h3 class="text-sm font-medium text-surface-900 border-b border-surface-200 pb-3 uppercase tracking-wider">¿Qué incluye este paquete?</h3>
+
+                      <div class="mt-6">
+                        <ul role="list" class="space-y-4 text-sm">
+                          <li th:each="item : ${combo.items}" class="flex items-center justify-between p-3 rounded-xl border border-surface-100 bg-surface-50 hover:bg-surface-100/50 transition-colors group">
+                             <div class="flex items-center gap-4 flex-1">
+                                 <div class="w-12 h-12 rounded-lg bg-white overflow-hidden shrink-0 border border-surface-200 shadow-sm relative">
+                                     <img th:if="${item.productoImagen != null}" th:src="${item.productoImagen}" class="w-full h-full object-cover">
+                                     <div th:unless="${item.productoImagen != null}" class="w-full h-full flex items-center justify-center bg-surface-50">
+                                        <svg class="w-5 h-5 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                     </div>
+                                 </div>
+                                 <div class="flex flex-col">
+                                     <a th:href="@{/producto/{id}(id=${item.productoId})}" class="text-sm font-bold text-surface-900 hover:text-furent-600 transition-colors truncate" th:text="${item.productoNombre}">Silla</a>
+                                     <span class="text-xs text-surface-400 font-medium" th:if="${item.precioPorDia != null}" th:text="'Individual/día: $' + ${#numbers.formatInteger(item.precioPorDia, 1, 'POINT')}">Individual: $10.000</span>
+                                 </div>
+                             </div>
+                             <div class="shrink-0 flex items-center justify-center bg-white px-3 py-1.5 rounded-lg border border-surface-200 shadow-sm ml-4 shadow-surface-300/10">
+                                 <span class="text-sm font-black text-surface-900 font-mono" th:text="'× ' + ${item.cantidad}">× 50</span>
+                             </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                                        <!-- Premium Availability Calendar â€” Glassmorphism + Bento Grid + Date Range Picker -->
+                    <div class="mt-6 relative" id="availabilitySection">
+                        <div class="avail-glass relative overflow-hidden rounded-3xl">
+                            <!-- Decorative Orbs -->
+                            <div class="absolute -top-20 -right-20 w-52 h-52 rounded-full opacity-[0.12] pointer-events-none" style="background: radial-gradient(circle, #E07A3A 0%, transparent 70%);"></div>
+                            <div class="absolute -bottom-16 -left-16 w-44 h-44 rounded-full opacity-[0.08] pointer-events-none" style="background: radial-gradient(circle, #22c55e 0%, transparent 70%);"></div>
+
+                            <div class="relative z-10 p-6 md:p-8">
+                                <!-- Header -->
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-furent-500 to-furent-600 flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 14px rgba(224,122,58,0.3);">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-bold text-surface-900">Disponibilidad</h3>
+                                            <p class="text-xs text-surface-400">Selecciona fechas para tu evento</p>
+                                        </div>
+                                    </div>
+                                    <!-- View Toggle -->
+                                    <div class="avail-view-toggle flex items-center gap-1 p-1 rounded-xl border border-surface-200/50">
+                                        <button id="viewMonth" class="avail-view-btn w-8 h-8 rounded-lg text-xs font-semibold" onclick="window.__premiumCal.setView('month')" title="Vista mensual">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 10.5h16.5"/></svg>
+                                        </button>
+                                        <button id="viewCompact" class="avail-view-btn active w-8 h-8 rounded-lg text-xs font-semibold" onclick="window.__premiumCal.setView('compact')" title="Vista compacta">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Bento Grid Stats -->
+                                <div class="grid grid-cols-3 gap-3 mb-6">
+                                    <div class="bento-stat bento-bg-green group relative overflow-hidden rounded-2xl p-4 border border-green-200/40 cursor-default">
+                                        <div class="flex flex-col">
+                                            <span class="text-2xl font-black text-green-700" id="statAvailDays">--</span>
+                                            <span class="text-[10px] font-bold text-green-600/70 uppercase tracking-widest mt-0.5">Disponibles</span>
+                                        </div>
+                                        <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-green-400/10 group-hover:scale-[2] transition-transform duration-700"></div>
+                                    </div>
+                                    <div class="bento-stat bento-bg-red group relative overflow-hidden rounded-2xl p-4 border border-red-200/40 cursor-default">
+                                        <div class="flex flex-col">
+                                            <span class="text-2xl font-black text-red-700" id="statOccDays">--</span>
+                                            <span class="text-[10px] font-bold text-red-600/70 uppercase tracking-widest mt-0.5">Ocupados</span>
+                                        </div>
+                                        <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-red-400/10 group-hover:scale-[2] transition-transform duration-700"></div>
+                                    </div>
+                                    <div class="bento-stat bento-bg-furent group relative overflow-hidden rounded-2xl p-4 border border-furent-200/40 cursor-default">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-black text-furent-700 leading-tight" id="statNextAvail">--</span>
+                                            <span class="text-[10px] font-bold text-furent-600/70 uppercase tracking-widest mt-0.5">Próx. libre</span>
+                                        </div>
+                                        <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-furent-400/10 group-hover:scale-[2] transition-transform duration-700"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Month Navigation -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <button class="avail-nav-btn w-9 h-9 rounded-xl flex items-center justify-center" onclick="window.__premiumCal.navigate(-1)" aria-label="Mes anterior">
+                                        <svg class="w-4 h-4 text-surface-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                                    </button>
+                                    <div class="text-center">
+                                        <h4 id="calTitle" class="text-lg font-bold text-surface-900 capitalize"></h4>
+                                    </div>
+                                    <button class="avail-nav-btn w-9 h-9 rounded-xl flex items-center justify-center" onclick="window.__premiumCal.navigate(1)" aria-label="Mes siguiente">
+                                        <svg class="w-4 h-4 text-surface-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Day-of-Week Headers -->
+                                <div class="grid grid-cols-7 gap-1.5 mb-1">
+                                    <div class="avail-day-header">lun</div>
+                                    <div class="avail-day-header">mar</div>
+                                    <div class="avail-day-header">mié</div>
+                                    <div class="avail-day-header">jue</div>
+                                    <div class="avail-day-header">vie</div>
+                                    <div class="avail-day-header" style="color:#E07A3A;">sáb</div>
+                                    <div class="avail-day-header" style="color:#E07A3A;">dom</div>
+                                </div>
+
+                                <!-- Calendar Grid -->
+                                <div id="premiumCalGrid" class="grid grid-cols-7 gap-1.5"></div>
+
+                                <!-- Compact Selection & Booking Bar -->
+                                <div id="calSelectionBar" class="avail-sel-bg mt-8 p-6 rounded-[2rem] border border-furent-200/20 hidden fade-in shadow-2xl overflow-hidden relative">
+                                    <div class="sel-bar-content flex flex-col lg:flex-row items-center justify-between gap-8">
+                                        
+                                        <!-- Left: Icon & Dates -->
+                                        <div class="flex items-center gap-5 flex-1">
+                                            <div class="avail-sel-icon w-14 h-20 rounded-3xl flex items-center justify-center bg-furent-50/50 shadow-inner shrink-0">
+                                                <svg class="w-7 h-7 text-furent-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                                                </svg>
+                                            </div>
+                                            <div class="flex flex-col sel-dates-text">
+                                                <p class="text-xl font-black text-surface-900 leading-[1.1] tracking-tight" id="calSelText">--</p>
+                                                <p class="text-[11px] font-black text-furent-600 uppercase tracking-widest mt-1.5" id="calSelDays">--</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Center: Qty & Action -->
+                                        <div class="flex flex-col items-center gap-4 sel-bar-action">
+
+                                            
+
+                                            
+
+                                            <!-- === DISPONIBLE: Selector normal === -->
+                                            <div  class="flex flex-col items-center gap-2 qty-selector-container">
+                                                <span class="text-[10px] font-black text-surface-300 uppercase tracking-[0.2em] leading-none qty-label">CANTIDAD</span>
+                                                <div class="flex items-center gap-3 bg-white/50 backdrop-blur-sm rounded-2xl p-1 border border-surface-100 shadow-sm">
+                                                    <button type="button" id="qtyDecrease" class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-surface-600 hover:text-furent-600 hover:bg-furent-50 transition-all text-xl shadow-sm">−</button>
+                                                    <input type="number" id="quantity" value="1" min="1"  class="w-20 text-center bg-transparent border-none text-base font-black text-surface-800 outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                                    <button type="button" id="qtyIncrease" class="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-surface-600 hover:text-furent-600 hover:bg-furent-50 transition-all text-xl shadow-sm">+</button>
+                                                </div>
+                                            </div>
+                                            <button  id="reserveNowBtn" class="add-combo-to-bag-btn px-12 py-5 bg-furent-600 text-white font-black rounded-[1.5rem] hover:bg-furent-700 transition-all shadow-lg active:scale-95 text-base whitespace-nowrap" type="button" 
+                                                    th:data-combo-id="${combo.id}"
+                                                    th:data-combo-name="${combo.nombre}"
+                                                    >
+                                                Reservar ahora
+                                            </button>
+                                        </div>
+
+                                        <!-- Right: Summary & Trash -->
+                                        <div class="flex items-center gap-8 flex-1 justify-end sel-bar-summary">
+                                            <div class="text-right">
+                                                <span class="text-[10px] font-black text-surface-300 uppercase tracking-[0.2em] block mb-1 total-label">TOTAL ESTIMADO</span>
+                                                <p id="totalEstimate" class="text-4xl font-black text-surface-900 leading-none">$0</p>
+                                                <p id="daysLabel" class="text-[11px] font-black text-furent-600 uppercase tracking-widest mt-2">--</p>
+                                            </div>
+                                            <button onclick="window.__premiumCal.clearSelection()" class="p-3 rounded-2xl text-surface-300 hover:text-red-500 hover:bg-red-50 transition-all group" title="Limpiar selección">
+                                                <svg class="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Legend -->
+                                <div class="avail-legend-border flex flex-wrap items-center gap-x-6 gap-y-3 mt-8 pt-6 border-t border-surface-100">
+                                    <span class="flex items-center gap-2.5 text-sm font-bold text-surface-400">
+                                        <span class="relative flex items-center justify-center w-5 h-5">
+                                            <span class="absolute inset-0 rounded-full bg-green-400/20"></span>
+                                            <span class="relative block w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                        </span>
+                                        Disponible
+                                    </span>
+                                    <span class="flex items-center gap-2.5 text-sm font-bold text-surface-400">
+                                        <span class="relative flex items-center justify-center w-5 h-5">
+                                            <span class="absolute inset-0 rounded-full bg-red-400/20"></span>
+                                            <span class="relative block w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                                        </span>
+                                        Ocupado
+                                    </span>
+                                    <span class="flex items-center gap-2.5 text-sm font-bold text-surface-400">
+                                        <span class="block w-3.5 h-3.5 rounded-full bg-furent-500 shadow-sm"></span>
+                                        Seleccionado
+                                    </span>
+                                    <span class="flex items-center gap-2.5 text-sm font-bold text-surface-400">
+                                        <span class="block w-3.5 h-3.5 rounded-full border-2 border-furent-500 bg-white"></span>
+                                        Hoy
+                                    </span>
+                                </div>
+
+                                <!-- Limit Notice -->
+                                <div class="mt-6 flex items-start gap-4 p-5 rounded-[1.5rem] bg-furent-50/30 border border-furent-100/50">
+                                    <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                                        <svg class="w-5 h-5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <p class="text-[11px] font-black text-furent-600 uppercase tracking-widest">Política de Alquiler</p>
+                                        <p class="text-xs font-bold text-surface-500 leading-relaxed uppercase tracking-tight">
+                                            No puedes alquilar un mobiliario por <span class="text-surface-900">más de 7 días</span>. El sistema bloquea automáticamente las fechas excedentes para garantizar la disponibilidad.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <!-- Tags -->
-                            <div class="absolute top-3 right-3" th:if="${rc.porcentajeDescuento > 0}">
-                                <span class="bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-lg" th:text="'-' + rc.porcentajeDescuento + '%'">-20%</span>
+                        </div>
+                        <!-- Hidden Utility Inputs (strictly hidden) -->
+                        <div class="hidden" aria-hidden="true">
+                            <input type="hidden" id="startDate">
+                            <input type="hidden" id="endDate">
+                            <input type="hidden" id="dateRange">
+                        </div>
+                    </div>
+
+
+<div class="mt-10">
+                      <h2 class="text-sm font-medium text-surface-900">Detalles adicionales</h2>
+                      <div class="mt-4 space-y-6">
+                        <p class="text-sm text-surface-600 leading-relaxed max-w-2xl">Al reservar este combo obtienes un descuento exclusivo frente al alquiler individual de cada pieza. Ideal para resolver de forma rápida y sencilla las necesidades de tu evento sin tener que armar el pedido uno por uno.</p>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+            </div>
+
+            <!-- REVIEWS SECTION -->
+            <!-- REVIEWS SECTION - INSPIRED BY SECOND IMAGE -->
+            <div id="reviews-section" class="mt-32 pt-16 border-t border-surface-200 w-full">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+                    
+                    <!-- Left column: Summary & CTA -->
+                    <div class="lg:col-span-4 sticky top-[100px] h-fit">
+                        <h2 class="text-2xl font-black text-surface-900 mb-2">Opiniones de clientes</h2>
+                        
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="flex items-center gap-0.5 text-amber-400">
+                                <svg th:each="i : ${#numbers.sequence(1, 5)}" class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            </div>
+                            <span class="text-sm font-medium text-surface-500" th:text="'Basado en ' + (${totalReviews != null ? totalReviews : 0}) + ' reseñas'">Basado en 0 reseñas</span>
+                        </div>
+
+                        <!-- Rating Bars -->
+                        <div class="space-y-4 mb-12">
+                            <div th:each="star : ${#numbers.sequence(5, 1, -1)}" class="flex items-center gap-4 group cursor-default">
+                                <div class="flex items-center gap-1 w-8">
+                                    <span class="text-sm font-bold text-surface-700" th:text="${star}">5</span>
+                                    <svg class="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                </div>
+                                <div class="flex-1 h-3 bg-surface-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-amber-400 rounded-full transition-all duration-1000 group-hover:bg-amber-500" 
+                                         th:style="'width: ' + (${star == 5 ? 85 : (star == 4 ? 12 : (star == 3 ? 3 : 0))}) + '%'"></div>
+                                </div>
+                                <span class="text-sm font-bold text-surface-400 w-10 text-right" th:text="(${star == 5 ? '85' : (star == 4 ? '12' : (star == 3 ? '3' : '0'))}) + '%'">0%</span>
                             </div>
                         </div>
 
-                        <!-- Content -->
-                        <div class="p-5 flex-1 flex flex-col items-start">
-                            <h3 class="font-extrabold text-surface-900 text-base line-clamp-1 mb-1" th:text="${rc.nombre}">Kit</h3>
-                            <p class="text-[11px] text-surface-400 font-medium mb-3">Paquete promocional</p>
-                            
-                            <!-- Price -->
-                            <div class="mt-auto pt-3 border-t border-surface-100 w-full flex items-end justify-between">
-                                <div>
-                                    <div class="flex items-baseline gap-1" th:if="${rc.precioCombo != null}">
-                                        <span class="text-base font-black text-furent-600" th:text="'$' + rc.precioCombo">$40k</span>
-                                        <span class="text-[10px] text-surface-400">/día</span>
-                                    </div>
-                                    <div class="flex items-baseline gap-1" th:unless="${rc.precioCombo != null}">
-                                        <span class="text-base font-black text-furent-600">Ver precio</span>
+                        <!-- CTA Section -->
+                        <div class="pt-8 border-t border-surface-100">
+                            <h3 class="text-lg font-bold text-surface-900 mb-2">Comparte tu experiencia</h3>
+                            <p class="text-sm text-surface-500 mb-6 font-medium">Si has alquilado este mobiliario antes, cuéntales a los demás qué te pareció.</p>
+                            <button onclick="document.getElementById('reviewFormContainer').classList.toggle('hidden')" 
+                                    class="w-full py-4 bg-white border-2 border-surface-200 text-surface-900 rounded-2xl text-sm font-black hover:border-surface-900 transition-all active:scale-[0.98]">
+                                Escribir una reseña
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right column: Reviews List -->
+                    <div class="lg:col-span-8">
+                        <!-- Review Form (Hidden by default) -->
+                        <div id="reviewFormContainer" class="hidden mb-16 bg-surface-50 rounded-3xl p-8 border-2 border-dashed border-surface-200">
+                            <form th:action="@{/producto/reseña}" method="post" class="space-y-6">
+                                <input type="hidden" name="productId" th:value="${combo.id}">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-lg font-bold text-surface-900">Tu valoración</h4>
+                                    <div class="flex items-center gap-1">
+                                        <div th:each="i : ${#numbers.sequence(1, 5)}" class="relative">
+                                            <input type="radio" name="rating" th:value="${i}" th:id="'star' + ${i}" class="peer hidden" th:checked="${i == 5}" required>
+                                            <label th:for="'star' + ${i}" class="cursor-pointer text-surface-200 peer-checked:text-amber-400 hover:text-amber-300 transition-all">
+                                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="w-8 h-8 rounded-full bg-surface-50 flex items-center justify-center text-surface-400 group-hover:bg-furent-50 group-hover:text-furent-600 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                                <textarea id="comment" name="comment" rows="4" required placeholder="Describe tu experiencia..." 
+                                          class="w-full px-6 py-4 bg-white border border-surface-200 rounded-2xl text-base focus:ring-4 focus:ring-amber-400/10 focus:border-amber-400 transition-all resize-none shadow-sm"></textarea>
+                                <div class="flex justify-end gap-4">
+                                    <button type="button" onclick="document.getElementById('reviewFormContainer').classList.add('hidden')" class="px-6 py-2 text-sm font-bold text-surface-500">Cancelar</button>
+                                    <button type="submit" class="px-8 py-3 bg-furent-600 text-white rounded-xl text-sm font-black shadow-lg">Publicar</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- List of actual reviews -->
+                        <div id="reviewsList" class="divide-y divide-surface-200">
+                            <!-- Empty state -->
+                            <div th:if="${#lists.isEmpty(reviews)}" class="py-12 text-center bg-surface-50 rounded-3xl border-2 border-dashed border-surface-200">
+                                <p class="text-surface-500 font-bold">Aún no hay opiniones. ¡Sé el primero!</p>
+                            </div>
+
+                            <div th:each="rev, iterStat : ${reviews}" 
+                                 class="review-card py-10 first:pt-0 last:pb-0 group" 
+                                 th:data-rating="${rev.rating}" 
+                                 th:classappend="${iterStat.index >= 5 ? 'hidden' : ''}">
+                                
+                                <div class="flex items-start gap-4 mb-4">
+                                    <div class="w-12 h-12 rounded-full overflow-hidden bg-surface-100 flex items-center justify-center font-black text-surface-400 border border-surface-200">
+                                        <span th:text="${rev.userName != null && !rev.userName.isEmpty() ? #strings.substring(rev.userName,0,1) : 'U'}">U</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-surface-900" th:text="${rev.userName != null ? rev.userName : 'Usuario Anónimo'}">Usuario</h4>
+                                        <div class="flex items-center gap-1 text-amber-400 mt-1">
+                                            <svg th:each="i : ${#numbers.sequence(1, 5)}" class="w-4 h-4" th:classappend="${i <= rev.rating ? 'fill-current' : 'text-surface-200 fill-current'}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pl-16">
+                                    <p class="text-surface-600 leading-relaxed italic" th:text="'&quot;' + ${rev.comment} + '&quot;'"></p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-400 mt-4" th:text="${#temporals.format(rev.createdAt, 'dd MMM. yyyy')}"></p>
+                                    
+                                    <!-- Admin Response -->
+                                    <div th:if="${rev.adminResponse != null && !rev.adminResponse.isEmpty()}" class="mt-4 p-5 bg-furent-50/50 rounded-2xl border border-furent-100/50 flex gap-4 relative">
+                                        <!-- Decorative notch -->
+                                        <div class="absolute -top-1.5 left-8 w-3 h-3 bg-furent-50 border-l border-t border-furent-100/50 rotate-45"></div>
+                                        
+                                        <div class="w-10 h-10 rounded-[14px] bg-gradient-to-br from-furent-500 to-furent-600 flex items-center justify-center shrink-0 shadow-md text-white">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1.5">
+                                                <p class="text-[11px] font-black text-furent-700 uppercase tracking-widest">Equipo Furent</p>
+                                                <svg class="w-3.5 h-3.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-surface-700 leading-relaxed" th:text="${rev.adminResponse}"></p>
+                                            <p class="text-[9px] font-bold uppercase tracking-widest text-surface-400 mt-3" th:if="${rev.respondedAt != null}" th:text="${#temporals.format(rev.respondedAt, 'dd MMM. yyyy')}"></p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- View More Button -->
+                        <div class="mt-12" th:if="${#lists.size(reviews) > 5}">
+                            <button id="toggleReviewsBtn" onclick="toggleReviews()" class="text-sm font-black text-surface-900 border-b-2 border-surface-900 pb-1 hover:text-furent-600 hover:border-furent-600 transition-all">
+                                Leer todas las reseñas
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+
 
         </div>
+
+        <!-- Related Combos -->
+        <div class="bg-surface-50 border-t border-surface-200/60 pb-16 pt-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mt-2 fade-in-up stagger-3" th:if="${relatedCombos != null and !relatedCombos.isEmpty()}">
+                    <div class="flex items-end justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-black text-surface-900 tracking-tight">Otros Combos Similares</h2>
+                            <p class="text-sm font-medium text-surface-500 mt-1">Sigue explorando más opciones increíbles para tu evento</p>
+                        </div>
+                        <a th:href="@{/catalogo}" class="text-sm font-bold text-furent-600 hover:text-furent-700 transition-colors hidden sm:block">Ver todos →</a>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Standardize Combo Cards with the Catalog page -->
+                        <div th:each="rc : ${relatedCombos}" th:if="${rc != null and rc.id != null}" class="group bg-white rounded-2xl overflow-hidden border border-surface-200 shadow-sm hover:shadow-hover transition-all duration-300 flex flex-col relative shrink-0">
+                            <a th:href="@{/combo/{id}(id=${rc.id})}" class="absolute inset-0 z-10 w-full h-full"></a>
+                            
+                            <!-- Image -->
+                            <div class="relative h-48 overflow-hidden bg-surface-100">
+                                <img th:if="${rc.imagenUrl != null and !rc.imagenUrl.isEmpty()}" th:src="${rc.imagenUrl}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div th:unless="${rc.imagenUrl != null and !rc.imagenUrl.isEmpty()}" class="w-full h-full flex items-center justify-center">
+                                    <svg class="w-10 h-10 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <!-- Tags -->
+                                <div class="absolute top-3 right-3" th:if="${rc.porcentajeDescuento != null && rc.porcentajeDescuento > 0}">
+                                    <span class="bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-lg" th:text="'-' + ${#numbers.formatInteger(rc.porcentajeDescuento, 1, 'POINT')} + '%'">-20%</span>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="p-5 flex-1 flex flex-col items-start">
+                                <h3 class="font-extrabold text-surface-900 text-base line-clamp-1 mb-1" th:text="${rc.nombre}">Kit</h3>
+                                <p class="text-[11px] text-surface-400 font-medium mb-3">Paquete promocional</p>
+                                
+                                <!-- Price -->
+                                <div class="mt-auto pt-3 border-t border-surface-100 w-full flex items-end justify-between">
+                                    <div>
+                                        <div class="flex items-baseline gap-1" th:if="${rc.precioCombo != null}">
+                                            <span class="text-base font-black text-furent-600" th:text="'$' + ${#numbers.formatInteger(rc.precioCombo, 1, 'POINT')}">$40k</span>
+                                            <span class="text-[10px] text-surface-400">/día</span>
+                                        </div>
+                                        <div class="flex items-baseline gap-1" th:unless="${rc.precioCombo != null}">
+                                            <span class="text-base font-black text-furent-600">Ver precio</span>
+                                        </div>
+                                    </div>
+                                    <div class="w-8 h-8 rounded-full bg-surface-50 flex items-center justify-center text-surface-400 group-hover:bg-furent-50 group-hover:text-furent-600 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <div th:replace="~{fragments/layout :: footer}"></div>
-    <div th:replace="~{fragments/layout :: mobileNav}"></div>
 
-    <script th:src="@{/js/bag.js}"></script>
+    <script th:src="@{/js/app.js}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Handle "Add Combo to Bag"
-        const btn = document.querySelector('.add-combo-to-bag-btn');
-        if (btn) {
+        const btns = document.querySelectorAll('.add-combo-to-bag-btn');
+        btns.forEach(btn => {
             btn.addEventListener('click', () => {
-                const container = btn.parentElement.querySelector('.combo-data-container');
+                const container = btn.parentElement.querySelector('.combo-data-container') || document.querySelector('.combo-data-container');
                 if (!container) return;
                 
                 const items = Array.from(container.querySelectorAll('.combo-data-item')).map(div => ({
@@ -248,28 +1118,568 @@
                     
                     // Button animation
                     const originalHTML = btn.innerHTML;
-                    btn.classList.replace('from-furent-500', 'from-green-500');
-                    btn.classList.replace('to-furent-600', 'to-green-600');
+                    const oldClass = btn.className;
                     btn.innerHTML = `
-                        <svg class="w-5 h-5 flex-shrink-0 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                        <svg class="w-5 h-5 flex-shrink-0 text-white mr-2 inline-block" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
                         ¡Listo!
                     `;
                     setTimeout(() => {
                         btn.innerHTML = originalHTML;
-                        btn.classList.replace('from-green-500', 'from-furent-500');
-                        btn.classList.replace('to-green-600', 'to-furent-600');
+                        btn.className = oldClass;
                     }, 2000);
                 }
             });
-        }
+        });
     });
 
-    // Toast Utility (same as layout if available globally, but fallbacks to alert if needed, though layout usually includes it)
     if (typeof showToast !== 'function') {
         window.showToast = function({title, message}) {
             alert(`${title}\n${message}`);
         }
     }
     </script>
+
+        <script th:inline="javascript">
+        let allReviewsVisible = false;
+
+        function filterReviews(type) {
+            const btns = document.querySelectorAll('.review-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-surface-900', 'text-white', 'shadow-xl', 'active');
+                b.classList.add('bg-white', 'text-surface-500', 'border-surface-100');
+            });
+            const activeBtn = event.currentTarget;
+            activeBtn.classList.add('bg-surface-900', 'text-white', 'shadow-xl', 'active');
+            activeBtn.classList.remove('bg-white', 'text-surface-500', 'border-surface-100');
+
+            const cards = document.querySelectorAll('.review-card');
+            let visibleCount = 0;
+
+            cards.forEach((card) => {
+                const rating = parseInt(card.getAttribute('data-rating'));
+                let show = false;
+
+                if (type === 'all') show = true;
+                else if (type === 'excellent' && rating === 5) show = true;
+                else if (type === 'good' && (rating === 3 || rating === 4)) show = true;
+
+                if (show) {
+                    if(type === 'all' && !allReviewsVisible && visibleCount >= 4) {
+                        card.classList.add('hidden');
+                    } else {
+                        card.classList.remove('hidden');
+                        card.classList.add('flex');
+                    }
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                    card.classList.remove('flex');
+                }
+            });
+            
+            const toggleBtn = document.getElementById('toggleReviewsBtn');
+            if(toggleBtn) {
+                if(type !== 'all' || visibleCount <= 4) {
+                    toggleBtn.classList.add('hidden');
+                } else {
+                    toggleBtn.classList.remove('hidden');
+                }
+            }
+        }
+
+        function filterReviews(type) {
+            const btns = document.querySelectorAll('.review-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-surface-900', 'text-white', 'shadow-xl', 'active');
+                b.classList.add('bg-white', 'text-surface-500', 'border-surface-100');
+            });
+            const activeBtn = event.currentTarget;
+            if (activeBtn) {
+                activeBtn.classList.add('bg-surface-900', 'text-white', 'shadow-xl', 'active');
+                activeBtn.classList.remove('bg-white', 'text-surface-500', 'border-surface-100');
+            }
+
+            const cards = document.querySelectorAll('.review-card');
+            let visibleCount = 0;
+
+            cards.forEach((card) => {
+                const rating = parseInt(card.getAttribute('data-rating'));
+                let show = false;
+
+                if (type === 'all') show = true;
+                else if (type === 'excellent' && rating === 5) show = true;
+                else if (type === 'good' && (rating === 3 || rating === 4)) show = true;
+
+                if (show) {
+                    if(type === 'all' && !allReviewsVisible && visibleCount >= 5) {
+                        card.classList.add('hidden');
+                    } else {
+                        card.classList.remove('hidden');
+                    }
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            
+            const toggleBtn = document.getElementById('toggleReviewsBtn');
+            if(toggleBtn) {
+                if(type !== 'all' || visibleCount <= 5) {
+                    toggleBtn.classList.add('hidden');
+                } else {
+                    toggleBtn.classList.remove('hidden');
+                }
+            }
+        }
+
+        function toggleReviews() {
+            const btn = document.getElementById('toggleReviewsBtn');
+            if (!allReviewsVisible) {
+                document.querySelectorAll('.review-card').forEach(c => {
+                    c.classList.remove('hidden');
+                });
+                btn.innerHTML = 'Mostrar menos testimonios';
+                allReviewsVisible = true;
+            } else {
+                document.querySelectorAll('.review-card').forEach((c, index) => {
+                    if(index >= 5) {
+                        c.classList.add('hidden');
+                    }
+                });
+                btn.innerHTML = 'Leer todas las reseñas';
+                allReviewsVisible = false;
+            }
+        }
+        
+        setTimeout(() => {
+            if(window.location.hash === '#reviews-section') {
+                document.getElementById('reviews-section').scrollIntoView({behavior: 'smooth'});
+            }
+        }, 300);
+    </script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+    <script th:inline="javascript">
+        const pricePerDay = /*[[${combo.precioCombo != null ? combo.precioCombo : 0}]]*/ 0;
+        const occupiedRanges = /*[[${occupiedRanges}]]*/ [];
+
+        // === COP Formatter ===
+        function formatCOP(n) {
+            return '$' + Math.round(n).toLocaleString('es-CO');
+        }
+
+        // === Quantity & Date Logic ===
+        window.__updateTotalEstimate = function() {
+            const qtyInput = document.getElementById('quantity');
+            const totalEl = document.getElementById('totalEstimate');
+            const daysLabel = document.getElementById('daysLabel');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+
+            if (!qtyInput || !totalEl || !daysLabel) return;
+
+            const qty = parseInt(qtyInput.value) || 1;
+            
+            let days = 1;
+            if (startDate && endDate && startDate.value && endDate.value) {
+                const s = new Date(startDate.value + "T00:00:00");
+                const e = new Date(endDate.value + "T00:00:00");
+                const diffTime = Math.abs(e - s);
+                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }
+            
+            const total = pricePerDay * qty * days;
+            totalEl.textContent = formatCOP(total);
+            daysLabel.textContent = days + ' día' + (days > 1 ? 's' : '') + ' × ' + qty + ' unidad' + (qty > 1 ? 'es' : '');
+        };
+
+        // Attach quantity listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const qtyInput = document.getElementById('quantity');
+            const qtyDec = document.getElementById('qtyDecrease');
+            const qtyInc = document.getElementById('qtyIncrease');
+            
+            if (qtyDec && qtyInc && qtyInput) {
+                qtyDec.addEventListener('click', () => {
+                    if (parseInt(qtyInput.value) > 1) {
+                        qtyInput.value = parseInt(qtyInput.value) - 1;
+                        window.__updateTotalEstimate();
+                    }
+                });
+                qtyInc.addEventListener('click', () => {
+                    qtyInput.value = parseInt(qtyInput.value) + 1;
+                    window.__updateTotalEstimate();
+                });
+                qtyInput.addEventListener('input', window.__updateTotalEstimate);
+            }
+        });
+    </script>
+    <!-- Premium Availability Calendar Engine -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        let curMonth = today.getMonth();
+        let curYear = today.getFullYear();
+        let selStart = null;
+        let selEnd = null;
+        let syncFlag = false;
+
+        function ds(d) {
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
+        function isOcc(date) {
+            const s = ds(date);
+            return (typeof occupiedRanges !== 'undefined') && occupiedRanges.some(function(r) {
+                return r.start && s >= r.start && s <= r.end;
+            });
+        }
+
+        function isPast(date) {
+            var d = new Date(date); d.setHours(0,0,0,0);
+            return d < today;
+        }
+
+        function isToday(date) { return ds(date) === ds(today); }
+
+        function inRange(date) {
+            if (!selStart) return false;
+            var s2 = ds(date);
+            if (!selEnd) return s2 === ds(selStart);
+            return s2 >= ds(selStart) && s2 <= ds(selEnd);
+        }
+
+        function updateStats() {
+            var daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+            var avail = 0, occ = 0, nextAvail = null;
+            for (var d = 1; d <= daysInMonth; d++) {
+                var date = new Date(curYear, curMonth, d);
+                if (isPast(date)) continue;
+                if (isOcc(date)) { occ++; }
+                else { avail++; if (!nextAvail && date >= today) nextAvail = date; }
+            }
+            var elA = document.getElementById('statAvailDays');
+            var elO = document.getElementById('statOccDays');
+            var elN = document.getElementById('statNextAvail');
+            if (elA) elA.textContent = avail;
+            if (elO) elO.textContent = occ;
+            if (elN) {
+                if (nextAvail) {
+                    elN.textContent = nextAvail.getDate() + ' ' + MONTHS_ES[nextAvail.getMonth()].substring(0,3) + '.';
+                } else { elN.textContent = 'N/A'; }
+            }
+        }
+
+        function render() {
+            var grid = document.getElementById('premiumCalGrid');
+            if (!grid) return;
+
+            var first = new Date(curYear, curMonth, 1);
+            var daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+            var startDay = first.getDay() - 1;
+            if (startDay < 0) startDay = 6;
+
+            var titleEl = document.getElementById('calTitle');
+            if (titleEl) {
+                // Capitalize first letter and center
+                var label = MONTHS_ES[curMonth] + ' ' + curYear;
+                titleEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+            }
+
+            var html = '';
+
+            for (var i = 0; i < startDay; i++) {
+                html += '<div class="avail-cell avail-cell-empty"></div>';
+            }
+
+            for (var d = 1; d <= daysInMonth; d++) {
+                var date = new Date(curYear, curMonth, d);
+                var past = isPast(date);
+                var occupied = isOcc(date);
+                var todayF = isToday(date);
+                var inSel = inRange(date);
+                var sStart = selStart && ds(date) === ds(selStart);
+                var sEnd = selEnd && ds(date) === ds(selEnd);
+                
+                // Proactive 7-day limit and occupied block logic
+                var outOfLimit = false;
+                if (selStart && !selEnd) {
+                    var d1 = new Date(selStart); d1.setHours(0,0,0,0);
+                    var dCurrent = new Date(date); dCurrent.setHours(0,0,0,0);
+                    var diff = Math.round((dCurrent - d1) / 86400000);
+                    
+                    if (diff < 0 || diff > 6) {
+                        outOfLimit = true;
+                    } else if (diff > 0) {
+                        // Check if there's any occupied date between selStart and this date
+                        var check = new Date(selStart);
+                        check.setDate(check.getDate() + 1);
+                        while (check <= dCurrent) {
+                            if (isOcc(check)) { outOfLimit = true; break; }
+                            check.setDate(check.getDate() + 1);
+                        }
+                    }
+                }
+
+                var disabled = past || occupied || outOfLimit;
+
+                var cls = 'avail-cell';
+                if (past) cls += ' avail-cell-past';
+                else if (occupied) cls += ' avail-cell-occupied';
+                else if (outOfLimit) cls += ' opacity-10 cursor-not-allowed grayscale';
+                else cls += ' avail-cell-available';
+
+                if (todayF) cls += ' avail-cell-today';
+                if (inSel && !disabled) cls += ' avail-cell-selected';
+                if (sStart && !disabled) cls += ' avail-cell-sel-start';
+                if (sEnd && !disabled) cls += ' avail-cell-sel-end';
+
+                var dotCls = occupied ? 'avail-dot-occ' : (past ? 'avail-dot-past' : 'avail-dot-free');
+
+                html += '<div class="' + cls + '" data-date="' + ds(date) + '"' + (disabled ? '' : ' onclick="window.__premiumCal.dayClick(this)"') + '>'
+                      + '<span class="avail-cell-num">' + d + '</span>'
+                      + '<span class="avail-dot ' + dotCls + '"></span>'
+                      + '</div>';
+            }
+
+            grid.innerHTML = html;
+            grid.style.opacity = '0';
+            grid.style.transform = 'translateY(6px)';
+            requestAnimationFrame(function() {
+                grid.style.opacity = '1';
+                grid.style.transform = 'translateY(0)';
+            });
+
+            updateStats();
+            updateSelBar();
+            if (typeof window.__updateTotalEstimate === 'function') window.__updateTotalEstimate();
+        }
+
+        function updateSelBar() {
+            var bar = document.getElementById('calSelectionBar');
+            var txt = document.getElementById('calSelText');
+            var dys = document.getElementById('calSelDays');
+            if (!bar) return;
+
+            if (selStart) {
+                bar.classList.remove('hidden');
+                var s = selStart.getDate() + ' ' + MONTHS_ES[selStart.getMonth()].substring(0,3) + '.';
+                if (selEnd) {
+                    var sDay = selStart.getDate() + ' ' + MONTHS_ES[selStart.getMonth()].substring(0,3) + '.';
+                    var eDay = selEnd.getDate() + ' ' + MONTHS_ES[selEnd.getMonth()].substring(0,3) + '.';
+                    txt.innerHTML = sDay + ' <span class="text-furent-500">\u2192</span><br>' + eDay;
+                    var d1 = new Date(selStart); d1.setHours(0,0,0,0);
+                    var d2 = new Date(selEnd); d2.setHours(0,0,0,0);
+                    var diff = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
+                    dys.textContent = diff + ' d\u00EDa' + (diff > 1 ? 's' : '') + ' del evento';
+                } else {
+                    txt.textContent = selStart.getDate() + ' ' + MONTHS_ES[selStart.getMonth()].substring(0,3) + '.';
+                    dys.textContent = 'Selecciona fin';
+                }
+
+                syncFlag = true;
+                const startInput = document.getElementById('startDate');
+                const endInput = document.getElementById('endDate');
+                if (startInput) startInput.value = ds(selStart);
+                if (endInput) endInput.value = selEnd ? ds(selEnd) : "";
+                
+                if (window.__fpRange) {
+                    window.__fpRange.setDate(selEnd ? [selStart, selEnd] : [selStart], false);
+                }
+                syncFlag = false;
+
+                // Sync with global reservation dates for cotizacion
+                if (selStart && selEnd) {
+                    localStorage.setItem('furent_selected_dates', JSON.stringify({
+                        start: ds(selStart),
+                        end: ds(selEnd)
+                    }));
+                } else if (!selEnd) {
+                    localStorage.removeItem('furent_selected_dates');
+                }
+            } else {
+                bar.classList.add('hidden');
+                localStorage.removeItem('furent_selected_dates');
+            }
+        }
+
+        function dayClick(el) {
+            var dateStr = el.getAttribute('data-date');
+            var date = new Date(dateStr + 'T00:00:00');
+
+            if (!selStart || (selStart && selEnd)) {
+                selStart = date;
+                selEnd = null;
+            } else {
+                if (date < selStart) {
+                    selEnd = selStart;
+                    selStart = date;
+                } else if (ds(date) === ds(selStart)) {
+                    selStart = null;
+                    selEnd = null;
+                } else {
+                    // Enforce 7 days limit
+                    const d1 = new Date(selStart); d1.setHours(0,0,0,0);
+                    const d2 = new Date(date); d2.setHours(0,0,0,0);
+                    const diffDays = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
+                    
+                    if (diffDays > 7) {
+                        if (typeof showToast === 'function') showToast('Máximo 7 días de alquiler', 'warning');
+                        selStart = date;
+                        selEnd = null;
+                        render();
+                        return;
+                    }
+
+                    var hasOcc = false;
+                    var check = new Date(selStart);
+                    while (check <= date) {
+                        if (isOcc(check)) { hasOcc = true; break; }
+                        check.setDate(check.getDate() + 1);
+                    }
+                    if (hasOcc) {
+                        if (typeof showToast === 'function') showToast('Hay fechas ocupadas en ese rango', 'error');
+                        selStart = date;
+                        selEnd = null;
+                    } else {
+                        selEnd = date;
+                    }
+                }
+            }
+            render();
+        }
+
+        function navigate(dir) {
+            curMonth += dir;
+            if (curMonth > 11) { curMonth = 0; curYear++; }
+            if (curMonth < 0) { curMonth = 11; curYear--; }
+            render();
+        }
+
+        function clearSelection() {
+            selStart = null;
+            selEnd = null;
+            var s = document.getElementById('startDate');
+            var e = document.getElementById('endDate');
+            if (s) s.value = '';
+            if (e) e.value = '';
+            render();
+        }
+
+        function setView(view) {
+            document.querySelectorAll('.avail-view-btn').forEach(function(b) { b.classList.remove('active'); });
+            var btn = document.getElementById(view === 'month' ? 'viewMonth' : 'viewCompact');
+            if (btn) btn.classList.add('active');
+            var section = document.getElementById('availabilitySection');
+            if (section) {
+                if (view === 'compact') section.classList.add('view-compact');
+                else section.classList.remove('view-compact');
+            }
+        }
+
+        // Initialize Flatpickr Range
+        const reservedDatesArray = (typeof occupiedRanges !== 'undefined') ? occupiedRanges.map(r => ({ from: r.start, to: r.end })) : [];
+
+        window.__fpRange = flatpickr("#dateRange", {
+            locale: "es",
+            mode: "range",
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            altInput: false, // Hide the duplicate input shown in reference image
+            disable: reservedDatesArray,
+            onReady: function(selectedDates, dateStr, instance) {
+                if (instance.input) instance.input.setAttribute('autocomplete', 'off');
+                if (instance.altInput) instance.altInput.setAttribute('autocomplete', 'off');
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                if (syncFlag) return;
+                
+                if (selectedDates.length === 1) {
+                    // When first date is selected, set maxDate to +6 days
+                    const maxDate = new Date(selectedDates[0]);
+                    maxDate.setDate(maxDate.getDate() + 6);
+                    instance.set('maxDate', maxDate);
+                    
+                    selStart = selectedDates[0];
+                    selEnd = null;
+                    document.getElementById('startDate').value = instance.formatDate(selStart, "Y-m-d");
+                    document.getElementById('endDate').value = "";
+                    render();
+                } else if (selectedDates.length === 2 || selectedDates.length === 0) {
+                    // When selection is complete or cleared, reset maxDate
+                    instance.set('maxDate', null);
+
+                    if (selectedDates.length === 2) {
+                        const d1 = new Date(selectedDates[0]); d1.setHours(0,0,0,0);
+                        const d2 = new Date(selectedDates[1]); d2.setHours(0,0,0,0);
+                        const diffDays = Math.round(Math.abs(d2 - d1) / 86400000) + 1;
+                        
+                        if (diffDays > 7) {
+                            if (typeof showToast === 'function') showToast('Máximo 7 días de alquiler', 'warning');
+                            setTimeout(() => {
+                                instance.clear();
+                                selStart = null;
+                                selEnd = null;
+                                document.getElementById('startDate').value = "";
+                                document.getElementById('endDate').value = "";
+                                render();
+                            }, 10);
+                            return;
+                        }
+                        
+                        selStart = selectedDates[0];
+                        selEnd = selectedDates[1];
+                        
+                        document.getElementById('startDate').value = instance.formatDate(selStart, "Y-m-d");
+                        document.getElementById('endDate').value = instance.formatDate(selEnd, "Y-m-d");
+                        render();
+                    } else {
+                        selStart = null;
+                        selEnd = null;
+                        document.getElementById('startDate').value = "";
+                        document.getElementById('endDate').value = "";
+                        render();
+                    }
+                }
+                
+                // Sync with global reservation dates
+                if (selStart && selEnd) {
+                    localStorage.setItem('furent_selected_dates', JSON.stringify({
+                        start: instance.formatDate(selStart, "Y-m-d"),
+                        end: instance.formatDate(selEnd, "Y-m-d")
+                    }));
+                } else {
+                    localStorage.removeItem('furent_selected_dates');
+                }
+
+                if (typeof window.__updateTotalEstimate === 'function') window.__updateTotalEstimate();
+            }
+        });
+
+        // Expose API
+        window.__premiumCal = {
+            dayClick: dayClick,
+            navigate: navigate,
+            clearSelection: function() {
+                selStart = null;
+                selEnd = null;
+                if (window.__fpRange) window.__fpRange.clear();
+                render();
+            },
+            setView: setView
+        };
+
+        // Initialize in compact mode
+        setView('compact');
+        render();
+    });
+    </script>
+
+
 </body>
 </html>

@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -152,7 +153,6 @@ public class PageController {
         }
         return "redirect:/catalogo";
     }
-
     @GetMapping("/combo/{id}")
     public String comboDetail(@PathVariable String id, Model model) {
         Optional<com.alquiler.furent.model.Combo> comboOpt = productService.getComboById(id);
@@ -166,6 +166,43 @@ public class PageController {
                     .limit(4)
                     .collect(Collectors.toList());
             model.addAttribute("relatedCombos", relatedCombos);
+
+            // Compute overall occupied ranges by unioning the active reservations of ALL items in the combo
+            List<Map<String, String>> occupiedRanges = new ArrayList<>();
+            if (combo.getItems() != null) {
+                for (com.alquiler.furent.model.Combo.ComboItem item : combo.getItems()) {
+                    List<Reservation> itemRes = reservationService.getActiveReservationsByProductId(item.getProductoId());
+                    for (Reservation r : itemRes) {
+                        Map<String, String> range = new HashMap<>();
+                        range.put("start", r.getFechaInicio() != null ? r.getFechaInicio().toString() : "");
+                        range.put("end", r.getFechaFin() != null ? r.getFechaFin().plusDays(1).toString() : "");
+                        occupiedRanges.add(range);
+                    }
+                }
+            }
+            model.addAttribute("occupiedRanges", occupiedRanges);
+
+            // For reviews, since Combos might not have a dedicated review schema right now, 
+            // we will query reviews for all items in the combo to display them, or if Combo has its own, we'd use that.
+            // But wait, the repository doesn't have getReviewsByCombo. Let's aggregate reviews of its products.
+            List<Review> allReviews = new ArrayList<>();
+            if (combo.getItems() != null) {
+                for (com.alquiler.furent.model.Combo.ComboItem item : combo.getItems()) {
+                    allReviews.addAll(reviewService.getReviewsByProduct(item.getProductoId()));
+                }
+            }
+            // Distinct or sort them? Just take top 10 recent or all
+            List<Review> sortedReviews = allReviews.stream()
+                .sorted(Comparator.comparing(Review::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+            model.addAttribute("reviews", sortedReviews);
+
+            double avgRating = 0;
+            if (!sortedReviews.isEmpty()) {
+                avgRating = sortedReviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
+            }
+            model.addAttribute("avgRating", avgRating);
+            model.addAttribute("totalReviews", sortedReviews.size());
 
             return "combo-detail";
         }
