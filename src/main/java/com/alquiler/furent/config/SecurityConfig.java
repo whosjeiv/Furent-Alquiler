@@ -30,12 +30,18 @@ public class SecurityConfig {
     private final UserService userService;
     private final JwtAuthFilter jwtAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+    private final com.alquiler.furent.service.OAuth2UserService oauth2UserService;
 
     public SecurityConfig(@Lazy UserService userService, @Lazy JwtAuthFilter jwtAuthFilter,
-                          CorsConfigurationSource corsConfigurationSource) {
+                          CorsConfigurationSource corsConfigurationSource,
+                          OAuth2LoginSuccessHandler oauth2LoginSuccessHandler,
+                          com.alquiler.furent.service.OAuth2UserService oauth2UserService) {
         this.userService = userService;
         this.jwtAuthFilter = jwtAuthFilter;
         this.corsConfigurationSource = corsConfigurationSource;
+        this.oauth2LoginSuccessHandler = oauth2LoginSuccessHandler;
+        this.oauth2UserService = oauth2UserService;
     }
 
     @Bean
@@ -129,6 +135,12 @@ public class SecurityConfig {
                         .failureHandler(authenticationFailureHandler())
                         .usernameParameter("email")
                         .passwordParameter("password")
+                        .permitAll())
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oauth2UserService))
+                        .successHandler(oauth2LoginSuccessHandler)
                         .permitAll())
                 .rememberMe(remember -> remember
                         .key("furent-remember-me-key-2026")

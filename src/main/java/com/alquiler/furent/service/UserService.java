@@ -105,9 +105,14 @@ public class UserService implements UserDetailsService {
             throw new AccountSuspendedException("Cuenta suspendida", reason, duration, user.isSuspensionPermanente());
         }
 
+        // Para usuarios OAuth2 sin contraseña, usar un placeholder
+        String password = user.getPassword() != null && !user.getPassword().isEmpty() 
+            ? user.getPassword() 
+            : "{noop}"; // No password for OAuth2 users
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
-                user.getPassword(),
+                password,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
     }
 

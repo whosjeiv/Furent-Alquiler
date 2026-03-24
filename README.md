@@ -24,6 +24,7 @@
 - 🎟️ **Cupones** — sistema de descuentos con validación automática
 - ⭐ **Reseñas** — calificación de productos con promedio
 - 📱 **Responsive** — diseño adaptativo para cualquier dispositivo
+- 🔐 **Inicio de Sesión con Google** — autenticación OAuth2 integrada
 
 ### Para Administradores
 - 📊 **Dashboard** — métricas en tiempo real (ingresos, reservas, usuarios)
@@ -82,6 +83,10 @@ Esto levanta MongoDB + la aplicación automáticamente.
 | `SPRING_DATA_MONGODB_URI` | URI de conexión a MongoDB | `mongodb://localhost:27017/furent` |
 | `SPRING_PROFILES_ACTIVE` | Perfil activo | `dev` |
 | `FURENT_ADMIN_PASSWORD` | Contraseña del admin inicial | `admin123` |
+| `GOOGLE_CLIENT_ID` | Client ID de Google OAuth2 | - |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth2 | - |
+
+> 💡 **Nota:** Para configurar el inicio de sesión con Google, consulta [GOOGLE_OAUTH_QUICKSTART.md](GOOGLE_OAUTH_QUICKSTART.md)
 
 ## 📁 Estructura del Proyecto
 

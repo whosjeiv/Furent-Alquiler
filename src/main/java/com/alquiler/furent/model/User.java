@@ -72,6 +72,11 @@ public class User {
     private String totpSecret;
     private boolean totpEnabled = false;
 
+    // OAuth2 fields
+    private String provider; // "local", "google", "facebook", etc.
+    private String providerId; // ID del usuario en el proveedor OAuth
+    private String profileImageUrl;
+
     public User() {
         this.fechaCreacion = LocalDateTime.now();
         this.activo = true;
@@ -379,5 +384,29 @@ public class User {
 
     public void setNotasAdmin(String notasAdmin) {
         this.notasAdmin = notasAdmin;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

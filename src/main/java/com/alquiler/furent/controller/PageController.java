@@ -11,6 +11,7 @@ import com.alquiler.furent.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -465,8 +466,21 @@ public class PageController {
     public String settings(Model model, Authentication auth) {
         model.addAttribute("pageTitle", "Configuración");
         if (auth != null) {
-            Optional<User> optUser = userService.findByEmail(auth.getName());
-            optUser.ifPresent(user -> model.addAttribute("currentUser", user));
+            String email = null;
+            
+            // Manejar OAuth2 Authentication
+            if (auth instanceof OAuth2AuthenticationToken) {
+                OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) auth;
+                email = oauth2Token.getPrincipal().getAttribute("email");
+            } else {
+                // Autenticación tradicional (email/password)
+                email = auth.getName();
+            }
+            
+            if (email != null) {
+                Optional<User> optUser = userService.findByEmail(email);
+                optUser.ifPresent(user -> model.addAttribute("currentUser", user));
+            }
         }
         return "settings";
     }
