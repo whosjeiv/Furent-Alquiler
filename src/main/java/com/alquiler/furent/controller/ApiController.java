@@ -6,6 +6,7 @@ import com.alquiler.furent.config.TenantContext;
 import com.alquiler.furent.dto.CotizacionRequest;
 import com.alquiler.furent.dto.ProductResponse;
 import com.alquiler.furent.model.PendingCardPayment;
+import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.Reservation.ItemReserva;
 import com.alquiler.furent.model.User;
@@ -27,8 +28,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
@@ -95,34 +99,195 @@ public class ApiController {
 
     @GetMapping("/productos/availability")
     public ResponseEntity<List<Map<String, String>>> getBulkAvailability(@RequestParam List<String> ids) {
+        // Obtener todas las reservas activas de los productos solicitados
         List<Reservation> reservations = reservationService.getActiveReservationsByProductIds(ids);
-        List<Map<String, String>> occupiedRanges = reservations.stream().map(r -> {
+        
+        // Obtener información de stock de cada producto
+        Map<String, Integer> productStocks = new HashMap<>();
+        Map<String, String> productNames = new HashMap<>();
+        for (String productId : ids) {
+            productService.getProductById(productId).ifPresent(product -> {
+                productStocks.put(productId, product.getStock());
+                productNames.put(productId, product.getNombre());
+            });
+        }
+        
+        // Agrupar fechas ocupadas por producto
+        Map<String, Map<LocalDate, Integer>> reservedByProductAndDate = new HashMap<>();
+        
+        for (Reservation reservation : reservations) {
+            if (reservation.getFechaInicio() == null || reservation.getFechaFin() == null) {
+                continue;
+            }
+            
+            for (Reservation.ItemReserva item : reservation.getItems()) {
+                if (!ids.contains(item.getProductoId())) {
+                    continue;
+                }
+                
+                String productId = item.getProductoId();
+                reservedByProductAndDate.putIfAbsent(productId, new HashMap<>());
+                Map<LocalDate, Integer> dateMap = reservedByProductAndDate.get(productId);
+                
+                // Marcar cada fecha del rango con la cantidad reservada
+                LocalDate currentDate = reservation.getFechaInicio();
+                while (!currentDate.isAfter(reservation.getFechaFin())) {
+                    dateMap.merge(currentDate, item.getCantidad(), Integer::sum);
+                    currentDate = currentDate.plusDays(1);
+                }
+            }
+        }
+        
+        // Identificar fechas donde AL MENOS UN producto está completamente agotado
+        Map<LocalDate, List<String>> fullyOccupiedDates = new HashMap<>();
+        
+        for (Map.Entry<String, Map<LocalDate, Integer>> entry : reservedByProductAndDate.entrySet()) {
+            String productId = entry.getKey();
+            Map<LocalDate, Integer> dateReservations = entry.getValue();
+            Integer totalStock = productStocks.get(productId);
+            
+            if (totalStock == null || totalStock == 0) {
+                continue;
+            }
+            
+            for (Map.Entry<LocalDate, Integer> dateEntry : dateReservations.entrySet()) {
+                LocalDate date = dateEntry.getKey();
+                Integer reserved = dateEntry.getValue();
+                
+                // Si este producto está completamente agotado en esta fecha
+                if (reserved >= totalStock) {
+                    fullyOccupiedDates.putIfAbsent(date, new ArrayList<>());
+                    fullyOccupiedDates.get(date).add(productNames.getOrDefault(productId, "Producto #" + productId));
+                }
+            }
+        }
+        
+        // Convertir fechas ocupadas a rangos continuos
+        List<Map<String, String>> occupiedRanges = new ArrayList<>();
+        if (fullyOccupiedDates.isEmpty()) {
+            return ResponseEntity.ok(occupiedRanges);
+        }
+        
+        List<LocalDate> sortedDates = fullyOccupiedDates.keySet().stream()
+                .sorted()
+                .collect(Collectors.toList());
+        
+        LocalDate rangeStart = null;
+        LocalDate previousDate = null;
+        List<String> rangeProducts = new ArrayList<>();
+        
+        for (LocalDate date : sortedDates) {
+            if (rangeStart == null) {
+                rangeStart = date;
+                previousDate = date;
+                rangeProducts = new ArrayList<>(fullyOccupiedDates.get(date));
+            } else if (date.equals(previousDate.plusDays(1))) {
+                // Continuar el rango
+                previousDate = date;
+                // Agregar productos de esta fecha
+                for (String product : fullyOccupiedDates.get(date)) {
+                    if (!rangeProducts.contains(product)) {
+                        rangeProducts.add(product);
+                    }
+                }
+            } else {
+                // Cerrar rango anterior
+                Map<String, String> range = new HashMap<>();
+                range.put("start", rangeStart.toString());
+                range.put("end", previousDate.plusDays(1).toString());
+                range.put("products", String.join(", ", rangeProducts));
+                occupiedRanges.add(range);
+                
+                // Iniciar nuevo rango
+                rangeStart = date;
+                previousDate = date;
+                rangeProducts = new ArrayList<>(fullyOccupiedDates.get(date));
+            }
+        }
+        
+        // Cerrar último rango
+        if (rangeStart != null) {
             Map<String, String> range = new HashMap<>();
-            range.put("start", r.getFechaInicio() != null ? r.getFechaInicio().toString() : "");
-            range.put("end", r.getFechaFin() != null ? r.getFechaFin().plusDays(1).toString() : "");
-            
-            // Only list products that were actually requested and are in this reservation
-            String productNames = r.getItems().stream()
-                    .filter(item -> ids.contains(item.getProductoId()))
-                    .map(item -> {
-                        String name = item.getProductoNombre();
-                        // Fallback to fetch from DB if name is null (for older reservations)
-                        if (name == null || name.isBlank()) {
-                            name = productService.getProductById(item.getProductoId())
-                                    .map(com.alquiler.furent.model.Product::getNombre)
-                                    .orElse("Producto #" + item.getProductoId());
-                        }
-                        return name;
-                    })
-                    .distinct()
-                    .collect(Collectors.joining(", "));
-            
-            range.put("products", productNames.isEmpty() ? "Mobiliario no especificado" : productNames);
-            return range;
-        }).collect(Collectors.toList());
+            range.put("start", rangeStart.toString());
+            range.put("end", previousDate.plusDays(1).toString());
+            range.put("products", String.join(", ", rangeProducts));
+            occupiedRanges.add(range);
+        }
+        
         return ResponseEntity.ok(occupiedRanges);
     }
 
+    @GetMapping("/productos/{id}/stock-disponible")
+    public ResponseEntity<Map<String, Object>> getAvailableStock(
+            @PathVariable String id,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        
+        Optional<Product> productOpt = productService.getProductById(id);
+        if (productOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Product product = productOpt.get();
+        int totalStock = product.getStock();
+        
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        
+        // Obtener TODAS las reservas activas del producto
+        List<Reservation> activeReservations = reservationService.getActiveReservationsByProductId(id);
+        
+        log.info("Consultando stock disponible para producto {} del {} al {}", id, startDate, endDate);
+        log.info("Stock total: {}, Reservas activas encontradas: {}", totalStock, activeReservations.size());
+        
+        // Calcular stock disponible mínimo en el rango de fechas
+        int minAvailableStock = totalStock;
+        LocalDate currentDate = start;
+        
+        while (!currentDate.isAfter(end)) {
+            final LocalDate checkDate = currentDate;
+            
+            // Sumar cantidades reservadas para esta fecha específica
+            int reservedOnDate = 0;
+            for (Reservation reservation : activeReservations) {
+                if (reservation.getFechaInicio() == null || reservation.getFechaFin() == null) {
+                    continue;
+                }
+                
+                // Verificar si la fecha actual está dentro del rango de la reserva
+                if (!checkDate.isBefore(reservation.getFechaInicio()) && !checkDate.isAfter(reservation.getFechaFin())) {
+                    // Sumar solo las cantidades de este producto específico
+                    for (Reservation.ItemReserva item : reservation.getItems()) {
+                        if (item.getProductoId().equals(id)) {
+                            reservedOnDate += item.getCantidad();
+                            log.debug("Fecha {}: Reserva {} tiene {} unidades", checkDate, reservation.getId(), item.getCantidad());
+                        }
+                    }
+                }
+            }
+            
+            int availableOnDate = totalStock - reservedOnDate;
+            log.debug("Fecha {}: Reservadas={}, Disponibles={}", checkDate, reservedOnDate, availableOnDate);
+            
+            if (availableOnDate < minAvailableStock) {
+                minAvailableStock = availableOnDate;
+            }
+            
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        log.info("Stock mínimo disponible en el rango: {}", minAvailableStock);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("productId", id);
+        response.put("totalStock", totalStock);
+        response.put("availableStock", Math.max(0, minAvailableStock));
+        response.put("startDate", startDate);
+        response.put("endDate", endDate);
+        
+        return ResponseEntity.ok(response);
+    }
+    
     // === FAVORITOS ===
     @Operation(summary = "Agregar favorito", description = "Agrega un producto a la lista de favoritos del usuario")
     @ApiResponses({

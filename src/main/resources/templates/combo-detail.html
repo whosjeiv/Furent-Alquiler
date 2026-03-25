@@ -678,7 +678,7 @@
                     </div>
 
                                         <!-- Premium Availability Calendar â€” Glassmorphism + Bento Grid + Date Range Picker -->
-                    <div class="mt-6 relative" id="availabilitySection">
+                    <div class="mt-6 relative max-w-5xl mx-auto" id="availabilitySection">
                         <div class="avail-glass relative overflow-hidden rounded-3xl">
                             <!-- Decorative Orbs -->
                             <div class="absolute -top-20 -right-20 w-52 h-52 rounded-full opacity-[0.12] pointer-events-none" style="background: radial-gradient(circle, #E07A3A 0%, transparent 70%);"></div>
@@ -881,132 +881,57 @@
             </div>
 
             <!-- REVIEWS SECTION -->
-            <!-- REVIEWS SECTION - INSPIRED BY SECOND IMAGE -->
             <div id="reviews-section" class="mt-32 pt-16 border-t border-surface-200 w-full">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+                <div class="max-w-4xl mx-auto">
                     
-                    <!-- Left column: Summary & CTA -->
-                    <div class="lg:col-span-4 sticky top-[100px] h-fit">
-                        <h2 class="text-2xl font-black text-surface-900 mb-2">Opiniones de clientes</h2>
+                    <!-- Header -->
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-black text-surface-900 mb-3">Opiniones de clientes</h2>
+                        <p class="text-surface-500 font-medium">Las reseñas de combos estarán disponibles próximamente</p>
+                    </div>
+
+                    <!-- Info Card -->
+                    <div class="bg-gradient-to-br from-furent-50 to-orange-50 rounded-3xl p-12 border-2 border-furent-100/50 text-center">
+                        <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                            <svg class="w-10 h-10 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+                            </svg>
+                        </div>
                         
-                        <div class="flex items-center gap-3 mb-8">
-                            <div class="flex items-center gap-0.5 text-amber-400">
-                                <svg th:each="i : ${#numbers.sequence(1, 5)}" class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <h3 class="text-xl font-bold text-surface-900 mb-3">Sistema de reseñas para combos</h3>
+                        <p class="text-surface-600 leading-relaxed mb-6 max-w-2xl mx-auto">
+                            Actualmente, las reseñas están disponibles solo para productos individuales. 
+                            Estamos trabajando en implementar un sistema de valoración específico para nuestros combos.
+                        </p>
+                        
+                        <!-- Items in combo -->
+                        <div class="mt-8 pt-8 border-t border-furent-200/50">
+                            <p class="text-sm font-bold text-surface-700 mb-4">Este combo incluye:</p>
+                            <div class="flex flex-wrap justify-center gap-3">
+                                <span th:each="item : ${combo.items}" 
+                                      class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-xl text-sm font-medium text-surface-700 shadow-sm border border-surface-100">
+                                    <svg class="w-4 h-4 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span th:text="${item.productoNombre}">Producto</span>
+                                    <span class="text-xs text-surface-400" th:text="'(x' + ${item.cantidad} + ')'">x1</span>
+                                </span>
                             </div>
-                            <span class="text-sm font-medium text-surface-500" th:text="'Basado en ' + (${totalReviews != null ? totalReviews : 0}) + ' reseñas'">Basado en 0 reseñas</span>
                         </div>
 
-                        <!-- Rating Bars -->
-                        <div class="space-y-4 mb-12">
-                            <div th:each="star : ${#numbers.sequence(5, 1, -1)}" class="flex items-center gap-4 group cursor-default">
-                                <div class="flex items-center gap-1 w-8">
-                                    <span class="text-sm font-bold text-surface-700" th:text="${star}">5</span>
-                                    <svg class="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                </div>
-                                <div class="flex-1 h-3 bg-surface-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-amber-400 rounded-full transition-all duration-1000 group-hover:bg-amber-500" 
-                                         th:style="'width: ' + (${star == 5 ? 85 : (star == 4 ? 12 : (star == 3 ? 3 : 0))}) + '%'"></div>
-                                </div>
-                                <span class="text-sm font-bold text-surface-400 w-10 text-right" th:text="(${star == 5 ? '85' : (star == 4 ? '12' : (star == 3 ? '3' : '0'))}) + '%'">0%</span>
-                            </div>
-                        </div>
-
-                        <!-- CTA Section -->
-                        <div class="pt-8 border-t border-surface-100">
-                            <h3 class="text-lg font-bold text-surface-900 mb-2">Comparte tu experiencia</h3>
-                            <p class="text-sm text-surface-500 mb-6 font-medium">Si has alquilado este mobiliario antes, cuéntales a los demás qué te pareció.</p>
-                            <button onclick="document.getElementById('reviewFormContainer').classList.toggle('hidden')" 
-                                    class="w-full py-4 bg-white border-2 border-surface-200 text-surface-900 rounded-2xl text-sm font-black hover:border-surface-900 transition-all active:scale-[0.98]">
-                                Escribir una reseña
-                            </button>
+                        <!-- CTA -->
+                        <div class="mt-8">
+                            <p class="text-sm text-surface-500 mb-4">¿Quieres ver opiniones de los productos individuales?</p>
+                            <a th:href="@{/catalogo}" 
+                               class="inline-flex items-center gap-2 px-6 py-3 bg-furent-600 text-white rounded-xl font-bold hover:bg-furent-700 transition-all shadow-lg">
+                                Ver catálogo completo
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                                </svg>
+                            </a>
                         </div>
                     </div>
 
-                    <!-- Right column: Reviews List -->
-                    <div class="lg:col-span-8">
-                        <!-- Review Form (Hidden by default) -->
-                        <div id="reviewFormContainer" class="hidden mb-16 bg-surface-50 rounded-3xl p-8 border-2 border-dashed border-surface-200">
-                            <form th:action="@{/producto/reseña}" method="post" class="space-y-6">
-                                <input type="hidden" name="productId" th:value="${combo.id}">
-                                <div class="flex items-center justify-between">
-                                    <h4 class="text-lg font-bold text-surface-900">Tu valoración</h4>
-                                    <div class="flex items-center gap-1">
-                                        <div th:each="i : ${#numbers.sequence(1, 5)}" class="relative">
-                                            <input type="radio" name="rating" th:value="${i}" th:id="'star' + ${i}" class="peer hidden" th:checked="${i == 5}" required>
-                                            <label th:for="'star' + ${i}" class="cursor-pointer text-surface-200 peer-checked:text-amber-400 hover:text-amber-300 transition-all">
-                                                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <textarea id="comment" name="comment" rows="4" required placeholder="Describe tu experiencia..." 
-                                          class="w-full px-6 py-4 bg-white border border-surface-200 rounded-2xl text-base focus:ring-4 focus:ring-amber-400/10 focus:border-amber-400 transition-all resize-none shadow-sm"></textarea>
-                                <div class="flex justify-end gap-4">
-                                    <button type="button" onclick="document.getElementById('reviewFormContainer').classList.add('hidden')" class="px-6 py-2 text-sm font-bold text-surface-500">Cancelar</button>
-                                    <button type="submit" class="px-8 py-3 bg-furent-600 text-white rounded-xl text-sm font-black shadow-lg">Publicar</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- List of actual reviews -->
-                        <div id="reviewsList" class="divide-y divide-surface-200">
-                            <!-- Empty state -->
-                            <div th:if="${#lists.isEmpty(reviews)}" class="py-12 text-center bg-surface-50 rounded-3xl border-2 border-dashed border-surface-200">
-                                <p class="text-surface-500 font-bold">Aún no hay opiniones. ¡Sé el primero!</p>
-                            </div>
-
-                            <div th:each="rev, iterStat : ${reviews}" 
-                                 class="review-card py-10 first:pt-0 last:pb-0 group" 
-                                 th:data-rating="${rev.rating}" 
-                                 th:classappend="${iterStat.index >= 5 ? 'hidden' : ''}">
-                                
-                                <div class="flex items-start gap-4 mb-4">
-                                    <div class="w-12 h-12 rounded-full overflow-hidden bg-surface-100 flex items-center justify-center font-black text-surface-400 border border-surface-200">
-                                        <span th:text="${rev.userName != null && !rev.userName.isEmpty() ? #strings.substring(rev.userName,0,1) : 'U'}">U</span>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-surface-900" th:text="${rev.userName != null ? rev.userName : 'Usuario Anónimo'}">Usuario</h4>
-                                        <div class="flex items-center gap-1 text-amber-400 mt-1">
-                                            <svg th:each="i : ${#numbers.sequence(1, 5)}" class="w-4 h-4" th:classappend="${i <= rev.rating ? 'fill-current' : 'text-surface-200 fill-current'}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="pl-16">
-                                    <p class="text-surface-600 leading-relaxed italic" th:text="'&quot;' + ${rev.comment} + '&quot;'"></p>
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-surface-400 mt-4" th:text="${#temporals.format(rev.createdAt, 'dd MMM. yyyy')}"></p>
-                                    
-                                    <!-- Admin Response -->
-                                    <div th:if="${rev.adminResponse != null && !rev.adminResponse.isEmpty()}" class="mt-4 p-5 bg-furent-50/50 rounded-2xl border border-furent-100/50 flex gap-4 relative">
-                                        <!-- Decorative notch -->
-                                        <div class="absolute -top-1.5 left-8 w-3 h-3 bg-furent-50 border-l border-t border-furent-100/50 rotate-45"></div>
-                                        
-                                        <div class="w-10 h-10 rounded-[14px] bg-gradient-to-br from-furent-500 to-furent-600 flex items-center justify-center shrink-0 shadow-md text-white">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-1.5">
-                                                <p class="text-[11px] font-black text-furent-700 uppercase tracking-widest">Equipo Furent</p>
-                                                <svg class="w-3.5 h-3.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                </svg>
-                                            </div>
-                                            <p class="text-sm font-medium text-surface-700 leading-relaxed" th:text="${rev.adminResponse}"></p>
-                                            <p class="text-[9px] font-bold uppercase tracking-widest text-surface-400 mt-3" th:if="${rev.respondedAt != null}" th:text="${#temporals.format(rev.respondedAt, 'dd MMM. yyyy')}"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- View More Button -->
-                        <div class="mt-12" th:if="${#lists.size(reviews) > 5}">
-                            <button id="toggleReviewsBtn" onclick="toggleReviews()" class="text-sm font-black text-surface-900 border-b-2 border-surface-900 pb-1 hover:text-furent-600 hover:border-furent-600 transition-all">
-                                Leer todas las reseñas
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 

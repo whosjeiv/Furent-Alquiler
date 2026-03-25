@@ -24,7 +24,6 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -140,14 +139,9 @@ public class PageController {
             model.addAttribute("avgRating", avgRating);
             model.addAttribute("totalReviews", reviews.size());
 
-            // Load occupied date ranges for availability calendar
+            // Calculate occupied date ranges considering stock
             List<Reservation> productReservations = reservationService.getActiveReservationsByProductId(id);
-            List<Map<String, String>> occupiedRanges = productReservations.stream().map(r -> {
-                Map<String, String> range = new HashMap<>();
-                range.put("start", r.getFechaInicio() != null ? r.getFechaInicio().toString() : "");
-                range.put("end", r.getFechaFin() != null ? r.getFechaFin().plusDays(1).toString() : "");
-                return range;
-            }).collect(Collectors.toList());
+            List<Map<String, String>> occupiedRanges = calculateOccupiedRanges(productReservations, p.getStock());
             model.addAttribute("occupiedRanges", occupiedRanges);
 
             return "product-detail";
@@ -168,42 +162,17 @@ public class PageController {
                     .collect(Collectors.toList());
             model.addAttribute("relatedCombos", relatedCombos);
 
-            // Compute overall occupied ranges by unioning the active reservations of ALL items in the combo
-            List<Map<String, String>> occupiedRanges = new ArrayList<>();
-            if (combo.getItems() != null) {
-                for (com.alquiler.furent.model.Combo.ComboItem item : combo.getItems()) {
-                    List<Reservation> itemRes = reservationService.getActiveReservationsByProductId(item.getProductoId());
-                    for (Reservation r : itemRes) {
-                        Map<String, String> range = new HashMap<>();
-                        range.put("start", r.getFechaInicio() != null ? r.getFechaInicio().toString() : "");
-                        range.put("end", r.getFechaFin() != null ? r.getFechaFin().plusDays(1).toString() : "");
-                        occupiedRanges.add(range);
-                    }
-                }
-            }
+            // Calculate occupied ranges for combo considering stock of all items
+            List<Map<String, String>> occupiedRanges = calculateComboOccupiedRanges(combo);
             model.addAttribute("occupiedRanges", occupiedRanges);
 
-            // For reviews, since Combos might not have a dedicated review schema right now, 
-            // we will query reviews for all items in the combo to display them, or if Combo has its own, we'd use that.
-            // But wait, the repository doesn't have getReviewsByCombo. Let's aggregate reviews of its products.
-            List<Review> allReviews = new ArrayList<>();
-            if (combo.getItems() != null) {
-                for (com.alquiler.furent.model.Combo.ComboItem item : combo.getItems()) {
-                    allReviews.addAll(reviewService.getReviewsByProduct(item.getProductoId()));
-                }
-            }
-            // Distinct or sort them? Just take top 10 recent or all
-            List<Review> sortedReviews = allReviews.stream()
-                .sorted(Comparator.comparing(Review::getCreatedAt).reversed())
-                .collect(Collectors.toList());
-            model.addAttribute("reviews", sortedReviews);
-
-            double avgRating = 0;
-            if (!sortedReviews.isEmpty()) {
-                avgRating = sortedReviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
-            }
-            model.addAttribute("avgRating", avgRating);
-            model.addAttribute("totalReviews", sortedReviews.size());
+            // Para combos, NO mostramos reseñas de productos individuales
+            // Los combos no tienen reseñas propias por ahora
+            // Si en el futuro se implementan reseñas para combos, se agregarían aquí
+            List<Review> comboReviews = new ArrayList<>();
+            model.addAttribute("reviews", comboReviews);
+            model.addAttribute("avgRating", 0.0);
+            model.addAttribute("totalReviews", 0);
 
             return "combo-detail";
         }
@@ -854,5 +823,200 @@ public class PageController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/password-reset";
         }
+    }
+
+    /**
+     * Calcula los rangos de fechas ocupadas considerando el stock disponible.
+     * Solo marca fechas como ocupadas cuando la suma de cantidades reservadas >= stock total.
+     * 
+     * @param reservations Lista de reservas activas del producto
+     * @param totalStock Stock total del producto
+     * @return Lista de rangos de fechas completamente ocupadas
+     */
+    private List<Map<String, String>> calculateOccupiedRanges(List<Reservation> reservations, int totalStock) {
+        if (reservations.isEmpty() || totalStock <= 0) {
+            return new ArrayList<>();
+        }
+
+        // Mapa para contar cantidades reservadas por fecha
+        Map<java.time.LocalDate, Integer> quantityByDate = new HashMap<>();
+
+        // Sumar cantidades reservadas para cada fecha
+        for (Reservation reservation : reservations) {
+            if (reservation.getFechaInicio() == null || reservation.getFechaFin() == null) {
+                continue;
+            }
+
+            // Obtener la cantidad total reservada en esta reserva para este producto
+            int reservedQuantity = reservation.getItems().stream()
+                    .mapToInt(Reservation.ItemReserva::getCantidad)
+                    .sum();
+
+            // Marcar cada día del rango con la cantidad reservada
+            java.time.LocalDate currentDate = reservation.getFechaInicio();
+            while (!currentDate.isAfter(reservation.getFechaFin())) {
+                quantityByDate.merge(currentDate, reservedQuantity, Integer::sum);
+                currentDate = currentDate.plusDays(1);
+            }
+        }
+
+        // Identificar rangos continuos donde stock está completamente ocupado
+        List<Map<String, String>> occupiedRanges = new ArrayList<>();
+        java.time.LocalDate rangeStart = null;
+        java.time.LocalDate previousDate = null;
+
+        // Ordenar fechas para procesar rangos continuos
+        List<java.time.LocalDate> sortedDates = quantityByDate.keySet().stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+        for (java.time.LocalDate date : sortedDates) {
+            int reservedQuantity = quantityByDate.get(date);
+
+            // Si la cantidad reservada >= stock, el día está ocupado
+            if (reservedQuantity >= totalStock) {
+                if (rangeStart == null) {
+                    // Iniciar nuevo rango
+                    rangeStart = date;
+                } else if (previousDate != null && !date.equals(previousDate.plusDays(1))) {
+                    // Hay un gap, cerrar rango anterior y empezar uno nuevo
+                    Map<String, String> range = new HashMap<>();
+                    range.put("start", rangeStart.toString());
+                    range.put("end", previousDate.plusDays(1).toString());
+                    occupiedRanges.add(range);
+                    rangeStart = date;
+                }
+                previousDate = date;
+            } else {
+                // Día disponible, cerrar rango si había uno abierto
+                if (rangeStart != null && previousDate != null) {
+                    Map<String, String> range = new HashMap<>();
+                    range.put("start", rangeStart.toString());
+                    range.put("end", previousDate.plusDays(1).toString());
+                    occupiedRanges.add(range);
+                    rangeStart = null;
+                    previousDate = null;
+                }
+            }
+        }
+
+        // Cerrar último rango si quedó abierto
+        if (rangeStart != null && previousDate != null) {
+            Map<String, String> range = new HashMap<>();
+            range.put("start", rangeStart.toString());
+            range.put("end", previousDate.plusDays(1).toString());
+            occupiedRanges.add(range);
+        }
+
+        return occupiedRanges;
+    }
+
+    /**
+     * Calcula los rangos de fechas ocupadas para un combo.
+     * Un combo está ocupado cuando cualquiera de sus productos no tiene suficiente stock
+     * para completar la cantidad requerida por el combo.
+     * 
+     * @param combo El combo a evaluar
+     * @return Lista de rangos de fechas donde el combo no está disponible
+     */
+    private List<Map<String, String>> calculateComboOccupiedRanges(com.alquiler.furent.model.Combo combo) {
+        if (combo.getItems() == null || combo.getItems().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Mapa para rastrear disponibilidad por fecha
+        // Una fecha está ocupada si ANY producto del combo no tiene stock suficiente
+        Map<java.time.LocalDate, Boolean> dateOccupied = new HashMap<>();
+
+        // Para cada producto en el combo
+        for (com.alquiler.furent.model.Combo.ComboItem comboItem : combo.getItems()) {
+            // Obtener el producto para saber su stock
+            Optional<Product> productOpt = productService.getProductById(comboItem.getProductoId());
+            if (productOpt.isEmpty()) {
+                continue;
+            }
+            Product product = productOpt.get();
+            int productStock = product.getStock();
+            int requiredQuantity = comboItem.getCantidad();
+
+            // Obtener reservas activas de este producto
+            List<Reservation> productReservations = reservationService.getActiveReservationsByProductId(comboItem.getProductoId());
+            
+            // Mapa para contar cantidades reservadas por fecha para este producto específico
+            Map<java.time.LocalDate, Integer> quantityByDate = new HashMap<>();
+
+            for (Reservation reservation : productReservations) {
+                if (reservation.getFechaInicio() == null || reservation.getFechaFin() == null) {
+                    continue;
+                }
+
+                // Buscar este producto específico en los items de la reserva
+                int reservedQuantityForThisProduct = reservation.getItems().stream()
+                        .filter(item -> item.getProductoId().equals(comboItem.getProductoId()))
+                        .mapToInt(Reservation.ItemReserva::getCantidad)
+                        .sum();
+
+                if (reservedQuantityForThisProduct > 0) {
+                    // Marcar cada día del rango
+                    java.time.LocalDate currentDate = reservation.getFechaInicio();
+                    while (!currentDate.isAfter(reservation.getFechaFin())) {
+                        quantityByDate.merge(currentDate, reservedQuantityForThisProduct, Integer::sum);
+                        currentDate = currentDate.plusDays(1);
+                    }
+                }
+            }
+
+            // Marcar fechas donde este producto no tiene stock suficiente para el combo
+            for (Map.Entry<java.time.LocalDate, Integer> entry : quantityByDate.entrySet()) {
+                java.time.LocalDate date = entry.getKey();
+                int reservedQuantity = entry.getValue();
+                int availableStock = productStock - reservedQuantity;
+
+                // Si el stock disponible es menor que lo requerido por el combo, marcar como ocupado
+                if (availableStock < requiredQuantity) {
+                    dateOccupied.put(date, true);
+                }
+            }
+        }
+
+        // Convertir fechas ocupadas a rangos continuos
+        if (dateOccupied.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Map<String, String>> occupiedRanges = new ArrayList<>();
+        List<java.time.LocalDate> sortedDates = dateOccupied.keySet().stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+        java.time.LocalDate rangeStart = null;
+        java.time.LocalDate previousDate = null;
+
+        for (java.time.LocalDate date : sortedDates) {
+            if (rangeStart == null) {
+                rangeStart = date;
+                previousDate = date;
+            } else if (date.equals(previousDate.plusDays(1))) {
+                previousDate = date;
+            } else {
+                // Gap encontrado, cerrar rango anterior
+                Map<String, String> range = new HashMap<>();
+                range.put("start", rangeStart.toString());
+                range.put("end", previousDate.plusDays(1).toString());
+                occupiedRanges.add(range);
+                rangeStart = date;
+                previousDate = date;
+            }
+        }
+
+        // Cerrar último rango
+        if (rangeStart != null) {
+            Map<String, String> range = new HashMap<>();
+            range.put("start", rangeStart.toString());
+            range.put("end", previousDate.plusDays(1).toString());
+            occupiedRanges.add(range);
+        }
+
+        return occupiedRanges;
     }
 }

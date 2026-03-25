@@ -409,6 +409,28 @@
             0%, 100% { opacity: 0.15; transform: scale(1); }
             50% { opacity: 0.35; transform: scale(1.6); }
         }
+        
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        @keyframes fadeOutDown {
+            from { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+            to { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+        }
 
         /* === Day Headers === */
         .avail-day-header {
@@ -885,6 +907,78 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Stock Availability Popup -->
+                        <div id="stockAvailabilityPopup" class="hidden mt-6 bg-gradient-to-br from-white to-surface-50 rounded-2xl p-6 border-2 border-furent-200/50 shadow-xl relative overflow-hidden">
+                            <!-- Decorative elements -->
+                            <div class="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-furent-100/30 blur-2xl"></div>
+                            <div class="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-green-100/30 blur-2xl"></div>
+                            
+                            <div class="relative z-10">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-furent-500 to-furent-600 flex items-center justify-center shrink-0 shadow-lg">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-black text-surface-900 uppercase tracking-wider mb-1">Stock para estas fechas</h4>
+                                        <p class="text-xs text-surface-500 mb-4">Disponibilidad en el rango seleccionado</p>
+                                        
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex-1">
+                                                <div class="flex items-baseline gap-2 mb-1">
+                                                    <span id="stockAvailableCount" class="text-4xl font-black text-green-600">--</span>
+                                                    <span class="text-sm font-bold text-surface-400 uppercase tracking-wider">disponibles</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-xs text-surface-500">
+                                                    <span>de</span>
+                                                    <span id="stockTotalCount" class="font-bold text-surface-700">--</span>
+                                                    <span>en stock total</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="w-20 h-20 relative">
+                                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="16" fill="none" class="stroke-surface-200" stroke-width="3"></circle>
+                                                    <circle id="stockProgressCircle" cx="18" cy="18" r="16" fill="none" class="stroke-green-500 transition-all duration-500" stroke-width="3" stroke-dasharray="100 100" stroke-linecap="round"></circle>
+                                                </svg>
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <span id="stockPercentage" class="text-sm font-black text-surface-700">--</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="stockWarning" class="hidden mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                            <div class="flex items-start gap-2">
+                                                <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <p class="text-xs font-medium text-amber-800">Stock limitado para estas fechas. Ajusta la cantidad según disponibilidad.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="stockRecommendation" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+                                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h5 class="text-xs font-black text-blue-900 uppercase tracking-wider mb-1">¿Necesitas más unidades?</h5>
+                                                    <p class="text-xs text-blue-700 leading-relaxed">
+                                                        Si necesitas reservar el stock completo (<span id="fullStockAmount" class="font-bold">--</span> unidades), 
+                                                        te recomendamos seleccionar otras fechas con mayor disponibilidad o dividir tu reserva en múltiples pedidos.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Hidden Utility Inputs (strictly hidden) -->
                         <div class="hidden" aria-hidden="true">
                             <input type="hidden" id="startDate">
@@ -1726,13 +1820,130 @@
                         start: ds(selStart),
                         end: ds(selEnd)
                     }));
+                    // Consultar stock disponible para las fechas seleccionadas
+                    checkAvailableStock(ds(selStart), ds(selEnd));
                 } else if (!selEnd) {
                     localStorage.removeItem('furent_selected_dates');
+                    // Restaurar stock total cuando no hay rango completo
+                    resetStockToTotal();
                 }
             } else {
                 bar.classList.add('hidden');
                 localStorage.removeItem('furent_selected_dates');
+                resetStockToTotal();
             }
+        }
+
+        // Función para consultar stock disponible en el rango de fechas
+        async function checkAvailableStock(startDate, endDate) {
+            const popup = document.getElementById('stockAvailabilityPopup');
+            
+            try {
+                const response = await fetch(`/api/productos/${productData.id}/stock-disponible?startDate=${startDate}&endDate=${endDate}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const availableStock = data.availableStock;
+                    const totalStock = data.totalStock;
+                    
+                    // Mostrar popup con animación
+                    popup.classList.remove('hidden');
+                    popup.style.animation = 'fadeInUp 0.4s ease-out';
+                    
+                    // Actualizar valores
+                    document.getElementById('stockAvailableCount').textContent = availableStock;
+                    document.getElementById('stockTotalCount').textContent = totalStock;
+                    
+                    // Calcular porcentaje
+                    const percentage = totalStock > 0 ? Math.round((availableStock / totalStock) * 100) : 0;
+                    document.getElementById('stockPercentage').textContent = percentage + '%';
+                    
+                    // Actualizar círculo de progreso
+                    const circle = document.getElementById('stockProgressCircle');
+                    const circumference = 2 * Math.PI * 16; // radio = 16
+                    const offset = circumference - (percentage / 100) * circumference;
+                    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+                    circle.style.strokeDashoffset = offset;
+                    
+                    // Cambiar color según disponibilidad
+                    if (percentage >= 50) {
+                        circle.classList.remove('stroke-amber-500', 'stroke-red-500');
+                        circle.classList.add('stroke-green-500');
+                        document.getElementById('stockAvailableCount').classList.remove('text-amber-600', 'text-red-600');
+                        document.getElementById('stockAvailableCount').classList.add('text-green-600');
+                    } else if (percentage >= 20) {
+                        circle.classList.remove('stroke-green-500', 'stroke-red-500');
+                        circle.classList.add('stroke-amber-500');
+                        document.getElementById('stockAvailableCount').classList.remove('text-green-600', 'text-red-600');
+                        document.getElementById('stockAvailableCount').classList.add('text-amber-600');
+                    } else {
+                        circle.classList.remove('stroke-green-500', 'stroke-amber-500');
+                        circle.classList.add('stroke-red-500');
+                        document.getElementById('stockAvailableCount').classList.remove('text-green-600', 'text-amber-600');
+                        document.getElementById('stockAvailableCount').classList.add('text-red-600');
+                    }
+                    
+                    // Mostrar/ocultar advertencia
+                    const warning = document.getElementById('stockWarning');
+                    const recommendation = document.getElementById('stockRecommendation');
+                    
+                    if (availableStock < totalStock * 0.3) {
+                        warning.classList.remove('hidden');
+                    } else {
+                        warning.classList.add('hidden');
+                    }
+                    
+                    // Mostrar recomendación si el stock disponible es menor al 70% del total
+                    if (availableStock < totalStock * 0.7) {
+                        recommendation.classList.remove('hidden');
+                        document.getElementById('fullStockAmount').textContent = totalStock;
+                    } else {
+                        recommendation.classList.add('hidden');
+                    }
+                    
+                    // Actualizar el máximo del input de cantidad
+                    const qtyInput = document.getElementById('quantity');
+                    const effectiveMax = (productData.maxQty && productData.maxQty > 0) 
+                        ? Math.min(productData.maxQty, availableStock) 
+                        : availableStock;
+                    
+                    qtyInput.max = effectiveMax;
+                    
+                    // Si la cantidad actual excede el disponible, ajustarla
+                    if (parseInt(qtyInput.value) > effectiveMax) {
+                        qtyInput.value = Math.max(1, effectiveMax);
+                        if (typeof window.__updateTotalEstimate === 'function') {
+                            window.__updateTotalEstimate();
+                        }
+                    }
+                    
+                    // Mostrar toast solo si hay stock muy limitado o no hay stock
+                    if (availableStock === 0) {
+                        if (typeof showToast === 'function') {
+                            showToast('No hay stock disponible para estas fechas', 'error');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error al consultar stock disponible:', error);
+                popup.classList.add('hidden');
+            }
+        }
+
+        // Función para restaurar el stock total
+        function resetStockToTotal() {
+            const qtyInput = document.getElementById('quantity');
+            const effectiveMax = (productData.maxQty && productData.maxQty > 0) 
+                ? Math.min(productData.maxQty, productData.maxStock) 
+                : productData.maxStock;
+            qtyInput.max = effectiveMax;
+            
+            // Ocultar popup con animación
+            const popup = document.getElementById('stockAvailabilityPopup');
+            popup.style.animation = 'fadeOutDown 0.3s ease-in';
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                popup.style.animation = '';
+            }, 300);
         }
 
         function dayClick(el) {
@@ -1880,8 +2091,12 @@
                         start: instance.formatDate(selStart, "Y-m-d"),
                         end: instance.formatDate(selEnd, "Y-m-d")
                     }));
+                    // Consultar stock disponible para las fechas seleccionadas
+                    checkAvailableStock(instance.formatDate(selStart, "Y-m-d"), instance.formatDate(selEnd, "Y-m-d"));
                 } else {
                     localStorage.removeItem('furent_selected_dates');
+                    // Restaurar stock total cuando no hay rango completo
+                    resetStockToTotal();
                 }
 
                 if (typeof window.__updateTotalEstimate === 'function') window.__updateTotalEstimate();

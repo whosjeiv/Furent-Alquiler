@@ -1,5 +1,6 @@
 package com.alquiler.furent.config;
 
+import com.alquiler.furent.service.OAuth2UserService;
 import com.alquiler.furent.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,12 +32,12 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
     private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
-    private final com.alquiler.furent.service.OAuth2UserService oauth2UserService;
+    private final OAuth2UserService oauth2UserService;
 
     public SecurityConfig(@Lazy UserService userService, @Lazy JwtAuthFilter jwtAuthFilter,
                           CorsConfigurationSource corsConfigurationSource,
                           OAuth2LoginSuccessHandler oauth2LoginSuccessHandler,
-                          com.alquiler.furent.service.OAuth2UserService oauth2UserService) {
+                          OAuth2UserService oauth2UserService) {
         this.userService = userService;
         this.jwtAuthFilter = jwtAuthFilter;
         this.corsConfigurationSource = corsConfigurationSource;
