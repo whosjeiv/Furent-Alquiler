@@ -21,6 +21,8 @@ public class Payment {
     private String estado;
     private String referencia;
     private String comprobante;
+    private String tipoPago; // ANTICIPO, ABONO, SALDO_FINAL
+    private String nota;
 
     private LocalDateTime fechaPago;
     private LocalDateTime fechaCreacion;
@@ -118,5 +120,20 @@ public class Payment {
         this.tenantId = tenantId;
     }
 
+    public String getTipoPago() {
+        return tipoPago;
+    }
+
+    public void setTipoPago(String tipoPago) {
+        this.tipoPago = tipoPago;
+    }
+
+    public String getNota() {
+        return nota;
+    }
+
+    public void setNota(String nota) {
+        this.nota = nota;
+    }
 
 }

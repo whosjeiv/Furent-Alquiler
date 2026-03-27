@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -164,5 +165,93 @@ public class PaymentService {
 
     public Payment save(Payment payment) {
         return paymentRepository.save(payment);
+    }
+
+    /**
+     * Registra un abono (pago parcial) a una reserva.
+     * Valida que el monto no exceda el saldo pendiente, crea el registro de pago,
+     * y actualiza el estado financiero de la reserva.
+     */
+    public Payment registrarAbono(String reservaId, BigDecimal monto, String tipoPago,
+                                   String referencia, String nota, String adminUser) {
+        Reservation reserva = reservationService.getById(reservaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva", reservaId));
+
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new com.alquiler.furent.exception.InvalidOperationException("El monto del abono debe ser mayor a cero.");
+        }
+
+        BigDecimal saldoPendiente = reserva.getSaldoPendiente();
+        if (monto.compareTo(saldoPendiente) > 0) {
+            throw new com.alquiler.furent.exception.InvalidOperationException(
+                    String.format("El monto ($%,.0f) excede el saldo pendiente ($%,.0f).", monto, saldoPendiente));
+        }
+
+        // Crear registro de pago
+        Payment payment = new Payment();
+        payment.setReservaId(reservaId);
+        payment.setUsuarioId(reserva.getUsuarioId());
+        payment.setMonto(monto);
+        payment.setMetodoPago(reserva.getMetodoPago() != null ? reserva.getMetodoPago() : "EFECTIVO");
+        payment.setEstado(EstadoPago.PAGADO.name());
+        payment.setTipoPago(tipoPago != null ? tipoPago : "ABONO");
+        payment.setReferencia(referencia);
+        payment.setNota(nota);
+        payment.setFechaPago(LocalDateTime.now());
+        if (TenantContext.getCurrentTenant() != null) {
+            payment.setTenantId(TenantContext.getCurrentTenant());
+        }
+
+        Payment saved = paymentRepository.save(payment);
+
+        // Actualizar monto abonado en la reserva
+        BigDecimal nuevoAbonado = (reserva.getMontoAbonado() != null ? reserva.getMontoAbonado() : BigDecimal.ZERO).add(monto);
+        reserva.setMontoAbonado(nuevoAbonado);
+
+        // Determinar estado financiero
+        BigDecimal totalReserva = reserva.getTotal() != null ? reserva.getTotal() : BigDecimal.ZERO;
+        if (nuevoAbonado.compareTo(totalReserva) >= 0) {
+            reserva.setEstadoPago("PAGADO");
+        } else if (nuevoAbonado.compareTo(BigDecimal.ZERO) > 0) {
+            // Primer pago = ANTICIPO, pagos subsiguientes = PARCIAL
+            reserva.setEstadoPago("ANTICIPO".equals(tipoPago) || reserva.getPorcentajePagado() <= 50 ? "ANTICIPO" : "PARCIAL");
+        }
+        reserva.setFechaActualizacion(LocalDateTime.now());
+        reservationService.getById(reservaId).ifPresent(r -> {
+            r.setMontoAbonado(nuevoAbonado);
+            r.setEstadoPago(reserva.getEstadoPago());
+            r.setFechaActualizacion(LocalDateTime.now());
+            reservationService.save(r);
+        });
+
+        // Notificar al usuario
+        notificationService.notify(reserva.getUsuarioId(), "Abono Registrado",
+                String.format("Se registró un abono de $%,.0f a tu reserva. Saldo pendiente: $%,.0f",
+                        monto, totalReserva.subtract(nuevoAbonado).max(BigDecimal.ZERO)),
+                "SUCCESS", "/panel");
+
+        auditLogService.log(adminUser, "REGISTRAR_ABONO", "PAGO", saved.getId(),
+                String.format("Abono $%,.0f (%s) — Ref: %s", monto, tipoPago, referencia));
+
+        log.info("Abono registrado: {} de ${} para reserva: {} por {}", saved.getId(), monto, reservaId, adminUser);
+
+        return saved;
+    }
+
+    /**
+     * Obtiene todos los pagos asociados a una reserva.
+     */
+    public List<Payment> getPaymentsByReserva(String reservaId) {
+        return paymentRepository.findByReservaId(reservaId);
+    }
+
+    /**
+     * Calcula el total abonado (pagados) para una reserva.
+     */
+    public java.math.BigDecimal getTotalAbonado(String reservaId) {
+        return paymentRepository.findByReservaId(reservaId).stream()
+                .filter(p -> EstadoPago.PAGADO.name().equals(p.getEstado()))
+                .map(Payment::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

@@ -99,17 +99,20 @@ class PaymentServiceTest {
         assertEquals("PAGADO", result.getEstado());
         assertEquals("REF-123", result.getReferencia());
         assertNotNull(result.getFechaPago());
-        verify(reservationService).updateStatus("res-001", "ACTIVA");
+        verify(reservationService).updateStatus("res-001", "CONFIRMADA");
         verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("SUCCESS"), anyString());
     }
 
     @Test
-    void confirmPayment_alreadyPaid_throwsException() {
+    void confirmPayment_alreadyPaid_returnsUnchanged() {
         testPayment.setEstado("PAGADO");
         when(paymentRepository.findById("pay-001")).thenReturn(Optional.of(testPayment));
 
-        assertThrows(InvalidOperationException.class,
-                () -> paymentService.confirmPayment("pay-001", "REF-123", "admin"));
+        Payment result = paymentService.confirmPayment("pay-001", "REF-123", "admin");
+
+        assertEquals("PAGADO", result.getEstado());
+        // Should NOT call updateStatus since it's already paid
+        verify(reservationService, never()).updateStatus(anyString(), anyString());
     }
 
     @Test
@@ -121,5 +124,87 @@ class PaymentServiceTest {
 
         assertEquals("FALLIDO", result.getEstado());
         verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("ALERT"), anyString());
+    }
+
+    // ===== TESTS PARA PAGOS FRACCIONADOS (ABONOS) =====
+
+    @Test
+    void registrarAbono_validAmount_createsPaymentAndUpdatesReservation() {
+        testReservation.setMontoAbonado(BigDecimal.ZERO);
+        testReservation.setEstadoPago("SIN_PAGO");
+
+        when(reservationService.getById("res-001")).thenReturn(Optional.of(testReservation));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> {
+            Payment p = i.getArgument(0);
+            p.setId("pay-abono-1");
+            return p;
+        });
+        when(reservationService.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        Payment result = paymentService.registrarAbono("res-001", BigDecimal.valueOf(75000),
+                "ANTICIPO", "REF-ANTICIPO-001", "Primer anticipo", "admin@test.com");
+
+        assertNotNull(result);
+        assertEquals("PAGADO", result.getEstado());
+        assertEquals("ANTICIPO", result.getTipoPago());
+        assertEquals(0, BigDecimal.valueOf(75000).compareTo(result.getMonto()));
+        verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("SUCCESS"), anyString());
+        verify(auditLogService).log(eq("admin@test.com"), eq("REGISTRAR_ABONO"), eq("PAGO"), anyString(), anyString());
+    }
+
+    @Test
+    void registrarAbono_exceedsSaldo_throwsException() {
+        testReservation.setMontoAbonado(BigDecimal.valueOf(100000));
+        testReservation.setEstadoPago("ANTICIPO");
+
+        when(reservationService.getById("res-001")).thenReturn(Optional.of(testReservation));
+
+        // Saldo pendiente = 150000 - 100000 = 50000, intentar abonar 60000
+        assertThrows(InvalidOperationException.class,
+                () -> paymentService.registrarAbono("res-001", BigDecimal.valueOf(60000),
+                        "ABONO", "REF-002", null, "admin@test.com"));
+    }
+
+    @Test
+    void registrarAbono_fullPayment_setsEstadoPagado() {
+        testReservation.setMontoAbonado(BigDecimal.valueOf(100000));
+        testReservation.setEstadoPago("ANTICIPO");
+
+        when(reservationService.getById("res-001")).thenReturn(Optional.of(testReservation));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> {
+            Payment p = i.getArgument(0);
+            p.setId("pay-final");
+            return p;
+        });
+        when(reservationService.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Pagar saldo restante (50000)
+        Payment result = paymentService.registrarAbono("res-001", BigDecimal.valueOf(50000),
+                "SALDO_FINAL", "REF-FINAL", "Pago completo", "admin@test.com");
+
+        assertNotNull(result);
+        assertEquals("SALDO_FINAL", result.getTipoPago());
+        verify(reservationService, atLeastOnce()).save(argThat(r ->
+                "PAGADO".equals(r.getEstadoPago()) &&
+                r.getMontoAbonado().compareTo(BigDecimal.valueOf(150000)) == 0
+        ));
+    }
+
+    @Test
+    void registrarAbono_zeroAmount_throwsException() {
+        when(reservationService.getById("res-001")).thenReturn(Optional.of(testReservation));
+
+        assertThrows(InvalidOperationException.class,
+                () -> paymentService.registrarAbono("res-001", BigDecimal.ZERO,
+                        "ABONO", null, null, "admin"));
+    }
+
+    @Test
+    void registrarAbono_reservationNotFound_throwsException() {
+        when(reservationService.getById("res-999")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> paymentService.registrarAbono("res-999", BigDecimal.valueOf(50000),
+                        "ANTICIPO", null, null, "admin"));
     }
 }

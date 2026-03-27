@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +48,10 @@ public class Reservation {
     private String horaEntrega; // HH:mm — hora preferida de entrega logística
     /** Código único para pago en efectivo en oficina (ej. FRNT-A1B2C3D4). Se envía por correo. */
     private String codigoPagoEfectivo;
+    /** Monto total abonado por el cliente (suma de pagos confirmados). */
+    private BigDecimal montoAbonado;
+    /** Estado financiero: SIN_PAGO, ANTICIPO, PARCIAL, PAGADO */
+    private String estadoPago;
     @Indexed
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
@@ -55,6 +60,8 @@ public class Reservation {
         this.fechaCreacion = LocalDateTime.now();
         this.fechaActualizacion = LocalDateTime.now();
         this.estado = "PENDIENTE";
+        this.montoAbonado = BigDecimal.ZERO;
+        this.estadoPago = "SIN_PAGO";
     }
 
     // Inner class for reservation items
@@ -340,5 +347,36 @@ public class Reservation {
 
     public void setCodigoPagoEfectivo(String codigoPagoEfectivo) {
         this.codigoPagoEfectivo = codigoPagoEfectivo;
+    }
+
+    public BigDecimal getMontoAbonado() {
+        return montoAbonado;
+    }
+
+    public void setMontoAbonado(BigDecimal montoAbonado) {
+        this.montoAbonado = montoAbonado;
+    }
+
+    public String getEstadoPago() {
+        return estadoPago;
+    }
+
+    public void setEstadoPago(String estadoPago) {
+        this.estadoPago = estadoPago;
+    }
+
+    /** Saldo pendiente = total - montoAbonado (nunca negativo). */
+    public BigDecimal getSaldoPendiente() {
+        BigDecimal abonado = montoAbonado != null ? montoAbonado : BigDecimal.ZERO;
+        BigDecimal totalVal = total != null ? total : BigDecimal.ZERO;
+        return totalVal.subtract(abonado).max(BigDecimal.ZERO);
+    }
+
+    /** Porcentaje pagado (0-100) redondeado hacia abajo. */
+    public int getPorcentajePagado() {
+        if (total == null || total.compareTo(BigDecimal.ZERO) == 0) return 0;
+        BigDecimal abonado = montoAbonado != null ? montoAbonado : BigDecimal.ZERO;
+        return abonado.multiply(BigDecimal.valueOf(100))
+                .divide(total, 0, RoundingMode.FLOOR).intValue();
     }
 }

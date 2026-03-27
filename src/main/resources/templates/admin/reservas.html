@@ -23,7 +23,7 @@
             </div>
 
             <!-- Compact Status Analytics -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
                 <!-- Total -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-surface-200 flex items-center gap-4 hover:border-surface-300 transition-colors group">
                     <div class="w-12 h-12 rounded-xl bg-surface-100 flex items-center justify-center text-surface-600 group-hover:bg-surface-200 transition-colors">
@@ -69,6 +69,19 @@
                     <div>
                         <p class="text-xs font-bold text-blue-600/80 uppercase tracking-wider">Completadas</p>
                         <p class="text-2xl font-black text-blue-900 leading-tight" th:text="${#lists.size(completadas)}">0</p>
+                    </div>
+                </div>
+
+                <!-- Saldo Pendiente -->
+                <div class="bg-orange-50/50 p-5 rounded-2xl shadow-sm border border-orange-200/60 flex items-center gap-4 hover:border-orange-300/60 transition-colors group">
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 group-hover:bg-orange-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-orange-600/80 uppercase tracking-wider flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span> Saldo Pendiente
+                        </p>
+                        <p class="text-lg font-black text-orange-900 leading-tight" th:text="'$' + ${#numbers.formatDecimal(totalSaldoPendiente ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</p>
                     </div>
                 </div>
             </div>
@@ -160,6 +173,7 @@
                                 <th class="py-4">Cliente</th>
                                 <th class="py-4">Fechas</th>
                                 <th class="py-4">Monto</th>
+                                <th class="py-4">Pagos</th>
                                 <th class="py-4">Estado</th>
                                 <th class="pr-6 py-4 text-right">Acciones</th>
                             </tr>
@@ -260,6 +274,47 @@
                                                         <span class="text-xs font-black uppercase tracking-tighter text-surface-900">Total a Pagar</span>
                                                         <span class="text-xl font-black text-surface-950" th:text="${'$' + #numbers.formatDecimal(r.total ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
                                                     </div>
+
+                                                    <!-- Financial Summary -->
+                                                    <div class="mt-4 p-4 bg-surface-50 rounded-xl border border-surface-100 space-y-3">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-[11px] font-bold text-surface-500">Abonado</span>
+                                                            <span class="text-sm font-black text-green-600" th:text="${'$' + #numbers.formatDecimal(r.montoAbonado ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                                        </div>
+                                                        <div class="w-full bg-surface-200 rounded-full h-2 overflow-hidden">
+                                                            <div class="h-2 rounded-full transition-all duration-500"
+                                                                 th:style="'width:' + ${r.getPorcentajePagado()} + '%'"
+                                                                 th:classappend="${r.getPorcentajePagado() >= 100 ? ' bg-green-500' : (r.getPorcentajePagado() >= 50 ? ' bg-amber-500' : ' bg-red-400')}"></div>
+                                                        </div>
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-[11px] font-bold text-surface-500">Saldo Pendiente</span>
+                                                            <span class="text-sm font-black" th:classappend="${r.getSaldoPendiente().compareTo(T(java.math.BigDecimal).ZERO) > 0 ? ' text-orange-600' : ' text-green-600'}" th:text="${'$' + #numbers.formatDecimal(r.getSaldoPendiente(), 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                                        </div>
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-[11px] font-bold text-surface-500">Estado Financiero</span>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black border"
+                                                                  th:text="${r.estadoPago ?: 'SIN_PAGO'}"
+                                                                  th:classappend="${r.estadoPago == 'PAGADO' ? ' bg-green-50 text-green-700 border-green-200' : (r.estadoPago == 'ANTICIPO' ? ' bg-amber-50 text-amber-700 border-amber-200' : (r.estadoPago == 'PARCIAL' ? ' bg-blue-50 text-blue-700 border-blue-200' : ' bg-red-50 text-red-600 border-red-200'))}">SIN_PAGO</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Historial de Pagos -->
+                                                    <div th:if="${pagosMap != null and pagosMap.containsKey(r.id) and !pagosMap.get(r.id).isEmpty()}" class="mt-4">
+                                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-surface-400 mb-2">Historial de Pagos</h4>
+                                                        <div class="space-y-2">
+                                                            <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-surface-100" th:each="pago : ${pagosMap.get(r.id)}">
+                                                                <div class="flex flex-col">
+                                                                    <span class="text-[11px] font-bold text-surface-900" th:text="${pago.tipoPago ?: 'PAGO'}">ABONO</span>
+                                                                    <span class="text-[10px] text-surface-400" th:text="${pago.fechaPago != null ? #temporals.format(pago.fechaPago, 'dd MMM yyyy HH:mm') : '-'}">fecha</span>
+                                                                    <span th:if="${pago.referencia != null}" class="text-[10px] text-surface-400" th:text="'Ref: ' + ${pago.referencia}">ref</span>
+                                                                </div>
+                                                                <div class="text-right">
+                                                                    <span class="text-xs font-black text-green-600" th:text="'+$' + ${#numbers.formatDecimal(pago.monto ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                                                    <span class="block text-[10px] font-bold" th:classappend="${pago.estado == 'PAGADO' ? 'text-green-500' : 'text-amber-500'}" th:text="${pago.estado}">PAGADO</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -294,7 +349,30 @@
                                 
                                 <!-- Monto -->
                                 <td class="py-4 align-middle">
-                                    <span class="font-black text-surface-900" th:text="${'$' + #numbers.formatDecimal(r.total ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                    <div class="flex flex-col">
+                                        <span class="font-black text-surface-900" th:text="${'$' + #numbers.formatDecimal(r.total ?: 0, 1, 'POINT', 0, 'COMMA')}">$0</span>
+                                        <span th:if="${r.getSaldoPendiente().compareTo(T(java.math.BigDecimal).ZERO) > 0}" class="text-[10px] font-bold text-orange-600 mt-0.5" th:text="'Saldo: $' + ${#numbers.formatDecimal(r.getSaldoPendiente(), 1, 'POINT', 0, 'COMMA')}">Saldo: $0</span>
+                                    </div>
+                                </td>
+
+                                <!-- Estado Financiero -->
+                                <td class="py-4 align-middle">
+                                    <div class="flex flex-col gap-1.5 min-w-[100px]">
+                                        <span class="inline-flex items-center w-fit px-2 py-0.5 rounded-full text-[10px] font-black border"
+                                              th:text="${r.estadoPago ?: 'SIN_PAGO'}"
+                                              th:classappend="${r.estadoPago == 'PAGADO' ? ' bg-green-50 text-green-700 border-green-200' :
+                                                              (r.estadoPago == 'ANTICIPO' ? ' bg-amber-50 text-amber-700 border-amber-200' :
+                                                              (r.estadoPago == 'PARCIAL' ? ' bg-blue-50 text-blue-700 border-blue-200' :
+                                                              ' bg-red-50 text-red-600 border-red-200'))}">SIN_PAGO</span>
+                                        <!-- Progress Bar -->
+                                        <div class="w-full bg-surface-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="h-1.5 rounded-full transition-all duration-500"
+                                                 th:style="'width:' + ${r.getPorcentajePagado()} + '%'"
+                                                 th:classappend="${r.getPorcentajePagado() >= 100 ? ' bg-green-500' :
+                                                                 (r.getPorcentajePagado() >= 50 ? ' bg-amber-500' : ' bg-red-400')}"></div>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-surface-400" th:text="${r.getPorcentajePagado()} + '%'">0%</span>
+                                    </div>
                                 </td>
                                 
                                 <!-- Estado Rápido -->
@@ -359,6 +437,10 @@
                                             <button type="button" th:attr="onclick=|signDigital('${r.id}')|" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-surface-200 hover:bg-surface-800 transition-colors text-left border-b border-surface-900/50">
                                                 <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                                                 Firma Digital
+                                            </button>
+                                            <button th:if="${r.estadoPago != 'PAGADO'}" type="button" th:attr="onclick=|abrirModalAbono('${r.id}', '${r.getSaldoPendiente()}')|" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-green-400 hover:bg-green-500/10 transition-colors text-left border-b border-surface-900/50">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                Registrar Abono
                                             </button>
                                             <form th:if="${r.estado == 'PENDIENTE'}" th:action="@{/admin/reservas/eliminar/{id}(id=${r.id})}" method="post" class="m-0" onsubmit="return confirmarEliminarCotizacion(event)">
                                                 <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors text-left">
@@ -773,6 +855,107 @@
         }
     </script>
     
+    <!-- ABONO MODAL DIALOG -->
+    <dialog id="abonoDialog" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-surface-950/60 backdrop:backdrop-blur-sm rounded-[2rem]">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-[2rem] bg-white dark:bg-surface-900 text-left shadow-2xl sm:my-8 sm:w-full sm:max-w-md outline outline-surface-200 dark:outline-surface-800">
+                <form id="abonoForm" method="post" action="">
+                    <div class="bg-white dark:bg-surface-900 px-6 pt-8 pb-4 sm:px-8 sm:pt-8">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="flex size-11 shrink-0 items-center justify-center rounded-full bg-green-500/10">
+                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black tracking-tight text-surface-900 dark:text-white">Registrar Abono</h3>
+                                <p class="text-xs font-medium text-surface-400 mt-0.5">Saldo pendiente: <span id="abonoSaldoLabel" class="font-black text-orange-600">$0</span></p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Monto -->
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-surface-500 mb-1.5">Monto del Abono *</label>
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-surface-400">$</span>
+                                    <input type="number" name="monto" id="abonoMonto" required min="1" step="1000" placeholder="0"
+                                           class="w-full pl-8 pr-4 py-3 border border-surface-200 rounded-xl bg-surface-50 text-sm font-bold text-surface-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition-all">
+                                </div>
+                            </div>
+
+                            <!-- Tipo de Pago -->
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-surface-500 mb-1.5">Tipo de Pago</label>
+                                <select name="tipoPago" class="w-full px-4 py-3 border border-surface-200 rounded-xl bg-surface-50 text-sm font-bold text-surface-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition-all">
+                                    <option value="ANTICIPO">Anticipo / Depósito</option>
+                                    <option value="ABONO">Abono Parcial</option>
+                                    <option value="SALDO_FINAL">Saldo Final (Completo)</option>
+                                </select>
+                            </div>
+
+                            <!-- Referencia -->
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-surface-500 mb-1.5">Referencia / Comprobante</label>
+                                <input type="text" name="referencia" placeholder="Nro. de transferencia, recibo, etc."
+                                       class="w-full px-4 py-3 border border-surface-200 rounded-xl bg-surface-50 text-sm font-medium text-surface-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition-all">
+                            </div>
+
+                            <!-- Nota -->
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase tracking-widest text-surface-500 mb-1.5">Nota (Opcional)</label>
+                                <textarea name="nota" rows="2" placeholder="Observaciones del abono..."
+                                          class="w-full px-4 py-3 border border-surface-200 rounded-xl bg-surface-50 text-sm font-medium text-surface-900 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 transition-all resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-50 dark:bg-surface-800/50 px-6 py-5 sm:flex sm:flex-row-reverse sm:px-8 gap-3">
+                        <button type="submit" class="inline-flex w-full justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-black text-white hover:bg-green-500 transition-all sm:ml-0 sm:w-auto shadow-lg shadow-green-600/20 active:scale-95">
+                            Registrar Abono
+                        </button>
+                        <button type="button" onclick="cerrarModalAbono()" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white dark:bg-surface-800 px-6 py-3 text-sm font-black text-surface-700 dark:text-surface-300 ring-1 ring-inset ring-surface-200 dark:ring-surface-700 hover:bg-surface-50 dark:hover:bg-surface-700 transition-all sm:mt-0 sm:w-auto active:scale-95">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        function abrirModalAbono(reservaId, saldoPendiente) {
+            // Close any open dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+            
+            const dialog = document.getElementById('abonoDialog');
+            const form = document.getElementById('abonoForm');
+            const saldoLabel = document.getElementById('abonoSaldoLabel');
+            const montoInput = document.getElementById('abonoMonto');
+
+            form.action = '/admin/reservas/' + reservaId + '/abono';
+            
+            const saldoNum = parseFloat(saldoPendiente) || 0;
+            saldoLabel.textContent = '$' + Math.round(saldoNum).toLocaleString('es-CO');
+            montoInput.max = saldoNum;
+            montoInput.value = '';
+            
+            // Reset fields
+            form.querySelector('[name="referencia"]').value = '';
+            form.querySelector('[name="nota"]').value = '';
+            form.querySelector('[name="tipoPago"]').selectedIndex = 0;
+            
+            dialog.showModal();
+        }
+
+        function cerrarModalAbono() {
+            document.getElementById('abonoDialog').close();
+        }
+
+        // Close on backdrop click
+        document.getElementById('abonoDialog').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('abonoDialog')) {
+                cerrarModalAbono();
+            }
+        });
+    </script>
+
     <!-- TAILWIND CUSTOM MODAL DIALOG -->
     <el-dialog>
       <dialog id="dialog" aria-labelledby="dialog-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent">
