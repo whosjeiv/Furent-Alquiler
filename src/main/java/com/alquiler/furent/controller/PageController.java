@@ -344,6 +344,13 @@ public class PageController {
         return "payment-result";
     }
 
+    @GetMapping("/inspiracion")
+    public String inspiration(Model model) {
+        model.addAttribute("pageTitle", "Inspiración");
+        model.addAttribute("products", productService.getAllProducts());
+        return "inspiration";
+    }
+
     @GetMapping("/nosotros")
     public String about(Model model) {
         model.addAttribute("pageTitle", "Nosotros");

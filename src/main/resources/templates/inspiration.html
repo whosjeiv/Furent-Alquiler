@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<style>
+    /* Masonry Grid */
+    .masonry-grid {
+        columns: 1;
+        column-gap: 20px;
+    }
+    @media (min-width: 640px) { .masonry-grid { columns: 2; } }
+    @media (min-width: 1024px) { .masonry-grid { columns: 3; } }
+
+    .masonry-item {
+        break-inside: avoid;
+        margin-bottom: 20px;
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    /* Product Pin */
+    .product-pin {
+        position: absolute;
+        z-index: 10;
+        transition: all 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    .pin-dot {
+        width: 28px; height: 28px;
+        background: rgba(255,255,255,0.95);
+        border: 3px solid #E07A3A;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(224,122,58,0.35);
+        transition: all 0.3s cubic-bezier(.4,0,.2,1);
+        animation: pingPulse 2.5s infinite;
+    }
+    .pin-dot::after {
+        content: '+';
+        font-size: 16px; font-weight: 800;
+        color: #E07A3A;
+        line-height: 1;
+    }
+    @keyframes pingPulse {
+        0% { box-shadow: 0 0 0 0 rgba(224,122,58,0.5); }
+        70% { box-shadow: 0 0 0 12px rgba(224,122,58,0); }
+        100% { box-shadow: 0 0 0 0 rgba(224,122,58,0); }
+    }
+
+    /* Tooltip Card */
+    .pin-tooltip {
+        position: absolute;
+        left: 36px; top: 50%;
+        transform: translateY(-50%) scale(0.9);
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(255,255,255,0.97);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(224,122,58,0.15);
+        border-radius: 16px;
+        padding: 12px 14px;
+        min-width: 220px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        transition: all 0.3s cubic-bezier(.4,0,.2,1);
+        z-index: 20;
+    }
+    .pin-tooltip.tooltip-left {
+        left: auto; right: 36px;
+    }
+
+    .product-pin:hover .pin-tooltip,
+    .product-pin.active .pin-tooltip {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+        pointer-events: auto;
+    }
+    .product-pin:hover .pin-dot {
+        animation: none;
+        transform: scale(1.15);
+        background: #E07A3A;
+        border-color: #fff;
+    }
+    .product-pin:hover .pin-dot::after {
+        color: #fff;
+    }
+
+    /* Overlay gradient on hover */
+    .masonry-item .overlay-gradient {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 50%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+    .masonry-item:hover .overlay-gradient { opacity: 1; }
+
+    /* Pins hidden by default, visible on card hover */
+    .masonry-item .product-pin { opacity: 0; transform: scale(0.7); }
+    .masonry-item:hover .product-pin { opacity: 1; transform: scale(1); }
+    .masonry-item:hover .product-pin:nth-child(2) { transition-delay: 0.06s; }
+    .masonry-item:hover .product-pin:nth-child(3) { transition-delay: 0.12s; }
+
+    /* Event badge */
+    .event-badge {
+        position: absolute; bottom: 16px; left: 16px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(12px);
+        border-radius: 12px;
+        padding: 8px 14px;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all 0.35s cubic-bezier(.4,0,.2,1);
+        z-index: 5;
+    }
+    .masonry-item:hover .event-badge {
+        opacity: 1; transform: translateY(0);
+    }
+
+    /* Add to bag button */
+    .pin-add-btn {
+        background: linear-gradient(135deg, #E07A3A, #C2630F);
+        color: white; border: none; border-radius: 10px;
+        padding: 7px 14px; font-size: 11px; font-weight: 700;
+        cursor: pointer; transition: all 0.2s ease;
+        display: flex; align-items: center; gap: 5px;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .pin-add-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(224,122,58,0.4); }
+    .pin-add-btn:active { transform: scale(0.96); }
+    .pin-add-btn.added {
+        background: linear-gradient(135deg, #059669, #047857);
+        pointer-events: none;
+    }
+
+    /* Category filter pills */
+    .filter-pill {
+        padding: 8px 18px; border-radius: 100px;
+        font-size: 13px; font-weight: 600;
+        border: 1.5px solid #e5e5e5;
+        background: white; color: #616161;
+        cursor: pointer; transition: all 0.25s ease;
+        white-space: nowrap;
+    }
+    .filter-pill:hover { border-color: #E07A3A; color: #E07A3A; }
+    .filter-pill.active {
+        background: linear-gradient(135deg, #E07A3A, #C2630F);
+        color: white; border-color: transparent;
+        box-shadow: 0 4px 15px rgba(224,122,58,0.3);
+    }
+</style>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]" id="main-content">
+
+        <!-- Hero Section -->
+        <section class="bg-white border-b border-surface-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+                <div class="max-w-3xl mx-auto text-center fade-in-up">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-furent-50 text-furent-600 border border-furent-100 mb-6">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                        Eventos Reales
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-bold text-surface-900 tracking-tight mb-5">Galería de Inspiración</h1>
+                    <p class="text-lg text-surface-500 leading-relaxed">Descubre cómo nuestros mobiliarios transforman eventos en experiencias inolvidables. <strong class="text-surface-700">Pasa el mouse sobre las fotos</strong> para ver los productos usados y agregarlos directamente.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Filter -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
+            <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" id="filterContainer">
+                <button class="filter-pill active" onclick="filterGallery('all', this)">Todos</button>
+                <button class="filter-pill" onclick="filterGallery('boda', this)"><svg class="w-4 h-4 inline -mt-0.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg> Bodas</button>
+                <button class="filter-pill" onclick="filterGallery('corporativo', this)"><svg class="w-4 h-4 inline -mt-0.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg> Corporativos</button>
+                <button class="filter-pill" onclick="filterGallery('quinceañera', this)"><svg class="w-4 h-4 inline -mt-0.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265z"/></svg> Quinceañeras</button>
+                <button class="filter-pill" onclick="filterGallery('social', this)"><svg class="w-4 h-4 inline -mt-0.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg> Sociales</button>
+                <button class="filter-pill" onclick="filterGallery('rustico', this)"><svg class="w-4 h-4 inline -mt-0.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg> Rústico</button>
+            </div>
+        </section>
+
+        <!-- Masonry Gallery -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="masonry-grid" id="masonryGrid">
+
+                <!-- Card 1: Wedding Reception -->
+                <div class="masonry-item group" data-category="boda" data-aos="fade-up">
+                    <img th:src="@{/images/inspiration/wedding-reception.png}" alt="Recepción de boda al aire libre" class="w-full block rounded-[20px]" loading="lazy">
+                    <div class="overlay-gradient rounded-[20px]"></div>
+
+                    <!-- Product Pin 1 -->
+                    <div class="product-pin" style="top: 55%; left: 35%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip" id="tooltip-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-furent-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Silla Chiavari Dorada</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Elegancia clásica</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$15.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Silla Chiavari Dorada', 15000, '/images/inspiration/wedding-reception.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Pin 2 -->
+                    <div class="product-pin" style="top: 30%; left: 60%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip tooltip-left">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Mesa Redonda 1.5m</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Capacidad 10 personas</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$35.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Mesa Redonda 1.5m', 35000, '/images/inspiration/wedding-reception.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-badge">
+                        <p class="text-[11px] font-bold text-surface-900 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg> Boda en Jardín</p>
+                        <p class="text-[10px] text-surface-400 font-medium">120 invitados · Barranquilla</p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Corporate Gala -->
+                <div class="masonry-item group" data-category="corporativo" data-aos="fade-up" data-aos-delay="100">
+                    <img th:src="@{/images/inspiration/corporate-gala.png}" alt="Gala corporativa elegante" class="w-full block rounded-[20px]" loading="lazy">
+                    <div class="overlay-gradient rounded-[20px]"></div>
+
+                    <div class="product-pin" style="top: 50%; left: 40%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Silla Chiavari Plateada</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Acabado premium</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$18.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Silla Chiavari Plateada', 18000, '/images/inspiration/corporate-gala.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-badge">
+                        <p class="text-[11px] font-bold text-surface-900 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"/></svg> Gala Corporativa</p>
+                        <p class="text-[10px] text-surface-400 font-medium">200 invitados · Cartagena</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Garden Ceremony -->
+                <div class="masonry-item group" data-category="boda" data-aos="fade-up" data-aos-delay="200">
+                    <img th:src="@{/images/inspiration/garden-ceremony.png}" alt="Ceremonia en jardín" class="w-full block rounded-[20px]" loading="lazy">
+                    <div class="overlay-gradient rounded-[20px]"></div>
+
+                    <div class="product-pin" style="top: 45%; left: 25%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Silla Plegable Blanca</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Estilo minimalista</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$8.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Silla Plegable Blanca', 8000, '/images/inspiration/garden-ceremony.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-pin" style="top: 70%; left: 55%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip tooltip-left">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Arco de Madera Rústico</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Incluye base estable</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$120.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Arco de Madera Rústico', 120000, '/images/inspiration/garden-ceremony.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-badge">
+                        <p class="text-[11px] font-bold text-surface-900 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg> Ceremonia al Aire Libre</p>
+                        <p class="text-[10px] text-surface-400 font-medium">80 invitados · Santa Marta</p>
+                    </div>
+                </div>
+
+                <!-- Card 4: Rustic Barn -->
+                <div class="masonry-item group" data-category="rustico" data-aos="fade-up" data-aos-delay="50">
+                    <img th:src="@{/images/inspiration/rustic-barn.png}" alt="Boda rústica en granero" class="w-full block rounded-[20px]" loading="lazy">
+                    <div class="overlay-gradient rounded-[20px]"></div>
+
+                    <div class="product-pin" style="top: 48%; left: 30%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Silla Crossback Madera</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Estilo rústico elegante</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$12.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Silla Crossback Madera', 12000, '/images/inspiration/rustic-barn.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-pin" style="top: 35%; left: 65%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip tooltip-left">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Mesa Tipo Granja</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Madera natural 2.4m</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$55.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Mesa Tipo Granja', 55000, '/images/inspiration/rustic-barn.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-badge">
+                        <p class="text-[11px] font-bold text-surface-900 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg> Boda Rústica</p>
+                        <p class="text-[10px] text-surface-400 font-medium">150 invitados · Sincelejo</p>
+                    </div>
+                </div>
+
+                <!-- Card 5: Beach Cocktail -->
+                <div class="masonry-item group" data-category="social" data-aos="fade-up" data-aos-delay="150">
+                    <img th:src="@{/images/inspiration/beach-cocktail.png}" alt="Evento coctel en playa" class="w-full block rounded-[20px]" loading="lazy">
+                    <div class="overlay-gradient rounded-[20px]"></div>
+
+                    <div class="product-pin" style="top: 50%; left: 45%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip tooltip-left">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Mesa Coctelera Alta</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Con faldón blanco</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$25.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Mesa Coctelera Alta', 25000, '/images/inspiration/beach-cocktail.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-badge">
+                        <p class="text-[11px] font-bold text-surface-900 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg> Cóctel en Playa</p>
+                        <p class="text-[10px] text-surface-400 font-medium">60 invitados · San Andrés</p>
+                    </div>
+                </div>
+
+                <!-- Card 6: Quinceañera -->
+                <div class="masonry-item group" data-category="quinceañera" data-aos="fade-up" data-aos-delay="250">
+                    <img th:src="@{/images/inspiration/quinceanera.png}" alt="Fiesta de quinceañera" class="w-full block rounded-[20px]" loading="lazy">
+                    <div class="overlay-gradient rounded-[20px]"></div>
+
+                    <div class="product-pin" style="top: 45%; left: 25%;">
+                        <div class="pin-dot" onclick="event.stopPropagation()"></div>
+                        <div class="pin-tooltip">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-[13px] font-extrabold text-surface-900 leading-tight">Silla Chiavari Dorada</p>
+                                    <p class="text-[11px] text-surface-400 font-medium">Con cojín rosa</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-surface-100">
+                                <span class="text-base font-black text-furent-600">$15.000<span class="text-[10px] font-medium text-surface-400">/día</span></span>
+                                <button class="pin-add-btn" onclick="addFromPin(this, 'Silla Chiavari Dorada', 15000, '/images/inspiration/quinceanera.png')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-badge">
+                        <p class="text-[11px] font-bold text-surface-900 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265z"/></svg> Quinceañera</p>
+                        <p class="text-[10px] text-surface-400 font-medium">100 invitados · Bogotá</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Dynamic Products Grid from DB -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12" th:if="${products != null and !products.isEmpty()}">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold text-surface-900 tracking-tight mb-2">¿Te gustó algo? Explora nuestro catálogo</h2>
+                <p class="text-surface-500 text-sm">Estos son algunos de los mobiliarios disponibles para tu próximo evento</p>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+                <th:block th:each="p, iter : ${products}" th:if="${iter.index < 8}">
+                    <a th:href="@{'/producto/' + ${p.id}}" class="group bg-white rounded-2xl overflow-hidden border border-surface-100 shadow-soft card-hover">
+                        <div class="aspect-square overflow-hidden">
+                            <img th:src="${p.imagenUrl}" th:alt="${p.nombre}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                        </div>
+                        <div class="p-4">
+                            <p class="text-sm font-bold text-surface-900 truncate" th:text="${p.nombre}">Producto</p>
+                            <p class="text-xs text-surface-400 mt-0.5" th:text="${p.categoriaNombre}">Categoría</p>
+                            <p class="text-base font-black text-furent-600 mt-2" th:text="'$' + ${#numbers.formatDecimal(p.precioPorDia, 0, 'COMMA', 0, 'POINT')} + '/día'">$0/día</p>
+                        </div>
+                    </a>
+                </th:block>
+            </div>
+            <div class="text-center mt-8">
+                <a th:href="@{/catalogo}" class="inline-flex items-center gap-2 px-8 py-3.5 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-all shadow-md">
+                    Ver catálogo completo
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                </a>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+            <div class="bg-gradient-to-r from-surface-900 to-surface-800 rounded-3xl px-8 py-12 md:px-16 md:py-16 text-center">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">¿Quieres este look para tu evento?</h2>
+                <p class="text-surface-300 mb-8 max-w-lg mx-auto">Cuéntanos tu visión y te ayudaremos a recrearla con nuestro mobiliario premium.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a th:href="@{/cotizacion}" class="inline-flex items-center justify-center px-8 py-3.5 bg-white text-surface-900 font-semibold rounded-xl hover:bg-surface-50 transition-colors shadow-lg">Solicitar Cotización</a>
+                    <a th:href="@{/contacto}" class="inline-flex items-center justify-center px-8 py-3.5 border-2 border-white/20 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors">Contáctanos</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        // Format COP currency
+        function formatCOP(n) { return '$' + Math.round(n).toLocaleString('es-CO'); }
+
+        // Add product from inspiration pin directly to bag (localStorage)
+        function addFromPin(btn, name, price, image) {
+            let bag = [];
+            try { bag = JSON.parse(localStorage.getItem('furent_bag') || '[]'); } catch(e) {}
+
+            // Check if already in bag
+            const existing = bag.find(item => item.name === name);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                bag.push({ name: name, price: price, qty: 1, image: image, maxQty: 100, maxStock: 9999 });
+            }
+
+            localStorage.setItem('furent_bag', JSON.stringify(bag));
+
+            // Visual feedback
+            btn.classList.add('added');
+            btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg> ¡Agregado!';
+
+            // Reset after 2 seconds
+            setTimeout(() => {
+                btn.classList.remove('added');
+                btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Agregar';
+            }, 2000);
+
+            // Update bag count globally
+            if (typeof updateBagCount === 'function') updateBagCount();
+
+            // Show toast
+            if (typeof showToast === 'function') {
+                showToast({ message: name + ' agregado a la bolsa', title: 'Inspiración', type: 'success', duration: 3000 });
+            }
+        }
+
+        // Category filter for masonry grid
+        function filterGallery(category, btn) {
+            // Update active pill
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+
+            const items = document.querySelectorAll('.masonry-item');
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = '';
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Close tooltips on mobile when tapping outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.product-pin')) {
+                document.querySelectorAll('.product-pin.active').forEach(pin => pin.classList.remove('active'));
+            }
+        });
+
+        // Mobile: toggle pin tooltip on tap
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.pin-dot').forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const pin = dot.closest('.product-pin');
+                    const wasActive = pin.classList.contains('active');
+                    document.querySelectorAll('.product-pin.active').forEach(p => p.classList.remove('active'));
+                    if (!wasActive) pin.classList.add('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>
