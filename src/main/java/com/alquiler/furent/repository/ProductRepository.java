@@ -27,4 +27,8 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     List<Product> searchProducts(String keyword);
 
     List<Product> findByIdIn(List<String> ids);
+
+    List<Product> findByTenantIdAndDisponible(String tenantId, boolean disponible);
+
+    List<Product> findByTenantId(String tenantId);
 }

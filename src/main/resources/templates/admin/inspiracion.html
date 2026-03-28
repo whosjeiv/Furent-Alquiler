@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es"
+      th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'inspiracion')}">
+<title>Inspiración — Admin Furent</title>
+<main>
+<style>
+    .inspiration-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .inspiration-grid.is-wide { grid-template-columns: 1fr; }
+    .inspiration-card { position: relative; border-radius: 1rem; overflow: hidden; background: white; border: 1px solid #e4e4e7; transition: all 0.3s ease; }
+    html.dark .inspiration-card { background: #18181b; border-color: #27272a; }
+    .inspiration-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+    .inspiration-card .card-image { width: 100%; height: 220px; object-fit: cover; }
+    .inspiration-card .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s; }
+    .inspiration-card:hover .card-overlay { opacity: 1; }
+    .inspiration-card.is-hidden { display: none; }
+    /* Wide view mode */
+    .inspiration-grid.is-wide .inspiration-card { display: flex; flex-direction: row; }
+    .inspiration-grid.is-wide .inspiration-card:hover { transform: none; }
+    .inspiration-grid.is-wide .card-image-wrapper { width: 280px; flex-shrink: 0; }
+    .inspiration-grid.is-wide .card-image { height: 100%; min-height: 200px; }
+    .inspiration-grid.is-wide .card-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .inspiration-grid.is-wide .card-description { display: block !important; }
+    .pin-editor-container { position: relative; width: 100%; background: #f4f4f5; border-radius: 1rem; overflow: hidden; }
+    html.dark .pin-editor-container { background: #18181b; }
+    .pin-editor-image { width: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+    .editor-pin { position: absolute; width: 32px; height: 32px; background: rgba(255,255,255,0.95); border: 3px solid #E07A3A; border-radius: 50%; cursor: move; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(224,122,58,0.4); transform: translate(-50%, -50%); z-index: 10; transition: transform 0.15s, box-shadow 0.15s; }
+    .editor-pin:hover { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 6px 20px rgba(224,122,58,0.5); }
+    .editor-pin::after { content: '+'; font-size: 18px; font-weight: 800; color: #E07A3A; }
+    .editor-pin.has-product { border-color: #22c55e; }
+    .editor-pin.has-product::after { content: '✓'; color: #22c55e; }
+    .editor-pin.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.3); }
+    .pin-info-panel { background: white; border: 1px solid #e4e4e7; border-radius: 1rem; padding: 1.5rem; }
+    html.dark .pin-info-panel { background: #18181b; border-color: #27272a; }
+    .product-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; max-height: 300px; overflow-y: auto; }
+    .product-option { padding: 0.75rem; border: 2px solid #e4e4e7; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+    html.dark .product-option { border-color: #27272a; }
+    .product-option:hover { border-color: #E07A3A; background: rgba(224,122,58,0.05); }
+    .product-option.selected { border-color: #E07A3A; background: rgba(224,122,58,0.1); }
+    .product-option img { width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; margin: 0 auto 0.5rem; }
+    .color-picker { display: flex; gap: 0.5rem; }
+    .color-option { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+    .color-option:hover, .color-option.selected { transform: scale(1.15); }
+    .color-option.selected { border-color: #18181b; }
+    html.dark .color-option.selected { border-color: #f4f4f5; }
+    .upload-zone { border: 2px dashed #d4d4d8; border-radius: 1rem; padding: 3rem; text-align: center; transition: all 0.3s; cursor: pointer; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: #E07A3A; background: rgba(224,122,58,0.05); }
+    html.dark .upload-zone { border-color: #3f3f46; }
+    html.dark .upload-zone:hover { border-color: #E07A3A; }
+
+    .pin-editor-viewport { position: relative; width: 100%; height: 560px; overflow: auto; border-radius: 1rem; background: #f4f4f5; cursor: crosshair; }
+    html.dark .pin-editor-viewport { background: #18181b; }
+    .pin-editor-viewport.is-pan-mode { cursor: grab; }
+    .pin-editor-viewport.is-panning { cursor: grabbing; }
+    .pin-editor-workspace { min-width: 100%; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; }
+    .pin-editor-container { width: fit-content; height: fit-content; max-width: none; max-height: none; background: #18181b; box-shadow: 0 18px 36px rgba(0,0,0,0.16); }
+    .pin-editor-image { width: 100%; height: 100%; max-width: none; max-height: none; pointer-events: none; }
+    .editor-pin { border-color: var(--pin-color, #E07A3A); box-shadow: 0 8px 20px var(--pin-shadow, rgba(224,122,58,0.35)); }
+    .editor-pin:hover { box-shadow: 0 10px 24px var(--pin-shadow, rgba(224,122,58,0.35)); }
+    .editor-pin::after { color: var(--pin-color, #E07A3A); }
+    .editor-pin.has-product { border-color: var(--pin-color, #E07A3A); }
+    .editor-pin.has-product::after { color: var(--pin-color, #E07A3A); }
+    .editor-pin.has-product::before { content: ''; position: absolute; right: -2px; bottom: -2px; width: 10px; height: 10px; border-radius: 9999px; background: #22c55e; border: 2px solid white; }
+    .editor-pin.selected { border-color: var(--pin-color, #E07A3A); box-shadow: 0 0 0 4px rgba(59,130,246,0.28), 0 8px 20px var(--pin-shadow, rgba(224,122,58,0.35)); }
+
+    .product-selector { max-height: 340px; padding-right: 0.25rem; }
+    .product-selector.is-wide { display: grid; grid-template-columns: 1fr; }
+    .product-option { display: flex; flex-direction: column; gap: 0.55rem; text-align: left; background: white; }
+    html.dark .product-option { background: #18181b; }
+    .product-option img { width: 100%; height: 92px; object-fit: cover; border-radius: 0.75rem; margin: 0; }
+    .product-option .product-meta { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+    .product-option .product-description { display: none; font-size: 11px; line-height: 1.35; color: #71717a; }
+    html.dark .product-option .product-description { color: #a1a1aa; }
+    .product-option .product-badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .product-selector.is-wide .product-option { flex-direction: row; align-items: flex-start; }
+    .product-selector.is-wide .product-option img { width: 84px; height: 84px; flex-shrink: 0; }
+    .product-selector.is-wide .product-option .product-description { display: block; }
+
+    /* Toolbox styles */
+    .editor-toolbox .tool-btn { position: relative; }
+    .editor-toolbox .tool-btn.active { background: #E07A3A; color: white; box-shadow: 0 2px 8px rgba(224,122,58,0.3); }
+    .editor-toolbox .tool-btn.active:hover { background: #c9612e; }
+    .editor-toolbox .tool-btn:not(.active):hover { background: rgba(0,0,0,0.06); }
+    html.dark .editor-toolbox .tool-btn:not(.active):hover { background: rgba(255,255,255,0.08); }
+</style>
+
+<div class="p-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-surface-900 dark:text-white">Galería de Inspiración</h1>
+            <p class="text-surface-500 mt-1">Gestiona las imágenes y puntos de mobiliario para la página de inspiración</p>
+        </div>
+        <button onclick="openUploadModal()" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-bold rounded-xl shadow-lg shadow-furent-500/30 hover:shadow-xl hover:shadow-furent-500/40 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Nueva Imagen
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-furent-50 dark:bg-furent-500/10 flex items-center justify-center">
+                    <svg class="w-7 h-7 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-surface-500">Total Imágenes</p>
+                    <p class="text-2xl font-black text-surface-900 dark:text-white" th:text="${#lists.size(images)}">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+                    <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-surface-500">Puntos Activos</p>
+                    <p class="text-2xl font-black text-surface-900 dark:text-white" id="totalPins">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                    <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-surface-500">Mobiliarios Vinculados</p>
+                    <p class="text-2xl font-black text-surface-900 dark:text-white" id="linkedProducts">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search, Filters and View Toggle -->
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+        <!-- Search -->
+        <div class="relative flex-1 max-w-md">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+            <input type="text" id="pageSearchInput" placeholder="Buscar por título, evento o ubicación..."
+                class="w-full pl-12 pr-4 py-3 text-sm border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800 shadow-sm">
+        </div>
+        <!-- Filters -->
+        <div class="flex items-center gap-3 flex-wrap">
+            <select id="filterEventType" class="px-4 py-3 text-sm border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 focus:ring-2 focus:ring-furent-500 focus:border-transparent shadow-sm">
+                <option value="">Todos los eventos</option>
+                <option value="Boda">Bodas</option>
+                <option value="Quinceañera">Quinceañeras</option>
+                <option value="Cumpleaños">Cumpleaños</option>
+                <option value="Grado">Graduaciones</option>
+                <option value="Corporativo">Corporativos</option>
+                <option value="Social">Social / Fiesta</option>
+                <option value="Bautizo">Bautizo / Baby Shower</option>
+            </select>
+            <select id="filterStatus" class="px-4 py-3 text-sm border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 focus:ring-2 focus:ring-furent-500 focus:border-transparent shadow-sm">
+                <option value="">Todos los estados</option>
+                <option value="active">Activas</option>
+                <option value="inactive">Inactivas</option>
+            </select>
+            <button onclick="clearPageFilters()" class="px-4 py-3 text-sm font-medium text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+            </button>
+        </div>
+        <!-- View Toggle -->
+        <div class="flex items-center gap-1 p-1 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 shadow-sm">
+            <button id="compactViewBtn" onclick="setPageViewMode('compact')" class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg bg-furent-500 text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                Compacto
+            </button>
+            <button id="wideViewBtn" onclick="setPageViewMode('wide')" class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
+                Amplio
+            </button>
+        </div>
+    </div>
+
+    <!-- Images Grid -->
+    <div class="inspiration-grid" id="imagesGrid">
+        <div th:each="image : ${images}" class="inspiration-card" 
+             th:data-id="${image.id}"
+             th:data-title="${image.title}"
+             th:data-event="${image.eventType}"
+             th:data-location="${image.location}"
+             th:data-active="${image.active}"
+             th:data-pins="${#lists.size(image.pins)}"
+             th:data-category="${image.category}">
+            <!-- Image -->
+            <div class="card-image-wrapper relative">
+                <img th:src="${image.imageUrl}" th:alt="${image.title}" class="card-image w-full h-56 object-cover">
+                <div class="card-overlay"></div>
+                <!-- Drag handle -->
+                <div class="drag-handle absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/40 hover:bg-black/60 rounded-full cursor-grab active:cursor-grabbing transition-all opacity-0 group-hover:opacity-100 z-20 backdrop-blur-sm">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 6a1 1 0 110-2 1 1 0 010 2zM8 13a1 1 0 110-2 1 1 0 010 2zM8 20a1 1 0 110-2 1 1 0 010 2zM16 6a1 1 0 110-2 1 1 0 010 2zM16 13a1 1 0 110-2 1 1 0 010 2zM16 20a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </div>
+                <!-- Badges -->
+                <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
+                    <div class="flex flex-wrap gap-2">
+                        <span th:if="${image.eventType}" class="px-2.5 py-1 bg-white/90 dark:bg-surface-800/90 backdrop-blur text-xs font-bold text-surface-700 dark:text-surface-300 rounded-lg flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+                            <span th:text="${image.eventType}">Evento</span>
+                        </span>
+                        <span class="px-2.5 py-1 bg-white/90 dark:bg-surface-800/90 backdrop-blur text-xs font-bold text-surface-700 dark:text-surface-300 rounded-lg flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                            <span th:text="${#lists.size(image.pins)}">0</span> puntos
+                        </span>
+                    </div>
+                    <span th:if="${image.active}" class="px-2.5 py-1 bg-green-500 text-white text-xs font-bold rounded-lg shadow-sm">Activa</span>
+                    <span th:unless="${image.active}" class="px-2.5 py-1 bg-surface-500 text-white text-xs font-bold rounded-lg shadow-sm">Inactiva</span>
+                </div>
+            </div>
+            <!-- Content -->
+            <div class="card-content p-5">
+                <h3 class="font-black text-lg text-surface-900 dark:text-white mb-1 truncate" th:text="${image.title}">Título</h3>
+                <p class="text-sm text-surface-500 mb-1 flex items-center gap-2">
+                    <span th:if="${image.category}" class="inline-flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
+                        <span th:text="${image.category}">Categoría</span>
+                    </span>
+                    <span th:if="${image.location}" class="inline-flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                        <span th:text="${image.location}">Ubicación</span>
+                    </span>
+                </p>
+                <!-- Wide mode: extra info (hidden in compact) -->
+                <p class="card-description text-sm text-surface-400 dark:text-surface-500 mt-2 line-clamp-2 hidden">
+                    <span th:if="${image.guestCount != null}" th:text="'Capacidad: ' + ${image.guestCount} + ' personas'">Capacidad</span>
+                </p>
+                <!-- Buttons -->
+                <div class="flex gap-2 mt-4">
+                    <button th:data-id="${image.id}" onclick="openEditor(this.dataset.id)" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-furent-500 to-furent-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-furent-500/30 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                        Editar Puntos
+                    </button>
+                    <button th:data-id="${image.id}" onclick="editImageInfo(this.dataset.id)" class="px-3 py-2.5 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors" title="Editar información">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                    </button>
+                    <button th:data-id="${image.id}" onclick="toggleImageStatus(this.dataset.id)" th:title="${image.active} ? 'Desactivar' : 'Activar'" class="px-3 py-2.5 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors">
+                        <svg th:if="${image.active}" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <svg th:unless="${image.active}" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                    </button>
+                    <button th:data-id="${image.id}" onclick="deleteImage(this.dataset.id)" class="px-3 py-2.5 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors" title="Eliminar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(images)}" class="col-span-full">
+            <div class="upload-zone" onclick="openUploadModal()" id="emptyUploadZone">
+                <svg class="w-16 h-16 mx-auto text-surface-300 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                <p class="text-lg font-bold text-surface-600 dark:text-surface-400 mb-2">No hay imágenes de inspiración</p>
+                <p class="text-surface-400 mb-4">Sube tu primera imagen para comenzar a crear tu galería</p>
+                <span class="inline-flex items-center gap-2 px-6 py-3 bg-furent-500 text-white font-bold rounded-xl">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Subir Imagen
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<dialog id="uploadModal" class="fixed inset-0 z-50 bg-transparent p-4 m-auto max-w-2xl w-full backdrop:bg-black/60">
+    <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-2xl overflow-hidden"
+         x-data="{
+            categoryOpen: false,
+            eventOpen: false,
+            activeToggle: true,
+            category: { value: 'bodas', label: 'Bodas', icon: 'M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L12 12m6.894 5.785l-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864l-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495' },
+            eventType: { value: '', label: 'Selecciona un tipo', icon: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' },
+            categories: [
+                { value: 'bodas', label: 'Bodas', icon: 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z' },
+                { value: 'corporativo', label: 'Corporativo', icon: 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21' },
+                { value: 'cumpleanos', label: 'Cumpleaños', icon: 'M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.049 1.837 2.128v1.5c0 .537-.203 1.057-.604 1.42l-1.245 1.168A4.5 4.5 0 0115.354 19.5H8.646a4.5 4.5 0 01-3.21-1.332l-1.245-1.168A1.955 1.955 0 013.75 15.5v-1.5c0-1.079.768-1.968 1.837-2.128.386-.058.773-.111 1.163-.16' },
+                { value: 'social', label: 'Social', icon: 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z' },
+                { value: 'quinceanera', label: 'Quinceañera', icon: 'M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z' },
+                { value: 'graduacion', label: 'Graduación', icon: 'M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5' }
+            ],
+            eventTypes: [
+                { value: 'Boda', label: 'Boda', icon: 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z' },
+                { value: 'Quinceañera', label: 'Quinceañera', icon: 'M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z' },
+                { value: 'Cumpleaños', label: 'Cumpleaños', icon: 'M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.049 1.837 2.128v1.5c0 .537-.203 1.057-.604 1.42l-1.245 1.168A4.5 4.5 0 0115.354 19.5H8.646a4.5 4.5 0 01-3.21-1.332l-1.245-1.168A1.955 1.955 0 013.75 15.5v-1.5c0-1.079.768-1.968 1.837-2.128.386-.058.773-.111 1.163-.16' },
+                { value: 'Grado', label: 'Graduación', icon: 'M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5' },
+                { value: 'Corporativo', label: 'Corporativo', icon: 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21' },
+                { value: 'Social', label: 'Social / Fiesta', icon: 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z' },
+                { value: 'Bautizo', label: 'Bautizo / Baby Shower', icon: 'M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z' }
+            ]
+         }">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-7 py-5 border-b border-surface-100 dark:border-surface-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-furent-50 dark:bg-furent-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black text-surface-900 dark:text-white">Nueva Imagen de Inspiración</h2>
+                    <p class="text-xs text-surface-400">Sube y configura una imagen para la galería</p>
+                </div>
+            </div>
+            <button onclick="closeUploadModal()" class="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors text-surface-400 hover:text-surface-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="uploadForm" enctype="multipart/form-data" class="overflow-y-auto max-h-[80vh]">
+            <!-- Drop zone + preview -->
+            <div class="px-7 pt-6">
+                <div class="upload-zone cursor-pointer" id="dropZone">
+                    <input type="file" id="fileInput" name="file" accept="image/*" class="hidden" required>
+                    <div class="flex flex-col items-center">
+                        <div class="w-14 h-14 rounded-2xl bg-furent-50 dark:bg-furent-500/10 flex items-center justify-center mb-3">
+                            <svg class="w-7 h-7 text-furent-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                        </div>
+                        <p class="text-surface-700 dark:text-surface-300 font-semibold">Arrastra tu imagen aquí</p>
+                        <p class="text-sm text-surface-400 mt-1">o <span class="text-furent-500 font-bold">haz clic para seleccionar</span></p>
+                        <p class="text-xs text-surface-400 mt-2 px-4 py-1.5 bg-surface-50 dark:bg-surface-700 rounded-lg">PNG, JPG, WEBP · Máx. 10 MB · Recomendado 1200×800px</p>
+                    </div>
+                </div>
+                <div id="imagePreview" class="hidden mt-3 relative">
+                    <img id="previewImg" class="w-full h-44 object-cover rounded-xl">
+                    <button type="button" onclick="clearPreview()" class="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección: Información Principal -->
+            <div class="px-7 pt-5">
+                <p class="text-xs font-black text-surface-400 uppercase tracking-widest mb-3">Información principal</p>
+                <div class="space-y-4">
+                    <!-- Título -->
+                    <div>
+                        <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Título de la imagen <span class="text-furent-500">*</span></label>
+                        <div class="relative">
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                            <input type="text" name="title" required placeholder="Ej: Recepción elegante en jardín" class="w-full pl-10 pr-4 py-3 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Tipo de Evento + Categoría -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Tipo de Evento: Custom dropdown -->
+                        <div>
+                            <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Tipo de evento</label>
+                            <input type="hidden" name="eventType" :value="eventType.value">
+                            <div class="relative">
+                                <button type="button" @click="eventOpen = !eventOpen; categoryOpen = false"
+                                    class="w-full flex items-center justify-between px-3.5 py-3 border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 text-sm transition-all hover:border-furent-400"
+                                    :class="eventOpen ? 'ring-2 ring-furent-500 border-transparent' : ''">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-furent-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="eventType.icon"/></svg>
+                                        <span class="text-surface-700 dark:text-surface-300" x-text="eventType.label"></span>
+                                    </span>
+                                    <svg class="w-4 h-4 text-surface-400 transition-transform" :class="eventOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div x-show="eventOpen" x-transition @click.away="eventOpen = false"
+                                    class="absolute z-20 w-full mt-1.5 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-xl shadow-xl overflow-hidden">
+                                    <template x-for="opt in eventTypes" :key="opt.value">
+                                        <button type="button" @click="eventType = opt; eventOpen = false"
+                                            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-furent-50 dark:hover:bg-furent-500/10 transition-colors text-left"
+                                            :class="eventType.value === opt.value ? 'bg-furent-50 dark:bg-furent-500/10 text-furent-600 font-bold' : 'text-surface-700 dark:text-surface-300'">
+                                            <svg class="w-4 h-4 flex-shrink-0" :class="eventType.value === opt.value ? 'text-furent-500' : 'text-surface-400'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="opt.icon"/></svg>
+                                            <span x-text="opt.label"></span>
+                                            <svg x-show="eventType.value === opt.value" class="w-4 h-4 text-furent-500 ml-auto" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categoría: Custom dropdown -->
+                        <div>
+                            <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Categoría</label>
+                            <input type="hidden" name="category" :value="category.value">
+                            <div class="relative">
+                                <button type="button" @click="categoryOpen = !categoryOpen; eventOpen = false"
+                                    class="w-full flex items-center justify-between px-3.5 py-3 border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 text-sm transition-all hover:border-furent-400"
+                                    :class="categoryOpen ? 'ring-2 ring-furent-500 border-transparent' : ''">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-furent-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="category.icon"/></svg>
+                                        <span class="text-surface-700 dark:text-surface-300" x-text="category.label"></span>
+                                    </span>
+                                    <svg class="w-4 h-4 text-surface-400 transition-transform" :class="categoryOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div x-show="categoryOpen" x-transition @click.away="categoryOpen = false"
+                                    class="absolute z-20 w-full mt-1.5 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-600 rounded-xl shadow-xl overflow-hidden">
+                                    <template x-for="cat in categories" :key="cat.value">
+                                        <button type="button" @click="category = cat; categoryOpen = false"
+                                            class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-furent-50 dark:hover:bg-furent-500/10 transition-colors text-left"
+                                            :class="category.value === cat.value ? 'bg-furent-50 dark:bg-furent-500/10 text-furent-600 font-bold' : 'text-surface-700 dark:text-surface-300'">
+                                            <svg class="w-4 h-4 flex-shrink-0" :class="category.value === cat.value ? 'text-furent-500' : 'text-surface-400'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="cat.icon"/></svg>
+                                            <span x-text="cat.label"></span>
+                                            <svg x-show="category.value === cat.value" class="w-4 h-4 text-furent-500 ml-auto" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección: Detalles adicionales -->
+            <div class="px-7 pt-5">
+                <p class="text-xs font-black text-surface-400 uppercase tracking-widest mb-3">Detalles adicionales</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Ubicación -->
+                    <div>
+                        <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Ubicación</label>
+                        <div class="relative">
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                            <input type="text" name="location" placeholder="Ej: Santa Marta" class="w-full pl-10 pr-4 py-3 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm">
+                        </div>
+                    </div>
+                    <!-- Invitados -->
+                    <div>
+                        <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Número de invitados</label>
+                        <div class="relative">
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                            <input type="number" name="guestCount" placeholder="Ej: 150" min="1" class="w-full pl-10 pr-4 py-3 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm">
+                        </div>
+                    </div>
+                    <!-- Orden -->
+                    <div>
+                        <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Orden de visualización</label>
+                        <div class="relative">
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                            <input type="number" name="displayOrder" placeholder="0" min="0" value="0" class="w-full pl-10 pr-4 py-3 border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800 text-surface-900 dark:text-white text-sm">
+                        </div>
+                    </div>
+                    <!-- Estado activo -->
+                    <div>
+                        <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-1.5">Estado</label>
+                        <div class="flex items-center gap-3 px-4 py-3 border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 cursor-pointer" @click="activeToggle = !activeToggle">
+                            <input type="hidden" name="active" :value="activeToggle ? 'true' : 'false'">
+                            <div class="relative w-11 h-6 flex-shrink-0">
+                                <div class="w-11 h-6 rounded-full transition-colors" :class="activeToggle ? 'bg-furent-500' : 'bg-surface-300 dark:bg-surface-600'"></div>
+                                <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="activeToggle ? 'translate-x-5' : 'translate-x-0'"></div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold" :class="activeToggle ? 'text-furent-600' : 'text-surface-500'" x-text="activeToggle ? 'Activa' : 'Inactiva'"></p>
+                                <p class="text-xs text-surface-400" x-text="activeToggle ? 'Visible en la galería pública' : 'Oculta de la galería'"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex gap-3 px-7 py-5 mt-2 border-t border-surface-100 dark:border-surface-700">
+                <button type="button" onclick="closeUploadModal()" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300 font-bold rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-furent-500/30 transition-all text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                    Subir Imagen
+                </button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<!-- Pin Editor Modal -->
+<dialog id="editorModal" class="fixed inset-0 z-50 bg-transparent p-4 m-auto max-w-6xl w-full backdrop:bg-black/60">
+    <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-2xl h-[92vh] overflow-hidden flex flex-col"
+         x-data="{ productSearch: '' }">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-7 py-4 border-b border-surface-200 dark:border-surface-700 flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-furent-50 dark:bg-furent-500/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black text-surface-900 dark:text-white">Editor de Puntos</h2>
+                    <p class="text-xs text-surface-400">Clic en la imagen para agregar · Arrastra para mover · Clic en punto para editar</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                    <div class="w-2 h-2 rounded-full bg-furent-500 animate-pulse"></div>
+                    <span class="text-xs font-bold text-surface-600 dark:text-surface-400"><span id="pinCount">0</span> puntos</span>
+                </div>
+                <button onclick="closeEditor()" class="p-2 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors text-surface-400 hover:text-surface-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-hidden flex">
+            <!-- Left: Image editor (2/3) -->
+            <div class="flex-1 p-6 overflow-hidden flex flex-col min-w-0">
+                <!-- Toolbox -->
+                <div class="editor-toolbox flex items-center gap-1 p-1.5 mb-3 bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 rounded-xl shadow-sm">
+                    <!-- Tool Mode Group -->
+                    <div class="flex items-center gap-0.5 p-1 bg-surface-100 dark:bg-surface-700 rounded-lg" title="Herramientas">
+                        <button id="pinToolButton" type="button" onclick="setEditorTool('pin')" class="tool-btn w-9 h-9 flex items-center justify-center rounded-lg transition-all" title="Agregar puntos (P)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                        </button>
+                        <button id="panToolButton" type="button" onclick="setEditorTool('pan')" class="tool-btn w-9 h-9 flex items-center justify-center rounded-lg transition-all" title="Mover vista (M)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.05 4.575a1.575 1.575 0 10-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 013.15 0v1.5m-3.15 0l.075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 013.15 0V15M6.9 7.575a1.575 1.575 0 10-3.15 0v8.175a6.75 6.75 0 006.75 6.75h2.018a5.25 5.25 0 003.712-1.538l1.732-1.732a5.25 5.25 0 001.538-3.712l.003-2.024a.668.668 0 01.198-.471 1.575 1.575 0 10-2.228-2.228 3.818 3.818 0 00-1.12 2.687M6.9 7.575V12m6.27 4.318A4.49 4.49 0 0116.35 15"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="w-px h-7 bg-surface-200 dark:bg-surface-600 mx-1"></div>
+                    
+                    <!-- Zoom Group -->
+                    <div class="flex items-center gap-0.5 p-1 bg-surface-100 dark:bg-surface-700 rounded-lg" title="Zoom">
+                        <button type="button" onclick="zoomOutEditor()" class="tool-btn w-9 h-9 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-600 transition-all" title="Alejar (-)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6"/></svg>
+                        </button>
+                        <span id="editorZoomLabel" class="min-w-[48px] text-center text-xs font-black text-surface-700 dark:text-surface-300 select-none">100%</span>
+                        <button type="button" onclick="zoomInEditor()" class="tool-btn w-9 h-9 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-600 transition-all" title="Acercar (+)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="w-px h-7 bg-surface-200 dark:bg-surface-600 mx-1"></div>
+                    
+                    <!-- View Actions Group -->
+                    <div class="flex items-center gap-0.5 p-1 bg-surface-100 dark:bg-surface-700 rounded-lg" title="Vista">
+                        <button type="button" onclick="fitEditorToViewport()" class="tool-btn w-9 h-9 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-600 transition-all" title="Ajustar a ventana (F)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+                        </button>
+                        <button type="button" onclick="resetEditorView()" class="tool-btn w-9 h-9 flex items-center justify-center rounded-lg text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-600 transition-all" title="Restablecer (R)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="w-px h-7 bg-surface-200 dark:bg-surface-600 mx-1"></div>
+                    
+                    <!-- Add Pin -->
+                    <button onclick="addPinAtCenter()" class="tool-btn flex items-center gap-2 px-3 h-9 bg-furent-500 text-white text-xs font-bold rounded-lg hover:bg-furent-600 transition-all shadow-sm" title="Agregar punto en el centro (C)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        <span class="hidden sm:inline">Agregar</span>
+                    </button>
+                    
+                    <!-- Spacer -->
+                    <div class="flex-1"></div>
+                    
+                    <!-- Mode indicator -->
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                        <div id="editorModeIcon" class="w-4 h-4 text-furent-500">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                        </div>
+                        <span id="editorModeLabel" class="text-xs font-bold text-surface-600 dark:text-surface-400">Puntos</span>
+                    </div>
+                </div>
+                <!-- Canvas -->
+                <div id="pinEditorViewport" class="pin-editor-viewport flex-1 min-h-0">
+                    <div id="pinEditorWorkspace" class="pin-editor-workspace">
+                        <div class="pin-editor-container" id="pinEditorContainer">
+                            <img id="editorImage" class="pin-editor-image" src="" alt="Editor">
+                        </div>
+                    </div>
+                </div>
+                <!-- Position display & hints -->
+                <div id="pinPositionDisplay" class="hidden mt-3 flex items-center gap-3 text-xs text-surface-500 bg-surface-50 dark:bg-surface-700 rounded-lg px-3 py-2">
+                    <svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span class="font-bold text-surface-700 dark:text-surface-300">Posición:</span>
+                    <span class="flex items-center gap-1">X: <span id="pinPosX" class="font-black text-furent-500">0</span>%</span>
+                    <span class="flex items-center gap-1">Y: <span id="pinPosY" class="font-black text-furent-500">0</span>%</span>
+                </div>
+            </div>
+
+            <!-- Right: Pin config panel (1/3) -->
+            <div class="w-[360px] flex-shrink-0 border-l border-surface-200 dark:border-surface-700 flex flex-col overflow-hidden">
+                <!-- No pin selected -->
+                <div id="noPinSelected" class="flex flex-col items-center justify-center h-full p-6 text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-surface-100 dark:bg-surface-700 flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                    </div>
+                    <p class="font-bold text-surface-600 dark:text-surface-400">Ningún punto seleccionado</p>
+                    <p class="text-sm text-surface-400 mt-1 leading-relaxed">Haz clic sobre la imagen para crear un punto, o selecciona uno existente</p>
+                    <div class="mt-4 flex flex-col gap-2 w-full text-xs text-surface-400">
+                        <div class="flex items-center gap-2 bg-surface-50 dark:bg-surface-700 rounded-lg px-3 py-2">
+                            <svg class="w-3.5 h-3.5 text-furent-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"/></svg>
+                            Clic → crear punto
+                        </div>
+                        <div class="flex items-center gap-2 bg-surface-50 dark:bg-surface-700 rounded-lg px-3 py-2">
+                            <svg class="w-3.5 h-3.5 text-furent-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75H6A2.25 2.25 0 003.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0120.25 6v1.5m0 9V18A2.25 2.25 0 0118 20.25h-1.5m-9 0H6A2.25 2.25 0 013.75 18v-1.5M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Arrastrar → mover punto
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pin editor panel -->
+                <div id="pinEditor" class="hidden flex flex-col overflow-hidden h-full">
+                    <div class="overflow-y-auto flex-1 p-4 space-y-4">
+                        <!-- Color del pin -->
+                        <div>
+                            <label class="block text-xs font-black text-surface-500 uppercase tracking-wider mb-2">Color del marcador</label>
+                            <div class="grid grid-cols-5 gap-2">
+                                <button type="button" data-color="green" onclick="selectPinColor('green')" title="Verde"
+                                    class="pin-color-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-transparent hover:border-green-400 transition-all group">
+                                    <div class="w-8 h-8 rounded-full bg-green-500 shadow-md shadow-green-500/30 group-hover:scale-110 transition-transform"></div>
+                                    <span class="text-[10px] font-bold text-surface-400">Verde</span>
+                                </button>
+                                <button type="button" data-color="pink" onclick="selectPinColor('pink')" title="Rosa"
+                                    class="pin-color-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-transparent hover:border-pink-400 transition-all group">
+                                    <div class="w-8 h-8 rounded-full bg-pink-500 shadow-md shadow-pink-500/30 group-hover:scale-110 transition-transform"></div>
+                                    <span class="text-[10px] font-bold text-surface-400">Rosa</span>
+                                </button>
+                                <button type="button" data-color="blue" onclick="selectPinColor('blue')" title="Azul"
+                                    class="pin-color-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-transparent hover:border-blue-400 transition-all group">
+                                    <div class="w-8 h-8 rounded-full bg-blue-500 shadow-md shadow-blue-500/30 group-hover:scale-110 transition-transform"></div>
+                                    <span class="text-[10px] font-bold text-surface-400">Azul</span>
+                                </button>
+                                <button type="button" data-color="amber" onclick="selectPinColor('amber')" title="Ámbar"
+                                    class="pin-color-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-transparent hover:border-amber-400 transition-all group">
+                                    <div class="w-8 h-8 rounded-full bg-amber-500 shadow-md shadow-amber-500/30 group-hover:scale-110 transition-transform"></div>
+                                    <span class="text-[10px] font-bold text-surface-400">Ámbar</span>
+                                </button>
+                                <button type="button" data-color="purple" onclick="selectPinColor('purple')" title="Morado"
+                                    class="pin-color-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-transparent hover:border-purple-400 transition-all group">
+                                    <div class="w-8 h-8 rounded-full bg-purple-500 shadow-md shadow-purple-500/30 group-hover:scale-110 transition-transform"></div>
+                                    <span class="text-[10px] font-bold text-surface-400">Morado</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mobiliario vinculado -->
+                        <div>
+                            <label class="block text-xs font-black text-surface-500 uppercase tracking-wider mb-2">Mobiliario vinculado</label>
+                            <!-- Selected product info -->
+                            <div id="selectedProductInfo" class="hidden mb-3 p-3 bg-furent-50 dark:bg-furent-500/10 border border-furent-200 dark:border-furent-500/20 rounded-xl">
+                                <div class="flex items-center gap-2.5">
+                                    <img id="selectedProductImg" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" src="" alt="">
+                                    <div class="flex-1 min-w-0">
+                                        <p id="selectedProductName" class="font-bold text-surface-900 dark:text-white text-sm truncate"></p>
+                                        <p id="selectedProductPrice" class="text-xs text-furent-600 font-bold"></p>
+                                    </div>
+                                    <button type="button" onclick="clearSelectedProduct()" class="p-1 hover:bg-furent-100 dark:hover:bg-furent-500/20 rounded-lg transition-colors flex-shrink-0" title="Quitar producto">
+                                        <svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Search -->
+                            <div class="relative mb-2">
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                                <input type="text" id="productSearchInput" placeholder="Buscar mobiliario..." x-model="productSearch"
+                                    class="w-full pl-8 pr-3 py-2 text-sm border border-surface-200 dark:border-surface-600 rounded-lg focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800">
+                            </div>
+                            <!-- Product grid -->
+                            <div class="product-selector" id="productSelector">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions footer -->
+                    <div class="p-4 border-t border-surface-200 dark:border-surface-700 flex-shrink-0 space-y-2">
+                        <button onclick="savePin()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-furent-500 text-white font-bold rounded-xl hover:bg-furent-600 transition-colors text-sm shadow-md shadow-furent-500/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Guardar cambios
+                        </button>
+                        <button onclick="deleteSelectedPin()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-surface-700 border border-red-200 dark:border-red-500/30 text-red-500 font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                            Eliminar punto
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+<!-- Hidden container for product data -->
+<div id="productsData" class="hidden">
+    <div th:each="p : ${products}" 
+         th:data-id="${p.id}" 
+         th:data-nombre="${p.nombre}" 
+         th:data-imagen="${p.imagenUrl}" 
+         th:data-descripcion="${(p.descripcionCorta != null and !#strings.isEmpty(p.descripcionCorta)) ? p.descripcionCorta : p.descripcion}"
+         th:data-precio="${p.precioPorDia}">
+    </div>
+</div>
+
+<script>
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+    
+    let currentImageId = null;
+    let currentImageData = null;
+    let selectedPinId = null;
+    let selectedProductId = null;
+    let selectedColor = 'green';
+    let isDragging = false;
+    let editorScale = 1;
+    let editorTool = 'pin';
+    let isViewportPanning = false;
+    let editorNaturalWidth = 0;
+    let editorNaturalHeight = 0;
+    let viewportPanState = { startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 };
+
+    const pinColorStyles = {
+        green: { color: '#22c55e', shadow: 'rgba(34,197,94,0.35)' },
+        pink: { color: '#ec4899', shadow: 'rgba(236,72,153,0.35)' },
+        blue: { color: '#3b82f6', shadow: 'rgba(59,130,246,0.35)' },
+        amber: { color: '#f59e0b', shadow: 'rgba(245,158,11,0.35)' },
+        purple: { color: '#a855f7', shadow: 'rgba(168,85,247,0.35)' }
+    };
+    
+    // Cargar productos desde los elementos data
+    const products = [];
+    document.querySelectorAll('#productsData > div').forEach(el => {
+        products.push({
+            id: el.dataset.id,
+            nombre: el.dataset.nombre,
+            imagenUrl: el.dataset.imagen || '/images/placeholder.png',
+            descripcion: el.dataset.descripcion || '',
+            precioPorDia: parseFloat(el.dataset.precio) || 0
+        });
+    });
+
+    // Upload Modal
+    function openUploadModal() {
+        document.getElementById('uploadModal').showModal();
+    }
+    function closeUploadModal() {
+        document.getElementById('uploadModal').close();
+        document.getElementById('uploadForm').reset();
+        document.getElementById('imagePreview').classList.add('hidden');
+        document.getElementById('dropZone').classList.remove('hidden');
+        document.getElementById('previewImg').src = '';
+    }
+
+    function clearPreview() {
+        document.getElementById('imagePreview').classList.add('hidden');
+        document.getElementById('dropZone').classList.remove('hidden');
+        document.getElementById('fileInput').value = '';
+        document.getElementById('previewImg').src = '';
+    }
+
+    // Drag & Drop for upload
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    
+    dropZone?.addEventListener('click', () => fileInput.click());
+    dropZone?.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone?.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone?.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            showPreview(e.dataTransfer.files[0]);
+        }
+    });
+    fileInput?.addEventListener('change', (e) => {
+        if (e.target.files.length) showPreview(e.target.files[0]);
+    });
+
+    function showPreview(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').classList.remove('hidden');
+            document.getElementById('dropZone').classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearSelectedProduct() {
+        selectedProductId = null;
+        updateProductSelection();
+        document.getElementById('selectedProductInfo').classList.add('hidden');
+    }
+
+    // ========== PAGE VIEW MODE, SEARCH & FILTERS ==========
+    let pageViewMode = 'compact';
+
+    function setPageViewMode(mode) {
+        pageViewMode = mode;
+        const grid = document.getElementById('imagesGrid');
+        const compactBtn = document.getElementById('compactViewBtn');
+        const wideBtn = document.getElementById('wideViewBtn');
+        
+        if (mode === 'wide') {
+            grid.classList.add('is-wide');
+            wideBtn.classList.add('bg-furent-500', 'text-white');
+            wideBtn.classList.remove('text-surface-600', 'dark:text-surface-400', 'hover:bg-surface-100', 'dark:hover:bg-surface-700');
+            compactBtn.classList.remove('bg-furent-500', 'text-white');
+            compactBtn.classList.add('text-surface-600', 'dark:text-surface-400', 'hover:bg-surface-100', 'dark:hover:bg-surface-700');
+        } else {
+            grid.classList.remove('is-wide');
+            compactBtn.classList.add('bg-furent-500', 'text-white');
+            compactBtn.classList.remove('text-surface-600', 'dark:text-surface-400', 'hover:bg-surface-100', 'dark:hover:bg-surface-700');
+            wideBtn.classList.remove('bg-furent-500', 'text-white');
+            wideBtn.classList.add('text-surface-600', 'dark:text-surface-400', 'hover:bg-surface-100', 'dark:hover:bg-surface-700');
+        }
+    }
+
+    function filterPageImages() {
+        const searchTerm = document.getElementById('pageSearchInput')?.value.toLowerCase() || '';
+        const eventFilter = document.getElementById('filterEventType')?.value || '';
+        const statusFilter = document.getElementById('filterStatus')?.value || '';
+        
+        document.querySelectorAll('.inspiration-card').forEach(card => {
+            const title = (card.dataset.title || '').toLowerCase();
+            const event = (card.dataset.event || '').toLowerCase();
+            const location = (card.dataset.location || '').toLowerCase();
+            const isActive = card.dataset.active === 'true';
+            
+            let show = true;
+            
+            // Search filter
+            if (searchTerm && !title.includes(searchTerm) && !event.includes(searchTerm) && !location.includes(searchTerm)) {
+                show = false;
+            }
+            
+            // Event type filter
+            if (eventFilter && card.dataset.event !== eventFilter) {
+                show = false;
+            }
+            
+            // Status filter
+            if (statusFilter === 'active' && !isActive) show = false;
+            if (statusFilter === 'inactive' && isActive) show = false;
+            
+            card.classList.toggle('is-hidden', !show);
+        });
+    }
+
+    function clearPageFilters() {
+        document.getElementById('pageSearchInput').value = '';
+        document.getElementById('filterEventType').value = '';
+        document.getElementById('filterStatus').value = '';
+        filterPageImages();
+    }
+
+    // Attach filter events
+    document.getElementById('pageSearchInput')?.addEventListener('input', filterPageImages);
+    document.getElementById('filterEventType')?.addEventListener('change', filterPageImages);
+    document.getElementById('filterStatus')?.addEventListener('change', filterPageImages);
+
+    // Toggle image status
+    async function toggleImageStatus(imageId) {
+        try {
+            const response = await fetch(`/admin/inspiracion/${imageId}/toggle-status`, {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken }
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                showToast('Error al cambiar estado', 'error');
+            }
+        } catch (err) {
+            showToast('Error de conexión', 'error');
+        }
+    }
+
+    // Upload Form Submit
+    document.getElementById('uploadForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        try {
+            const response = await fetch('/admin/inspiracion/upload', {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken },
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('Imagen subida correctamente', 'success');
+                closeUploadModal();
+                location.reload();
+            } else {
+                showToast(data.message || 'Error al subir', 'error');
+            }
+        } catch (err) {
+            showToast('Error de conexión', 'error');
+        }
+    });
+
+    // Editor Modal
+    async function openEditor(imageId) {
+        currentImageId = imageId;
+        try {
+            const response = await fetch(`/admin/inspiracion/${imageId}`);
+            currentImageData = await response.json();
+            
+            const img = document.getElementById('editorImage');
+            img.src = currentImageData.imageUrl;
+            
+            // Wait for image to load to get natural dimensions
+            img.onload = function() {
+                editorNaturalWidth = img.naturalWidth;
+                editorNaturalHeight = img.naturalHeight;
+                editorScale = 1;
+                applyEditorScale();
+                // Auto-fit if image is larger than viewport
+                const viewport = document.getElementById('pinEditorViewport');
+                if (editorNaturalWidth > viewport.clientWidth - 32 || editorNaturalHeight > viewport.clientHeight - 32) {
+                    fitEditorToViewport();
+                }
+            };
+            
+            document.getElementById('editorModal').showModal();
+            
+            // Initialize editor state
+            setEditorTool('pin');
+            
+            renderPins();
+            loadProductSelector();
+            updatePinCount();
+        } catch (err) {
+            showToast('Error al cargar la imagen', 'error');
+        }
+    }
+
+    function closeEditor() {
+        document.getElementById('editorModal').close();
+        currentImageId = null;
+        currentImageData = null;
+        selectedPinId = null;
+        selectedProductId = null;
+        clearPins();
+        document.getElementById('pinPositionDisplay').classList.add('hidden');
+        document.getElementById('noPinSelected').classList.remove('hidden');
+        document.getElementById('pinEditor').classList.add('hidden');
+        const searchInput = document.getElementById('productSearchInput');
+        if (searchInput) searchInput.value = '';
+        // Reset editor state
+        editorScale = 1;
+        editorNaturalWidth = 0;
+        editorNaturalHeight = 0;
+        const container = document.getElementById('pinEditorContainer');
+        container.style.width = '';
+        container.style.height = '';
+        document.getElementById('editorImage').style.width = '';
+        document.getElementById('editorImage').style.height = '';
+    }
+
+    function renderPins() {
+        clearPins();
+        if (!currentImageData?.pins) return;
+        currentImageData.pins.forEach(pin => createPinElement(pin));
+    }
+
+    function clearPins() {
+        document.querySelectorAll('.editor-pin').forEach(el => el.remove());
+    }
+
+    function createPinElement(pin) {
+        const container = document.getElementById('pinEditorContainer');
+        const pinEl = document.createElement('div');
+        pinEl.className = 'editor-pin' + (pin.productId ? ' has-product' : '');
+        pinEl.dataset.pinId = pin.pinId;
+        pinEl.style.left = pin.positionX + '%';
+        pinEl.style.top = pin.positionY + '%';
+        // Apply actual color from pin data
+        const colorKey = pin.iconColor || 'green';
+        const colorStyle = pinColorStyles[colorKey] || pinColorStyles.green;
+        pinEl.style.setProperty('--pin-color', colorStyle.color);
+        pinEl.style.setProperty('--pin-shadow', colorStyle.shadow);
+        pinEl.addEventListener('mousedown', startDrag);
+        pinEl.addEventListener('click', (e) => { e.stopPropagation(); selectPin(pin.pinId); });
+        container.appendChild(pinEl);
+    }
+
+    function updatePinCount() {
+        const count = currentImageData?.pins?.length || 0;
+        document.getElementById('pinCount').textContent = count;
+    }
+
+    // Add pin on image click (only in pin mode)
+    document.getElementById('pinEditorContainer')?.addEventListener('click', (e) => {
+        if (editorTool !== 'pin') return;
+        if (isDragging || e.target.classList.contains('editor-pin')) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        addPin(x, y);
+    });
+
+    function addPinAtCenter() {
+        addPin(50, 50);
+    }
+
+    async function addPin(x, y) {
+        const pin = { positionX: x, positionY: y, iconColor: selectedColor };
+        try {
+            const response = await fetch(`/admin/inspiracion/${currentImageId}/pins`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                body: JSON.stringify(pin)
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentImageData = data.image;
+                renderPins();
+                updatePinCount();
+                selectPin(data.pin.pinId);
+                showToast('Punto agregado', 'success');
+            }
+        } catch (err) {
+            showToast('Error al agregar punto', 'error');
+        }
+    }
+
+    function selectPin(pinId) {
+        selectedPinId = pinId;
+        document.querySelectorAll('.editor-pin').forEach(el => el.classList.remove('selected'));
+        document.querySelector(`[data-pin-id="${pinId}"]`)?.classList.add('selected');
+        
+        const pin = currentImageData.pins.find(p => p.pinId === pinId);
+        if (pin) {
+            document.getElementById('noPinSelected').classList.add('hidden');
+            document.getElementById('pinEditor').classList.remove('hidden');
+            selectedColor = pin.iconColor || 'green';
+            selectedProductId = pin.productId;
+            updateColorSelection();
+            updateProductSelection();
+            if (pin.productId) {
+                showSelectedProduct(pin);
+            } else {
+                document.getElementById('selectedProductInfo').classList.add('hidden');
+            }
+            // Show position
+            const posDisplay = document.getElementById('pinPositionDisplay');
+            posDisplay.classList.remove('hidden');
+            document.getElementById('pinPosX').textContent = pin.positionX.toFixed(1);
+            document.getElementById('pinPosY').textContent = pin.positionY.toFixed(1);
+        }
+    }
+
+    function updateColorSelection() {
+        document.querySelectorAll('.pin-color-btn').forEach(el => {
+            const isSelected = el.dataset.color === selectedColor;
+            if (isSelected) {
+                el.classList.add('ring-2', 'ring-offset-1');
+                const colorMap = { green: 'ring-green-500', pink: 'ring-pink-500', blue: 'ring-blue-500', amber: 'ring-amber-500', purple: 'ring-purple-500' };
+                el.classList.add(colorMap[el.dataset.color] || 'ring-furent-500');
+                el.style.borderColor = '';
+            } else {
+                el.classList.remove('ring-2', 'ring-offset-1', 'ring-green-500', 'ring-pink-500', 'ring-blue-500', 'ring-amber-500', 'ring-purple-500');
+            }
+        });
+    }
+
+    function selectPinColor(color) {
+        selectedColor = color;
+        updateColorSelection();
+    }
+
+    // ========== ZOOM / PAN / TOOL FUNCTIONS ==========
+    function setEditorTool(tool) {
+        editorTool = tool;
+        const viewport = document.getElementById('pinEditorViewport');
+        const pinBtn = document.getElementById('pinToolButton');
+        const panBtn = document.getElementById('panToolButton');
+        const modeLabel = document.getElementById('editorModeLabel');
+        const modeIcon = document.getElementById('editorModeIcon');
+        
+        // Reset all tool buttons
+        pinBtn.classList.remove('active');
+        panBtn.classList.remove('active');
+        
+        if (tool === 'pan') {
+            viewport.classList.add('is-pan-mode');
+            panBtn.classList.add('active');
+            modeLabel.textContent = 'Mover';
+            modeIcon.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.05 4.575a1.575 1.575 0 10-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 013.15 0v1.5m-3.15 0l.075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 013.15 0V15M6.9 7.575a1.575 1.575 0 10-3.15 0v8.175a6.75 6.75 0 006.75 6.75h2.018a5.25 5.25 0 003.712-1.538l1.732-1.732a5.25 5.25 0 001.538-3.712l.003-2.024a.668.668 0 01.198-.471 1.575 1.575 0 10-2.228-2.228 3.818 3.818 0 00-1.12 2.687M6.9 7.575V12m6.27 4.318A4.49 4.49 0 0116.35 15"/></svg>';
+        } else {
+            viewport.classList.remove('is-pan-mode');
+            pinBtn.classList.add('active');
+            modeLabel.textContent = 'Puntos';
+            modeIcon.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>';
+        }
+    }
+
+    function applyEditorScale() {
+        const container = document.getElementById('pinEditorContainer');
+        const img = document.getElementById('editorImage');
+        if (editorNaturalWidth && editorNaturalHeight) {
+            const scaledW = editorNaturalWidth * editorScale;
+            const scaledH = editorNaturalHeight * editorScale;
+            container.style.width = scaledW + 'px';
+            container.style.height = scaledH + 'px';
+            img.style.width = scaledW + 'px';
+            img.style.height = scaledH + 'px';
+        }
+        document.getElementById('editorZoomLabel').textContent = Math.round(editorScale * 100) + '%';
+    }
+
+    function zoomInEditor() {
+        editorScale = Math.min(editorScale + 0.25, 3);
+        applyEditorScale();
+    }
+
+    function zoomOutEditor() {
+        editorScale = Math.max(editorScale - 0.25, 0.25);
+        applyEditorScale();
+    }
+
+    function resetEditorView() {
+        editorScale = 1;
+        applyEditorScale();
+        const viewport = document.getElementById('pinEditorViewport');
+        viewport.scrollLeft = 0;
+        viewport.scrollTop = 0;
+    }
+
+    function fitEditorToViewport() {
+        const viewport = document.getElementById('pinEditorViewport');
+        if (!editorNaturalWidth || !editorNaturalHeight) return;
+        const vw = viewport.clientWidth - 32;
+        const vh = viewport.clientHeight - 32;
+        const scaleW = vw / editorNaturalWidth;
+        const scaleH = vh / editorNaturalHeight;
+        editorScale = Math.min(scaleW, scaleH, 1);
+        applyEditorScale();
+    }
+
+    // Viewport panning (when in pan mode)
+    const editorViewport = document.getElementById('pinEditorViewport');
+    editorViewport?.addEventListener('mousedown', (e) => {
+        if (editorTool !== 'pan' || e.target.classList.contains('editor-pin')) return;
+        isViewportPanning = true;
+        editorViewport.classList.add('is-panning');
+        viewportPanState.startX = e.clientX;
+        viewportPanState.startY = e.clientY;
+        viewportPanState.scrollLeft = editorViewport.scrollLeft;
+        viewportPanState.scrollTop = editorViewport.scrollTop;
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!isViewportPanning) return;
+        const dx = e.clientX - viewportPanState.startX;
+        const dy = e.clientY - viewportPanState.startY;
+        editorViewport.scrollLeft = viewportPanState.scrollLeft - dx;
+        editorViewport.scrollTop = viewportPanState.scrollTop - dy;
+    });
+    document.addEventListener('mouseup', () => {
+        if (isViewportPanning) {
+            isViewportPanning = false;
+            editorViewport?.classList.remove('is-panning');
+        }
+    });
+
+    // Scroll wheel zoom
+    editorViewport?.addEventListener('wheel', (e) => {
+        if (!editorNaturalWidth || !editorNaturalHeight) return;
+        e.preventDefault();
+        
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        const newScale = Math.min(Math.max(editorScale + delta, 0.25), 3);
+        
+        if (newScale !== editorScale) {
+            // Get mouse position relative to viewport
+            const rect = editorViewport.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left + editorViewport.scrollLeft;
+            const mouseY = e.clientY - rect.top + editorViewport.scrollTop;
+            
+            // Calculate position ratio
+            const ratioX = mouseX / (editorNaturalWidth * editorScale);
+            const ratioY = mouseY / (editorNaturalHeight * editorScale);
+            
+            editorScale = newScale;
+            applyEditorScale();
+            
+            // Adjust scroll to keep mouse position
+            const newMouseX = ratioX * editorNaturalWidth * editorScale;
+            const newMouseY = ratioY * editorNaturalHeight * editorScale;
+            editorViewport.scrollLeft += newMouseX - mouseX;
+            editorViewport.scrollTop += newMouseY - mouseY;
+        }
+    }, { passive: false });
+
+    // Keyboard shortcuts for editor
+    document.addEventListener('keydown', (e) => {
+        // Only work when editor modal is open
+        if (!document.getElementById('editorModal')?.open) return;
+        // Don't trigger when typing in inputs
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        switch(e.key.toLowerCase()) {
+            case 'p': setEditorTool('pin'); break;
+            case 'm': setEditorTool('pan'); break;
+            case 'f': fitEditorToViewport(); break;
+            case 'r': resetEditorView(); break;
+            case 'c': addPinAtCenter(); break;
+            case '+': case '=': zoomInEditor(); e.preventDefault(); break;
+            case '-': zoomOutEditor(); e.preventDefault(); break;
+        }
+    });
+
+    function loadProductSelector(filter) {
+        const container = document.getElementById('productSelector');
+        const term = (filter || '').toLowerCase();
+        const filtered = term ? products.filter(p => p.nombre.toLowerCase().includes(term)) : products;
+        if (filtered.length === 0) {
+            container.innerHTML = `<p class="text-xs text-surface-400 text-center py-4">${term ? 'Sin resultados para "' + term + '"' : 'No hay productos disponibles'}</p>`;
+            return;
+        }
+        container.innerHTML = filtered.map(p => `
+            <div class="product-option" data-product-id="${p.id}" onclick="selectProduct('${p.id}')">
+                <img src="${p.imagenUrl || '/images/placeholder.png'}" alt="${p.nombre}" onerror="this.src='/images/placeholder.png'">
+                <div class="product-meta">
+                    <p class="text-xs font-bold text-surface-700 dark:text-surface-300 truncate">${p.nombre}</p>
+                    <p class="text-xs text-furent-600 font-bold">$${Number(p.precioPorDia).toLocaleString()}/día</p>
+                </div>
+            </div>
+        `).join('');
+        updateProductSelection();
+    }
+
+    document.getElementById('productSearchInput')?.addEventListener('input', (e) => {
+        loadProductSelector(e.target.value);
+    });
+
+    function selectProduct(productId) {
+        selectedProductId = productId;
+        updateProductSelection();
+        const product = products.find(p => p.id === productId);
+        if (product) {
+            document.getElementById('selectedProductImg').src = product.imagenUrl || '/images/placeholder.png';
+            document.getElementById('selectedProductName').textContent = product.nombre;
+            document.getElementById('selectedProductPrice').textContent = '$' + Number(product.precioPorDia).toLocaleString() + '/día';
+            document.getElementById('selectedProductInfo').classList.remove('hidden');
+        }
+    }
+
+    function updateProductSelection() {
+        document.querySelectorAll('.product-option').forEach(el => {
+            el.classList.toggle('selected', el.dataset.productId === selectedProductId);
+        });
+    }
+
+    function showSelectedProduct(pin) {
+        document.getElementById('selectedProductImg').src = pin.productImageUrl || '/images/placeholder.png';
+        document.getElementById('selectedProductName').textContent = pin.productName;
+        document.getElementById('selectedProductPrice').textContent = '$' + Number(pin.productPrice).toLocaleString() + '/día';
+        document.getElementById('selectedProductInfo').classList.remove('hidden');
+    }
+
+    async function savePin() {
+        if (!selectedPinId) return;
+        const pin = currentImageData.pins.find(p => p.pinId === selectedPinId);
+        if (!pin) return;
+        
+        pin.iconColor = selectedColor;
+        
+        try {
+            // Update pin position/color
+            await fetch(`/admin/inspiracion/${currentImageId}/pins/${selectedPinId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                body: JSON.stringify(pin)
+            });
+            
+            // Assign product if selected
+            if (selectedProductId) {
+                await fetch(`/admin/inspiracion/${currentImageId}/pins/${selectedPinId}/assign-product`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                    body: JSON.stringify({ productId: selectedProductId })
+                });
+            }
+            
+            // Refresh data
+            const response = await fetch(`/admin/inspiracion/${currentImageId}`);
+            currentImageData = await response.json();
+            renderPins();
+            selectPin(selectedPinId);
+            showToast('Punto guardado', 'success');
+        } catch (err) {
+            showToast('Error al guardar', 'error');
+        }
+    }
+
+    async function deleteSelectedPin() {
+        if (!selectedPinId) return;
+        try {
+            const response = await fetch(`/admin/inspiracion/${currentImageId}/pins/${selectedPinId}`, {
+                method: 'DELETE',
+                headers: { [csrfHeader]: csrfToken }
+            });
+            const data = await response.json();
+            if (data.success) {
+                currentImageData = data.image;
+                renderPins();
+                updatePinCount();
+                selectedPinId = null;
+                document.getElementById('noPinSelected').classList.remove('hidden');
+                document.getElementById('pinEditor').classList.add('hidden');
+                document.getElementById('pinPositionDisplay').classList.add('hidden');
+                showToast('Punto eliminado', 'success');
+            }
+        } catch (err) {
+            showToast('Error al eliminar', 'error');
+        }
+    }
+
+    // Drag functionality
+    let dragPin = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    function startDrag(e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        dragPin = e.target;
+        isDragging = true;
+        const rect = dragPin.getBoundingClientRect();
+        dragOffset.x = e.clientX - rect.left - rect.width / 2;
+        dragOffset.y = e.clientY - rect.top - rect.height / 2;
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', endDrag);
+    }
+
+    function onDrag(e) {
+        if (!dragPin) return;
+        const container = document.getElementById('pinEditorContainer');
+        const rect = container.getBoundingClientRect();
+        let x = ((e.clientX - rect.left) / rect.width) * 100;
+        let y = ((e.clientY - rect.top) / rect.height) * 100;
+        x = Math.max(0, Math.min(100, x));
+        y = Math.max(0, Math.min(100, y));
+        dragPin.style.left = x + '%';
+        dragPin.style.top = y + '%';
+    }
+
+    async function endDrag(e) {
+        if (!dragPin) return;
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('mouseup', endDrag);
+        
+        const pinId = dragPin.dataset.pinId;
+        const pin = currentImageData.pins.find(p => p.pinId === pinId);
+        if (pin) {
+            pin.positionX = parseFloat(dragPin.style.left);
+            pin.positionY = parseFloat(dragPin.style.top);
+            // Update position display if this pin is selected
+            if (pinId === selectedPinId) {
+                document.getElementById('pinPosX').textContent = pin.positionX.toFixed(1);
+                document.getElementById('pinPosY').textContent = pin.positionY.toFixed(1);
+            }
+            try {
+                await fetch(`/admin/inspiracion/${currentImageId}/pins/${pinId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                    body: JSON.stringify(pin)
+                });
+            } catch (err) {
+                console.error('Error saving pin position');
+            }
+        }
+        
+        dragPin = null;
+        setTimeout(() => { isDragging = false; }, 100);
+    }
+
+    // Delete image
+    async function deleteImage(imageId) {
+        showModal({
+            title: '¿Eliminar imagen?',
+            message: 'Esta acción no se puede deshacer. Se eliminarán todos los puntos asociados.',
+            type: 'danger',
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar',
+            onConfirm: async () => {
+                try {
+                    const response = await fetch(`/admin/inspiracion/${imageId}`, {
+                        method: 'DELETE',
+                        headers: { [csrfHeader]: csrfToken }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast('Imagen eliminada', 'success');
+                        location.reload();
+                    }
+                } catch (err) {
+                    showToast('Error al eliminar', 'error');
+                }
+            }
+        });
+    }
+
+    // Edit image info
+    async function editImageInfo(imageId) {
+        try {
+            const response = await fetch(`/admin/inspiracion/${imageId}`);
+            const image = await response.json();
+            
+            showModal({
+                title: 'Editar Información',
+                html: `
+                    <form id="editImageForm" class="text-left space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-2">Título</label>
+                            <input type="text" name="title" value="${image.title || ''}" class="w-full px-4 py-3 border border-surface-200 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-2">Ubicación</label>
+                            <input type="text" name="location" value="${image.location || ''}" class="w-full px-4 py-3 border border-surface-200 rounded-xl" placeholder="Ciudad, País">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-2">Tipo de Evento</label>
+                                <select name="eventType" class="w-full px-4 py-3 border border-surface-200 rounded-xl">
+                                    <option value="">Sin especificar</option>
+                                    <option value="Boda" ${image.eventType === 'Boda' ? 'selected' : ''}>Boda</option>
+                                    <option value="Quinceañera" ${image.eventType === 'Quinceañera' ? 'selected' : ''}>Quinceañera</option>
+                                    <option value="Cumpleaños" ${image.eventType === 'Cumpleaños' ? 'selected' : ''}>Cumpleaños</option>
+                                    <option value="Grado" ${image.eventType === 'Grado' ? 'selected' : ''}>Graduación</option>
+                                    <option value="Corporativo" ${image.eventType === 'Corporativo' ? 'selected' : ''}>Corporativo</option>
+                                    <option value="Social" ${image.eventType === 'Social' ? 'selected' : ''}>Social / Fiesta</option>
+                                    <option value="Bautizo" ${image.eventType === 'Bautizo' ? 'selected' : ''}>Bautizo / Baby Shower</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-2">Categoría</label>
+                                <select name="category" class="w-full px-4 py-3 border border-surface-200 rounded-xl">
+                                    <option value="Boda" ${image.category === 'Boda' ? 'selected' : ''}>Bodas</option>
+                                    <option value="Quinceañera" ${image.category === 'Quinceañera' ? 'selected' : ''}>Quinceañera</option>
+                                    <option value="Cumpleaños" ${image.category === 'Cumpleaños' ? 'selected' : ''}>Cumpleaños</option>
+                                    <option value="Grado" ${image.category === 'Grado' ? 'selected' : ''}>Graduación</option>
+                                    <option value="Corporativo" ${image.category === 'Corporativo' ? 'selected' : ''}>Corporativo</option>
+                                    <option value="Social" ${image.category === 'Social' ? 'selected' : ''}>Social / Fiesta</option>
+                                    <option value="Bautizo" ${image.category === 'Bautizo' ? 'selected' : ''}>Bautizo / Baby Shower</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-2">Invitados</label>
+                                <input type="number" name="guestCount" value="${image.guestCount || ''}" class="w-full px-4 py-3 border border-surface-200 rounded-xl" min="1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-surface-700 dark:text-surface-300 mb-2">Orden</label>
+                                <input type="number" name="displayOrder" value="${image.displayOrder || 0}" class="w-full px-4 py-3 border border-surface-200 rounded-xl" min="0">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-4 bg-surface-50 dark:bg-surface-700 rounded-xl">
+                            <input type="checkbox" name="active" id="activeCheck" ${image.active ? 'checked' : ''} class="w-5 h-5 rounded border-surface-300 accent-furent-500">
+                            <label for="activeCheck" class="text-sm font-medium text-surface-700 dark:text-surface-300">Imagen activa (visible en la página pública)</label>
+                        </div>
+                    </form>
+                `,
+                confirmText: 'Guardar',
+                cancelText: 'Cancelar',
+                onConfirm: async () => {
+                    const form = document.getElementById('editImageForm');
+                    const formData = new FormData(form);
+                    const data = {
+                        title: formData.get('title'),
+                        eventType: formData.get('eventType'),
+                        location: formData.get('location'),
+                        guestCount: formData.get('guestCount') ? parseInt(formData.get('guestCount')) : null,
+                        category: formData.get('category'),
+                        displayOrder: formData.get('displayOrder') ? parseInt(formData.get('displayOrder')) : 0,
+                        active: form.querySelector('[name="active"]').checked
+                    };
+                    try {
+                        const resp = await fetch(`/admin/inspiracion/${imageId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                            body: JSON.stringify(data)
+                        });
+                        if (resp.ok) {
+                            showToast('Información actualizada', 'success');
+                            location.reload();
+                        }
+                    } catch (err) {
+                        showToast('Error al actualizar', 'error');
+                    }
+                }
+            });
+        } catch (err) {
+            showToast('Error al cargar información', 'error');
+        }
+    }
+
+    // ========== DRAG & DROP REORDER ==========
+    function initSortable() {
+        const grid = document.getElementById('imagesGrid');
+        if (!grid || typeof Sortable === 'undefined') return;
+        Sortable.create(grid, {
+            animation: 150,
+            ghostClass: 'opacity-30',
+            chosenClass: 'scale-105',
+            handle: '.drag-handle',
+            onEnd: async () => {
+                const cards = grid.querySelectorAll('.inspiration-card[data-id]');
+                const order = Array.from(cards).map((card, idx) => ({ id: card.dataset.id, order: idx }));
+                try {
+                    const resp = await fetch('/admin/inspiracion/reorder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', [csrfHeader]: csrfToken },
+                        body: JSON.stringify(order)
+                    });
+                    if (resp.ok) showToast('Orden guardado', 'success');
+                    else showToast('Error al guardar orden', 'error');
+                } catch (e) {
+                    showToast('Error de conexión', 'error');
+                }
+            }
+        });
+    }
+
+    // Calculate stats on load
+    document.addEventListener('DOMContentLoaded', () => {
+        initSortable();
+        const imageCards = document.querySelectorAll('.inspiration-card');
+        let totalPins = 0;
+        let linkedProducts = 0;
+        
+        imageCards.forEach(card => {
+            const pinsText = card.querySelector('[class*="puntos"]')?.textContent || '0 puntos';
+            const pinsCount = parseInt(pinsText) || 0;
+            totalPins += pinsCount;
+        });
+        
+        document.getElementById('totalPins').textContent = totalPins;
+        document.getElementById('linkedProducts').textContent = linkedProducts;
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+</main>
+</html>
