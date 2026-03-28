@@ -1,27 +1,22 @@
 package com.alquiler.furent.service;
 
-import com.alquiler.furent.enums.EstadoPago;
-import com.alquiler.furent.enums.EstadoReserva;
 import com.alquiler.furent.model.Payment;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.repository.PaymentRepository;
+import com.alquiler.furent.exception.InvalidOperationException;
 import com.alquiler.furent.exception.ResourceNotFoundException;
 import com.alquiler.furent.config.TenantContext;
 import com.alquiler.furent.config.MetricsConfig;
-import com.alquiler.furent.event.EventPublisher;
-import com.alquiler.furent.event.PaymentCompletedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Servicio de gestión de pagos.
- * Maneja el flujo completo de pagos: iniciación, confirmación y rechazo,
- * con notificaciones automáticas al usuario y registro de auditoría.
+ * Controla el ciclo de vida de pagos: inicialización, confirmación y rechazo.
  *
  * @author Furent Team
  * @since 1.0
@@ -30,139 +25,284 @@ import java.util.Optional;
 public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final SecureRandom random = new SecureRandom();
 
     private final PaymentRepository paymentRepository;
     private final ReservationService reservationService;
     private final NotificationService notificationService;
-    private final AuditLogService auditLogService;
-    private final EventPublisher eventPublisher;
+    private final EmailService emailService;
     private final MetricsConfig metricsConfig;
+    private final AuditLogService auditLogService;
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationService reservationService,
-                          NotificationService notificationService, AuditLogService auditLogService,
-                          EventPublisher eventPublisher, MetricsConfig metricsConfig) {
+    public PaymentService(PaymentRepository paymentRepository,
+                          ReservationService reservationService,
+                          NotificationService notificationService,
+                          EmailService emailService,
+                          MetricsConfig metricsConfig,
+                          AuditLogService auditLogService) {
         this.paymentRepository = paymentRepository;
         this.reservationService = reservationService;
         this.notificationService = notificationService;
-        this.auditLogService = auditLogService;
-        this.eventPublisher = eventPublisher;
+        this.emailService = emailService;
         this.metricsConfig = metricsConfig;
+        this.auditLogService = auditLogService;
     }
 
-    public Payment initPayment(String reservaId, String usuarioId, String metodoPago) {
-        Reservation reserva = reservationService.getById(reservaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reserva", reservaId));
+    /**
+     * Inicia un pago para una reserva confirmada.
+     * Genera referencia única PAY-XXXXXXXX y crea notificación al usuario.
+     *
+     * @param reservaId ID de la reserva
+     * @param userId ID del usuario
+     * @param metodo Método de pago (EFECTIVO, TRANSFERENCIA, TARJETA)
+     * @return Payment creado con estado PENDIENTE
+     * @throws InvalidOperationException si la reserva no está CONFIRMADA
+     */
+    public Payment initPayment(String reservaId, String userId, String metodo) {
+        // Validar que la reserva existe y está en estado CONFIRMADA
+        Reservation reserva = reservationService.getByIdOrThrow(reservaId);
+        
+        if (!"CONFIRMADA".equals(reserva.getEstado())) {
+            throw new InvalidOperationException(
+                "No se puede iniciar el pago. La reserva debe estar en estado CONFIRMADA (estado actual: " + reserva.getEstado() + ")"
+            );
+        }
 
+        // Crear el pago
         Payment payment = new Payment();
+        payment.setTenantId(TenantContext.getCurrentTenant());
         payment.setReservaId(reservaId);
-        payment.setUsuarioId(usuarioId);
+        payment.setUsuarioId(userId);
         payment.setMonto(reserva.getTotal());
-        payment.setMetodoPago(metodoPago);
-        payment.setEstado(EstadoPago.PENDIENTE.name());
+        payment.setMetodoPago(metodo);
+        payment.setEstado("PENDIENTE");
+        payment.setReferencia(generateReference());
 
         Payment saved = paymentRepository.save(payment);
-        log.info("Pago iniciado: {} para reserva: {}", saved.getId(), reservaId);
+        log.info("Pago iniciado: {} para reserva {} por usuario {}", saved.getReferencia(), reservaId, userId);
 
-        notificationService.notify(usuarioId, "Pago Iniciado",
-                "Tu pago por $" + String.format("%,.0f", reserva.getTotal()) + " está pendiente de confirmación.",
-                "INFO", "/panel");
+        // Incrementar métrica de pagos creados
+        metricsConfig.getPaymentsCreated().increment();
+
+        // Crear notificación para el usuario
+        notificationService.notify(
+            userId,
+            "Pago iniciado",
+            "Se ha iniciado el proceso de pago para tu reserva. Referencia: " + saved.getReferencia(),
+            "PAGO",
+            "/mis-reservas/" + reservaId
+        );
 
         return saved;
     }
 
-    public Payment confirmPayment(String paymentId, String referencia, String adminUser) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pago", paymentId));
-        return confirmPaymentInternal(payment, referencia, adminUser);
+    /**
+     * Genera una referencia única de pago.
+     * Formato: PAY-XXXXXXXX (8 caracteres alfanuméricos)
+     *
+     * @return Referencia única
+     */
+    public String generateReference() {
+        StringBuilder sb = new StringBuilder("PAY-");
+        for (int i = 0; i < 8; i++) {
+            sb.append(ALPHANUMERIC.charAt(random.nextInt(ALPHANUMERIC.length())));
+        }
+        return sb.toString();
     }
 
-    public void confirmPaymentByReference(String reservaId, String referencia, String adminUser) {
-        Optional<Payment> paymentOpt = getPaymentByReserva(reservaId);
-        if (paymentOpt.isPresent()) {
-            confirmPaymentInternal(paymentOpt.get(), referencia, adminUser);
-        } else {
-            // Si no existe el pago, lo inicializamos y confirmamos
-            Reservation res = reservationService.getById(reservaId).orElse(null);
-            if (res != null) {
-                Payment p = initPayment(reservaId, res.getUsuarioId(), "TARJETA");
-                confirmPaymentInternal(p, referencia, adminUser);
-            }
-        }
+    /**
+     * Obtiene un pago por ID o lanza excepción.
+     *
+     * @param id ID del pago
+     * @return Payment encontrado
+     * @throws ResourceNotFoundException si el pago no existe
+     */
+    public Payment getByIdOrThrow(String id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pago", id));
     }
 
-    private Payment confirmPaymentInternal(Payment payment, String referencia, String adminUser) {
-        if (!EstadoPago.PENDIENTE.name().equals(payment.getEstado())) {
-            return payment;
+    /**
+     * Confirma un pago pendiente (acción de admin).
+     * Actualiza estado a PAGADO, cambia reserva a ENTREGADA, incrementa métricas y envía email.
+     *
+     * @param paymentId ID del pago
+     * @param referencia Referencia de pago externa (comprobante)
+     * @param admin Email del admin que confirma
+     * @return Payment actualizado con estado PAGADO
+     * @throws ResourceNotFoundException si el pago no existe
+     * @throws InvalidOperationException si el pago ya fue procesado
+     */
+    public Payment confirmPayment(String paymentId, String referencia, String admin) {
+        Payment payment = getByIdOrThrow(paymentId);
+
+        // Validar que el pago esté en estado PENDIENTE
+        if (!"PENDIENTE".equals(payment.getEstado())) {
+            throw new InvalidOperationException(
+                "No se puede confirmar el pago. El pago ya fue procesado (estado actual: " + payment.getEstado() + ")"
+            );
         }
 
-        payment.setEstado(EstadoPago.PAGADO.name());
-        payment.setReferencia(referencia);
+        // Actualizar estado del pago
+        payment.setEstado("PAGADO");
         payment.setFechaPago(LocalDateTime.now());
+        if (referencia != null && !referencia.isBlank()) {
+            payment.setReferencia(referencia);
+        }
+        Payment savedPayment = paymentRepository.save(payment);
 
-        long start = System.nanoTime();
-        Payment saved = paymentRepository.save(payment);
-        if (metricsConfig != null) {
-             metricsConfig.getPaymentProcessingTime()
-                .record(java.time.Duration.ofNanos(System.nanoTime() - start));
-             metricsConfig.getPaymentsCompleted().increment();
-             if (saved.getMonto() != null) {
-                 metricsConfig.addRevenue(saved.getMonto());
-             }
+        log.info("Pago {} confirmado por admin {}", paymentId, admin);
+
+        // Cambiar estado de la reserva a ENTREGADA
+        try {
+            reservationService.updateStatus(payment.getReservaId(), "ENTREGADA", admin, 
+                "Pago confirmado - Referencia: " + payment.getReferencia());
+        } catch (Exception e) {
+            log.error("Error al actualizar estado de reserva {} a ENTREGADA: {}", payment.getReservaId(), e.getMessage());
         }
 
-        // Actualizar estado de reserva
-        reservationService.updateStatus(payment.getReservaId(), EstadoReserva.CONFIRMADA.name());
+        // Incrementar métrica de pagos completados
+        metricsConfig.getPaymentsCompleted().increment();
 
-        // Notificar al usuario
-        notificationService.notify(payment.getUsuarioId(), "Pago Confirmado",
-                "Tu pago ha sido confirmado exitosamente. Tu reserva está activa.",
-                "SUCCESS", "/panel");
+        // Acumular ingresos
+        if (payment.getMonto() != null) {
+            metricsConfig.addRevenue(payment.getMonto());
+        }
 
-        auditLogService.log(adminUser, "CONFIRMAR_PAGO", "PAGO", payment.getId(),
-                "Pago confirmado. Ref: " + referencia);
+        // Enviar email de confirmación al usuario
+        try {
+            emailService.sendPaymentConfirmation(savedPayment);
+        } catch (Exception e) {
+            log.error("Error al enviar email de confirmación de pago: {}", e.getMessage());
+        }
 
-        // Publicar evento
-        String tenantId = TenantContext.getCurrentTenant() != null ? TenantContext.getCurrentTenant() : "default";
-        eventPublisher.publish(new PaymentCompletedEvent(this, saved, tenantId));
+        // Crear notificación para el usuario
+        notificationService.notify(
+            payment.getUsuarioId(),
+            "Pago confirmado",
+            "Tu pago ha sido confirmado. Referencia: " + payment.getReferencia(),
+            "PAGO",
+            "/mis-reservas/" + payment.getReservaId()
+        );
 
-        return saved;
+        // Registrar en auditoría
+        auditLogService.log(
+            admin,
+            "CONFIRMAR_PAGO",
+            "PAGO",
+            paymentId,
+            "Pago confirmado - Referencia: " + payment.getReferencia() + " - Monto: " + payment.getMonto()
+        );
+
+        return savedPayment;
     }
 
-    public Payment failPayment(String paymentId, String reason, String adminUser) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pago", paymentId));
+    /**
+     * Rechaza un pago pendiente (acción de admin).
+     * Actualiza estado a FALLIDO e incrementa métrica de pagos fallidos.
+     *
+     * @param paymentId ID del pago
+     * @param reason Razón del rechazo
+     * @param admin Email del admin que rechaza
+     * @return Payment actualizado con estado FALLIDO
+     * @throws ResourceNotFoundException si el pago no existe
+     * @throws InvalidOperationException si el pago ya fue procesado
+     */
+    public Payment failPayment(String paymentId, String reason, String admin) {
+        Payment payment = getByIdOrThrow(paymentId);
 
-        payment.setEstado(EstadoPago.FALLIDO.name());
-        Payment saved = paymentRepository.save(payment);
+        // Validar que el pago esté en estado PENDIENTE
+        if (!"PENDIENTE".equals(payment.getEstado())) {
+            throw new InvalidOperationException(
+                "No se puede rechazar el pago. El pago ya fue procesado (estado actual: " + payment.getEstado() + ")"
+            );
+        }
+
+        // Actualizar estado del pago
+        payment.setEstado("FALLIDO");
+        Payment savedPayment = paymentRepository.save(payment);
+
+        log.info("Pago {} rechazado por admin {}. Razón: {}", paymentId, admin, reason);
+
+        // Incrementar métrica de pagos fallidos
         metricsConfig.getPaymentsFailed().increment();
 
-        notificationService.notify(payment.getUsuarioId(), "Pago Rechazado",
-                "Tu pago fue rechazado: " + reason + ". Por favor, intenta de nuevo.",
-                "ALERT", "/pago/iniciar/" + payment.getReservaId());
+        // Crear notificación para el usuario
+        notificationService.notify(
+            payment.getUsuarioId(),
+            "Pago rechazado",
+            "Tu pago ha sido rechazado. Razón: " + (reason != null ? reason : "No especificada"),
+            "PAGO",
+            "/mis-reservas/" + payment.getReservaId()
+        );
 
-        auditLogService.log(adminUser, "RECHAZAR_PAGO", "PAGO", paymentId, "Razón: " + reason);
-        log.warn("Pago rechazado: {} razón: {}", paymentId, reason);
-        return saved;
+        // Registrar en auditoría
+        auditLogService.log(
+            admin,
+            "RECHAZAR_PAGO",
+            "PAGO",
+            paymentId,
+            "Pago rechazado - Razón: " + (reason != null ? reason : "No especificada") + " - Monto: " + payment.getMonto()
+        );
+
+        return savedPayment;
     }
 
-    public List<Payment> getPaymentsByUser(String userId) {
-        return paymentRepository.findByUsuarioId(userId);
-    }
+    // ========== Métodos auxiliares (serán implementados en tareas futuras) ==========
 
-    public Optional<Payment> getPaymentByReserva(String reservaId) {
-        List<Payment> payments = paymentRepository.findByReservaId(reservaId);
-        return payments.isEmpty() ? Optional.empty() : Optional.of(payments.get(0));
-    }
-
-    public Optional<Payment> getById(String id) {
-        return paymentRepository.findById(id);
-    }
-
-    public List<Payment> getAllPayments() {
+    /**
+     * Obtiene todos los pagos del sistema.
+     */
+    public java.util.List<Payment> getAllPayments() {
         return paymentRepository.findAll();
     }
 
-    public Payment save(Payment payment) {
-        return paymentRepository.save(payment);
+    /**
+     * Obtiene todos los pagos del sistema con paginación.
+     * Usado por el panel de administración.
+     *
+     * @param pageable Configuración de paginación
+     * @return Page de pagos
+     */
+    public org.springframework.data.domain.Page<Payment> getAllPaymentsPaged(org.springframework.data.domain.Pageable pageable) {
+        return paymentRepository.findAll(pageable);
+    }
+
+    /**
+     * Obtiene todos los pagos de un usuario.
+     *
+     * @param userId ID del usuario
+     * @return Lista de pagos del usuario
+     */
+    public java.util.List<Payment> getPaymentsByUser(String userId) {
+        return paymentRepository.findByUsuarioId(userId);
+    }
+
+    /**
+     * Obtiene el pago asociado a una reserva.
+     *
+     * @param reservaId ID de la reserva
+     * @return Optional con el pago si existe
+     */
+    public java.util.Optional<Payment> getPaymentByReserva(String reservaId) {
+        java.util.List<Payment> payments = paymentRepository.findByReservaId(reservaId);
+        return payments.isEmpty() ? java.util.Optional.empty() : java.util.Optional.of(payments.get(0));
+    }
+
+    /**
+     * Confirma un pago usando su referencia.
+     * Usado por webhooks de pasarelas de pago (PayU, etc.)
+     *
+     * @param referencia Referencia del pago
+     * @param transactionId ID de transacción externa
+     * @param admin Usuario que confirma (puede ser "SYSTEM_PAYU" para webhooks)
+     * @return Payment confirmado
+     * @throws ResourceNotFoundException si no existe pago con esa referencia
+     */
+    public Payment confirmPaymentByReference(String referencia, String transactionId, String admin) {
+        Payment payment = paymentRepository.findByReferencia(referencia)
+                .orElseThrow(() -> new ResourceNotFoundException("Pago con referencia", referencia));
+        return confirmPayment(payment.getId(), transactionId, admin);
     }
 }

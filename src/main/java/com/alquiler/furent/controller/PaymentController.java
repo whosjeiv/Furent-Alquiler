@@ -12,6 +12,12 @@ import com.alquiler.furent.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +32,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pagos")
+@Tag(name = "Pagos", description = "Gestión de pagos y transacciones")
 public class PaymentController {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
@@ -61,6 +68,16 @@ public class PaymentController {
      * Obtiene clientSecret y datos para un pago pendiente (flujo tarjeta sin reserva previa).
      * El usuario debe ser el dueño del pending.
      */
+    @Operation(summary = "Obtener pago pendiente", 
+               description = "Obtiene los datos de un pago pendiente para completar el flujo de pago con tarjeta")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Datos del pago pendiente obtenidos exitosamente",
+                     content = @Content(mediaType = "application/json",
+                                       examples = @ExampleObject(value = "{\"total\": 1500.00}"))),
+        @ApiResponse(responseCode = "401", description = "Usuario no autenticado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver este pago"),
+        @ApiResponse(responseCode = "404", description = "Pago pendiente no encontrado")
+    })
     @GetMapping("/pending/{pendingId}")
     public ResponseEntity<Map<String, Object>> getPendingPayment(@PathVariable String pendingId, Authentication auth) {
         User user = getAuthUser(auth);
@@ -82,6 +99,13 @@ public class PaymentController {
     /**
      * Pago con tarjeta online (PayU)
      */
+    @Operation(summary = "Obtener configuración de PayU", 
+               description = "Verifica si el pago con tarjeta está habilitado y devuelve la configuración")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Configuración de PayU obtenida",
+                     content = @Content(mediaType = "application/json",
+                                       examples = @ExampleObject(value = "{\"enabled\": true}")))
+    })
     @GetMapping("/payu/config")
     public ResponseEntity<Map<String, Object>> getPayUConfig() {
         boolean enabled = featureFlags.isPayuEnabled() && payUProperties.isConfigured();
@@ -94,6 +118,12 @@ public class PaymentController {
      * Webhook de confirmación de PayU (Confirmación de Pago).
      * PayU llama a este endpoint por POST con parámetros x_www_form_url_encoded.
      */
+    @Operation(summary = "Webhook de confirmación de PayU", 
+               description = "Endpoint para recibir notificaciones de confirmación de pago desde PayU")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Confirmación procesada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Parámetros inválidos o faltantes")
+    })
     @PostMapping("/payu/confirmacion")
     public ResponseEntity<?> handleConfirmation(@RequestParam Map<String, String> params) {
         log.info("Webhook Pago Recibido: {}", params);
@@ -152,7 +182,7 @@ public class PaymentController {
                 }
 
                 // Notificar por email
-                emailService.sendReservationConfirmation(res.getUsuarioEmail(), res.getId(), res.getTotal());
+                emailService.sendReservationConfirmation(res);
                 
                 // Borrar el pendiente
                 pendingCardPaymentRepository.delete(pending);
@@ -167,6 +197,16 @@ public class PaymentController {
         }
     }
 
+    @Operation(summary = "Iniciar pago", 
+               description = "Inicia un nuevo pago para una reserva confirmada. Genera una referencia única y crea el registro de pago en estado PENDIENTE")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Pago iniciado exitosamente",
+                     content = @Content(mediaType = "application/json",
+                                       examples = @ExampleObject(value = "{\"success\": true, \"paymentId\": \"65f1a2b3c4d5e6f7g8h9i0j1\", \"monto\": 1500.00, \"metodoPago\": \"EFECTIVO\"}"))),
+        @ApiResponse(responseCode = "400", description = "Reserva no encontrada o datos inválidos"),
+        @ApiResponse(responseCode = "401", description = "Usuario no autenticado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para esta reserva")
+    })
     @PostMapping("/iniciar/{reservaId}")
     public ResponseEntity<Map<String, Object>> initPayment(@PathVariable String reservaId,
             @RequestBody Map<String, String> body, Authentication auth) {
@@ -198,6 +238,14 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Obtener pago por reserva", 
+               description = "Obtiene el pago asociado a una reserva específica")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Pago encontrado o no existe",
+                     content = @Content(mediaType = "application/json",
+                                       examples = @ExampleObject(value = "{\"id\": \"65f1a2b3c4d5e6f7g8h9i0j1\", \"estado\": \"PAGADO\", \"monto\": 1500.00, \"metodoPago\": \"EFECTIVO\", \"fechaPago\": \"2024-01-15T10:30:00\"}"))),
+        @ApiResponse(responseCode = "401", description = "Usuario no autenticado")
+    })
     @GetMapping("/reserva/{reservaId}")
     public ResponseEntity<?> getPaymentByReserva(@PathVariable String reservaId, Authentication auth) {
         User user = getAuthUser(auth);
@@ -214,11 +262,58 @@ public class PaymentController {
                 .orElse(ResponseEntity.ok(Map.of("existe", "false")));
     }
 
+    @Operation(summary = "Obtener mis pagos", 
+               description = "Lista todos los pagos realizados por el usuario autenticado")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de pagos del usuario"),
+        @ApiResponse(responseCode = "401", description = "Usuario no autenticado")
+    })
     @GetMapping("/mis-pagos")
     public ResponseEntity<?> getMyPayments(Authentication auth) {
         User user = getAuthUser(auth);
         if (user == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(paymentService.getPaymentsByUser(user.getId()));
+    }
+
+    @Operation(summary = "Obtener pago por ID", 
+               description = "Obtiene los detalles completos de un pago específico. El usuario debe ser el propietario del pago")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Detalles del pago obtenidos exitosamente",
+                     content = @Content(mediaType = "application/json",
+                                       examples = @ExampleObject(value = "{\"id\": \"65f1a2b3c4d5e6f7g8h9i0j1\", \"reservaId\": \"65f1a2b3c4d5e6f7g8h9i0j2\", \"monto\": 1500.00, \"metodoPago\": \"EFECTIVO\", \"estado\": \"PAGADO\", \"referencia\": \"PAY-ABC12345\", \"fechaCreacion\": \"2024-01-15T10:00:00\", \"fechaPago\": \"2024-01-15T10:30:00\"}"))),
+        @ApiResponse(responseCode = "401", description = "Usuario no autenticado"),
+        @ApiResponse(responseCode = "403", description = "No autorizado para ver este pago"),
+        @ApiResponse(responseCode = "404", description = "Pago no encontrado")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPaymentById(@PathVariable String id, Authentication auth) {
+        User user = getAuthUser(auth);
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "No autenticado"));
+        }
+
+        try {
+            Payment payment = paymentService.getByIdOrThrow(id);
+            
+            // Validar que el usuario autenticado sea el dueño del pago
+            if (!payment.getUsuarioId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "No autorizado para ver este pago"));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", payment.getId());
+            response.put("reservaId", payment.getReservaId());
+            response.put("monto", payment.getMonto());
+            response.put("metodoPago", payment.getMetodoPago());
+            response.put("estado", payment.getEstado());
+            response.put("referencia", payment.getReferencia());
+            response.put("fechaCreacion", payment.getFechaCreacion());
+            response.put("fechaPago", payment.getFechaPago());
+
+            return ResponseEntity.ok(response);
+        } catch (com.alquiler.furent.exception.ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", "Pago no encontrado"));
+        }
     }
 
     private User getAuthUser(Authentication auth) {

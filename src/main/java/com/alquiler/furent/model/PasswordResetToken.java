@@ -3,10 +3,16 @@ package com.alquiler.furent.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Document(collection = "password_reset_tokens")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_tenant_user", def = "{'tenantId': 1, 'userId': 1}"),
+    @CompoundIndex(name = "idx_token", def = "{'token': 1}", unique = true)
+})
 public class PasswordResetToken {
 
     @Id
@@ -19,11 +25,13 @@ public class PasswordResetToken {
     private String token;
     private LocalDateTime expiresAt;
     private boolean used;
+    private LocalDateTime createdAt;
 
     public PasswordResetToken() {
         this.token = UUID.randomUUID().toString();
         this.expiresAt = LocalDateTime.now().plusHours(1);
         this.used = false;
+        this.createdAt = LocalDateTime.now();
     }
 
     public PasswordResetToken(String userId) {
@@ -56,4 +64,7 @@ public class PasswordResetToken {
 
     public String getTenantId() { return tenantId; }
     public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

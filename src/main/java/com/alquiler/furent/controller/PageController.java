@@ -39,7 +39,6 @@ public class PageController {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final ReviewService reviewService;
-    private final ContactService contactService;
     private final NotificationService notificationService;
     private final PasswordResetService passwordResetService;
     private final PendingCardPaymentRepository pendingCardPaymentRepository;
@@ -50,7 +49,7 @@ public class PageController {
 
     public PageController(ProductService productService, ReservationService reservationService,
             UserService userService, PasswordEncoder passwordEncoder, ReviewService reviewService,
-            ContactService contactService, NotificationService notificationService,
+            NotificationService notificationService,
             PasswordResetService passwordResetService, PendingCardPaymentRepository pendingCardPaymentRepository,
             PayUService payUService, PayUProperties payUProperties, EmailService emailService,
             TotpService totpService) {
@@ -59,7 +58,6 @@ public class PageController {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.reviewService = reviewService;
-        this.contactService = contactService;
         this.notificationService = notificationService;
         this.passwordResetService = passwordResetService;
         this.pendingCardPaymentRepository = pendingCardPaymentRepository;
@@ -341,37 +339,6 @@ public class PageController {
     public String about(Model model) {
         model.addAttribute("pageTitle", "Nosotros");
         return "about";
-    }
-
-    @GetMapping("/contacto")
-    public String contact(Model model) {
-        model.addAttribute("pageTitle", "Contacto");
-        return "contact";
-    }
-
-    @PostMapping("/contacto")
-    public String submitContact(@RequestParam String nombre, @RequestParam String email,
-                                @RequestParam(required = false) String telefono,
-                                @RequestParam String asunto, @RequestParam String mensaje,
-                                RedirectAttributes redirectAttributes) {
-        com.alquiler.furent.model.ContactMessage msg = new com.alquiler.furent.model.ContactMessage();
-        msg.setNombre(nombre);
-        msg.setEmail(email);
-        msg.setTelefono(telefono != null ? telefono : "");
-        msg.setAsunto(asunto);
-        msg.setMensaje(mensaje);
-        contactService.save(msg);
-        log.info("Nuevo mensaje de contacto de: {}", email);
-        
-        try {
-            emailService.sendContactNotification("valdeslastresjosedaniel@gmail.com", 
-                    nombre, email, asunto, mensaje, msg.getTelefono());
-        } catch (Exception e) {
-            log.error("No se pudo enviar notificacion de contacto por email: {}", e.getMessage());
-        }
-        
-        redirectAttributes.addFlashAttribute("success", "¡Mensaje enviado exitosamente! Te responderemos pronto.");
-        return "redirect:/contacto";
     }
 
     @GetMapping("/faq")
@@ -739,7 +706,7 @@ public class PageController {
             log.info("Enlace de recuperación generado para {}: {}", email, resetUrl);
 
             // Send the email
-            emailService.sendPasswordResetEmail(email, resetUrl);
+            emailService.sendPasswordResetLink(email, resetUrl);
             log.info("Email de recuperación enviado exitosamente a: {}", email);
 
             redirectAttributes.addFlashAttribute("success",

@@ -58,19 +58,22 @@ public class ReservationService {
         private final EventPublisher eventPublisher;
         private final MetricsConfig metricsConfig;
         private final MongoTemplate mongoTemplate;
+        private final EmailService emailService;
 
         public ReservationService(ReservationRepository reservationRepository,
                         ProductRepository productRepository,
                         StatusHistoryRepository statusHistoryRepository,
                         EventPublisher eventPublisher,
                         MetricsConfig metricsConfig,
-                        MongoTemplate mongoTemplate) {
+                        MongoTemplate mongoTemplate,
+                        EmailService emailService) {
                 this.reservationRepository = reservationRepository;
                 this.productRepository = productRepository;
                 this.statusHistoryRepository = statusHistoryRepository;
                 this.eventPublisher = eventPublisher;
                 this.metricsConfig = metricsConfig;
                 this.mongoTemplate = mongoTemplate;
+                this.emailService = emailService;
         }
 
         public List<Reservation> getAllReservations() {
@@ -297,6 +300,24 @@ public class ReservationService {
                                 // Registrar en historial
                                 statusHistoryRepository.save(new StatusHistory(id, oldStatus, newStatus, usuario, nota));
                                 log.info("Reserva {} cambió de {} a {} por {}", id, oldStatus, newStatus, usuario);
+
+                                // Enviar email de cambio de estado de forma asíncrona
+                                try {
+                                        emailService.sendStatusChange(r, oldStatus);
+                                } catch (Exception e) {
+                                        log.error("Error al enviar email de cambio de estado para reserva {}: {}", id, e.getMessage());
+                                        // No interrumpir el flujo si falla el email
+                                }
+
+                                // Enviar email de confirmación si la reserva pasa a CONFIRMADA
+                                if (EstadoReserva.CONFIRMADA.name().equals(newStatus)) {
+                                        try {
+                                                emailService.sendReservationConfirmation(r);
+                                        } catch (Exception e) {
+                                                log.error("Error al enviar email de confirmación para reserva {}: {}", id, e.getMessage());
+                                                // No interrumpir el flujo si falla el email
+                                        }
+                                }
 
                                 // Publicar evento si fue cancelada
                                 if (EstadoReserva.CANCELADA.name().equals(newStatus)) {

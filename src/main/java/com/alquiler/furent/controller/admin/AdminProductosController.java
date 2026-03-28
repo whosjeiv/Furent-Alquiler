@@ -1,5 +1,6 @@
 package com.alquiler.furent.controller.admin;
 
+import com.alquiler.furent.exception.InvalidOperationException;
 import com.alquiler.furent.model.Category;
 import com.alquiler.furent.model.Combo;
 import com.alquiler.furent.model.Product;
@@ -22,6 +23,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Controller
@@ -94,6 +96,9 @@ public class AdminProductosController {
                 List<String> urls = new ArrayList<>();
                 for (MultipartFile file : galeriaArchivos) {
                     if (!file.isEmpty()) {
+                        // Validar archivo antes de guardar
+                        validateImageFile(file);
+                        
                         if (file.getSize() > 104857600) { // 100MB
                             redirectAttributes.addFlashAttribute("error", "El archivo " + file.getOriginalFilename() + " excede los 100MB.");
                             return "redirect:/admin/mobiliarios";
@@ -127,10 +132,7 @@ public class AdminProductosController {
         product.setEstadoMantenimiento(estadoMantenimiento);
         product.setNotasMantenimiento(notasMantenimiento);
 
-        boolean available = stock > 0
-                && !"EN_MANTENIMIENTO".equals(estadoMantenimiento)
-                && !"FUERA_DE_SERVICIO".equals(estadoMantenimiento)
-                && !"EN_REPARACION".equals(estadoMantenimiento);
+        boolean available = stock > 0 && !"EN_REPARACION".equals(estadoMantenimiento);
         product.setDisponible(available);
 
         productService.saveProduct(product);
@@ -223,6 +225,9 @@ public class AdminProductosController {
         // Handle image upload
         try {
             if (comboImagen != null && !comboImagen.isEmpty()) {
+                // Validar archivo antes de guardar
+                validateImageFile(comboImagen);
+                
                 java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads");
                 if (!java.nio.file.Files.exists(uploadDir)) {
                     java.nio.file.Files.createDirectories(uploadDir);
@@ -279,5 +284,35 @@ public class AdminProductosController {
         productService.deleteCombo(id);
         redirectAttributes.addFlashAttribute("success", "Combo eliminado");
         return "redirect:/admin/mobiliarios";
+    }
+
+    /**
+     * Valida que un archivo sea una imagen válida.
+     * Verifica Content-Type y tamaño máximo.
+     * 
+     * @param file Archivo a validar
+     * @throws InvalidOperationException si el archivo no es válido
+     */
+    private void validateImageFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new InvalidOperationException("Debes seleccionar un archivo");
+        }
+        
+        Set<String> allowedTypes = Set.of(
+            "image/jpeg", "image/png", "image/webp", "image/gif"
+        );
+        
+        if (!allowedTypes.contains(file.getContentType())) {
+            throw new InvalidOperationException(
+                "Solo se permiten imágenes (JPG, PNG, WebP, GIF)"
+            );
+        }
+        
+        long maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.getSize() > maxSize) {
+            throw new InvalidOperationException(
+                "La imagen no puede superar 5MB"
+            );
+        }
     }
 }

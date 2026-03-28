@@ -31,7 +31,7 @@ public class DataInitializer implements CommandLineRunner {
         private final TenantService tenantService;
         private final PermissionRepository permissionRepository;
 
-        @Value("${furent.admin.password:admin123}")
+        @Value("${furent.admin.password:${random.uuid}}")
         private String adminPassword;
 
         public DataInitializer(ProductRepository productRepository, CategoryRepository categoryRepository,
@@ -59,6 +59,10 @@ public class DataInitializer implements CommandLineRunner {
                 // Create default admin with configurable password
                 userService.createAdmin("admin@furent.com", adminPassword, "Admin", "Furent");
                 log.info("=== Admin inicializado: admin@furent.com ===");
+                log.warn("═══════════════════════════════════════════════════════════════");
+                log.warn("Admin creado con contraseña: {}", adminPassword);
+                log.warn("CAMBIAR INMEDIATAMENTE EN PRODUCCIÓN VÍA FURENT_ADMIN_PASSWORD");
+                log.warn("═══════════════════════════════════════════════════════════════");
 
                 // Only seed if collections are empty
                 if (categoryRepository.count() == 0) {

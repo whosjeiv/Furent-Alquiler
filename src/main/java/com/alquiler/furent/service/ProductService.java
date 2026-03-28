@@ -113,17 +113,27 @@ public class ProductService {
         }
 
         public List<Product> getRelatedProducts(String productId, String category) {
+                // Validar parámetros para evitar RuntimeException
+                if (productId == null || category == null) {
+                        return List.of();
+                }
+
+                // Obtener productos de la misma categoría usando categoriaNombre
                 List<Product> sameCategory = productRepository.findByCategoriaNombre(category).stream()
-                                .filter(p -> !p.getId().equals(productId))
+                                .filter(p -> p != null && p.getId() != null && !p.getId().equals(productId))
                                 .collect(Collectors.toCollection(ArrayList::new));
 
                 if (sameCategory.size() >= 8) {
                         return sameCategory.stream().limit(8).toList();
                 }
 
+                // Completar con productos de otras categorías si no hay suficientes
                 List<Product> allProducts = productRepository.findAll();
                 List<Product> others = allProducts.stream()
-                                .filter(p -> !p.getId().equals(productId) && !p.getCategoriaNombre().equals(category))
+                                .filter(p -> p != null && p.getId() != null && 
+                                           !p.getId().equals(productId) && 
+                                           p.getCategoriaNombre() != null &&
+                                           !p.getCategoriaNombre().equals(category))
                                 .limit(8 - sameCategory.size())
                                 .toList();
 

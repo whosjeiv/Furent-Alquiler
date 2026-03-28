@@ -30,10 +30,16 @@ public class User {
     private String role; // USER, ADMIN
     private LocalDateTime fechaCreacion;
     private boolean activo;
+    
+    // Campos de suspensión
+    @Indexed
+    private String estado; // ACTIVO, SUSPENDIDO_TEMPORAL, ELIMINADO
     private String razonSuspension;
+    private LocalDateTime fechaSuspension;
     private LocalDateTime fechaInicioSuspension;
     private LocalDateTime fechaFinSuspension;
     private boolean suspensionPermanente;
+    private boolean deleted; // Para soft delete
 
     // Favoritos (IDs de productos)
     private List<String> favoritos = new ArrayList<>();
@@ -76,6 +82,8 @@ public class User {
         this.fechaCreacion = LocalDateTime.now();
         this.activo = true;
         this.role = "USER";
+        this.estado = "ACTIVO";
+        this.deleted = false;
     }
 
     public User(String email, String password, String nombre, String apellido, String telefono, String role) {
@@ -379,5 +387,43 @@ public class User {
 
     public void setNotasAdmin(String notasAdmin) {
         this.notasAdmin = notasAdmin;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public LocalDateTime getFechaSuspension() {
+        return fechaSuspension;
+    }
+
+    public void setFechaSuspension(LocalDateTime fechaSuspension) {
+        this.fechaSuspension = fechaSuspension;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    /**
+     * Verifica si el usuario está suspendido.
+     */
+    public boolean isSuspended() {
+        return "SUSPENDIDO_TEMPORAL".equals(estado);
+    }
+
+    /**
+     * Verifica si el usuario está activo y no eliminado.
+     */
+    public boolean isActive() {
+        return "ACTIVO".equals(estado) && !deleted;
     }
 }

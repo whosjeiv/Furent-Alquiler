@@ -2,7 +2,9 @@ package com.alquiler.furent.service;
 
 import com.alquiler.furent.config.MetricsConfig;
 import com.alquiler.furent.event.EventPublisher;
+import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Review;
+import com.alquiler.furent.repository.ProductRepository;
 import com.alquiler.furent.repository.ReviewRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -19,6 +22,7 @@ import static org.mockito.Mockito.*;
 class ReviewServiceTest {
 
     @Mock private ReviewRepository reviewRepository;
+    @Mock private ProductRepository productRepository;
     @Mock private EventPublisher eventPublisher;
     @Mock(answer = org.mockito.Answers.RETURNS_DEEP_STUBS) private MetricsConfig metricsConfig;
     @InjectMocks private ReviewService reviewService;
@@ -53,12 +57,19 @@ class ReviewServiceTest {
         Review saved = new Review("prod-1", "user-1", "Juan", 5, "Excelente");
         saved.setId("review-001");
 
+        Product product = new Product();
+        product.setId("prod-1");
+
         when(reviewRepository.save(review)).thenReturn(saved);
+        when(reviewRepository.findByProductIdOrderByCreatedAtDesc("prod-1")).thenReturn(List.of(saved));
+        when(productRepository.findById("prod-1")).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenReturn(product);
 
         Review result = reviewService.saveReview(review);
 
         assertEquals("review-001", result.getId());
         verify(reviewRepository).save(review);
         verify(eventPublisher).publish(any());
+        verify(productRepository).save(any(Product.class));
     }
 }

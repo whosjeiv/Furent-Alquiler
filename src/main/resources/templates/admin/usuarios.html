@@ -1,631 +1,314 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'usuarios')}">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <title>Usuarios — Furent Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Admin Furent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <main>
-        <div class="px-10 py-8 max-w-[90rem] mx-auto relative font-['Outfit']" x-data="{ 
-            filterDropdownInfo: false, 
-            selectedRole: 'ALL', 
-            selectedStatus: 'ALL', 
-            sortDate: 'NEWEST',
-            
-            openDetailsModal: false,
-            loadingDetails: false,
-            details: null,
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div th:replace="~{fragments/layout :: admin-header}"></div>
 
-            updateFilters() { window.applyTableAdvancedFilters(this.selectedRole, this.selectedStatus); }, 
-            sortUsers() { window.sortTableByDate(this.sortDate); },
-
-            openRoleModal: false,
-            roleModalUserId: null,
-            roleModalRole: null,
-            roleModalSaving: false,
-
-            showRoleModal(id, role) {
-                this.roleModalUserId = id;
-                this.roleModalRole = role;
-                this.openRoleModal = true;
-            },
-
-            async saveRole() {
-                this.roleModalSaving = true;
-                try {
-                    const header = document.querySelector('meta[name=\'_csrf_header\']').content;
-                    const token = document.querySelector('meta[name=\'_csrf\']').content;
-                    const res = await fetch(`/admin/usuarios/rol/${this.roleModalUserId}?role=${this.roleModalRole}`, {
-                        method: 'POST',
-                        headers: { [header]: token }
-                    });
-                    if (res.ok) window.location.reload();
-                    else alert('Error al sincronizar rol');
-                } catch(e) {
-                    alert('Error en conexión');
-                } finally {
-                    this.roleModalSaving = false;
-                }
-            },
-
-            async fetchUserDetails(id) {
-                this.loadingDetails = true;
-                this.openDetailsModal = true;
-                this.details = null;
-                try {
-                    const res = await fetch(`/admin/usuarios/detalles/${id}`);
-                    this.details = await res.json();
-                } catch (e) {
-                    console.error('Error fetching details', e);
-                } finally {
-                    this.loadingDetails = false;
-                }
-            }
-        }">
-            
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-3xl font-black tracking-tight text-surface-900 leading-none">Directorio de Usuarios</h1>
-                    <p class="text-sm font-medium text-surface-500 mt-2">Administra los clientes y sus niveles de acceso.</p>
-                    <p class="text-xs font-bold text-surface-400 mt-1" th:text="${'Total usuarios: ' + totalUsuarios + ' | Mostrando página ' + (currentPage + 1) + ' de ' + (totalPages == 0 ? 1 : totalPages)}">Total usuarios: 0</p>
-                </div>
-            </div>
-
-            <!-- Main Table Panel -->
-            <div class="bg-white rounded-[2.5rem] shadow-glass border border-surface-100 overflow-visible relative z-10 flex flex-col pt-8">
-                
-                <!-- Toolbar with Search and Filters -->
-                <div class="px-10 pb-8 flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-surface-50">
-                    <div class="relative w-full lg:max-w-md">
-                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-surface-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-                        <input id="userSearchInputBox" type="text" placeholder="Buscar por nombre, email o ID..." class="w-full pl-12 pr-4 py-4 bg-surface-50/50 border border-transparent rounded-2xl text-sm font-bold text-surface-900 focus:outline-none focus:ring-4 focus:ring-furent-500/5 focus:border-furent-200 focus:bg-white transition-all shadow-sm">
-                    </div>
-
-                    <div class="relative w-full lg:w-auto">
-                        <button @click="filterDropdownInfo = !filterDropdownInfo" class="w-full lg:w-auto flex items-center justify-between gap-3 px-6 py-4 bg-white border border-surface-200 rounded-2xl text-sm font-black text-surface-700 hover:border-surface-300 hover:bg-surface-50 transition-all shadow-sm active:scale-95">
-                            <span class="flex items-center gap-2.5">
-                                <svg class="size-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"/></svg>
-                                Filtrar Resultados
-                            </span>
-                            <svg class="size-4 transition-transform duration-300" :class="filterDropdownInfo ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
-                        </button>
-
-                        <div x-show="filterDropdownInfo" @click.away="filterDropdownInfo = false" x-transition.opacity class="absolute right-0 z-[100] mt-3 w-72 bg-white rounded-[2rem] shadow-2xl border border-surface-100 overflow-hidden py-4" style="display: none;">
-                            <div class="px-6 py-2 border-b border-surface-50">
-                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4">Credencial</p>
-                                <div class="space-y-1 mb-4">
-                                    <template x-for="r in [{v:'ALL', n:'Todos'}, {v:'ADMIN', n:'Staff (Admin)'}, {v:'USER', n:'Cliente'}]">
-                                        <button @click="selectedRole = r.v; updateFilters()" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between" :class="selectedRole === r.v ? 'bg-furent-50 text-furent-600' : 'text-surface-700 hover:bg-surface-50'">
-                                            <span x-text="r.n"></span>
-                                            <div x-show="selectedRole === r.v" class="size-1.5 rounded-full bg-furent-500 shadow-[0_0_8px_rgba(224,122,58,0.6)]"></div>
-                                        </button>
-                                    </template>
-                                </div>
-                            </div>
-                            <div class="px-6 py-6 border-b border-surface-50">
-                                <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4">Estado</p>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button @click="selectedStatus = 'ACTIVO'; updateFilters()" class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all" :class="selectedStatus === 'ACTIVO' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-surface-50 border-transparent text-surface-500'">Activos</button>
-                                    <button @click="selectedStatus = 'SUSPENDIDO'; updateFilters()" class="px-4 py-2.5 rounded-xl text-xs font-bold border transition-all" :class="selectedStatus === 'SUSPENDIDO' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-surface-50 border-transparent text-surface-500'">Baneados</button>
-                                </div>
-                            </div>
-                            <div class="px-6 py-4 pt-6">
-                                <button @click="selectedRole = 'ALL'; selectedStatus = 'ALL'; updateFilters(); filterDropdownInfo = false;" class="w-full py-3 rounded-xl bg-surface-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-surface-800 transition-colors">Limpiar Filtros</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table id="tablaUsuarios" class="w-full text-left border-collapse whitespace-nowrap">
-                        <thead class="bg-surface-50/50 border-b border-surface-100">
-                            <tr>
-                                <th class="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Cuenta de Usuario</th>
-                                <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Contacto</th>
-                                <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400 text-center">Nivel</th>
-                                <th class="px-6 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400">Estado</th>
-                                <th class="px-8 py-6 text-[11px] font-black uppercase tracking-widest text-surface-400 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-surface-100/50">
-                            <tr th:each="u : ${usuarios}" class="usuario-fila group hover:bg-surface-50/40 transition-colors" th:data-search="${#strings.toLowerCase((u.nombre ?: '') + ' ' + (u.apellido ?: '') + ' ' + (u.email ?: ''))}" th:data-role="${u.role}" th:data-status="${u.activo ? 'ACTIVO' : 'SUSPENDIDO'}" th:data-date="${u.fechaCreacion != null ? #temporals.format(u.fechaCreacion, 'yyyyMMddHHmmss') : '00000000000000'}">
-                                <td class="px-10 py-5">
-                                    <div class="flex items-center gap-4">
-                                        <div class="size-12 rounded-[18px] bg-white border border-surface-200 shadow-sm flex items-center justify-center font-black text-surface-700" th:text="${u.nombre != null and u.nombre.length() > 0 ? #strings.substring(u.nombre,0,1) : 'U'}">U</div>
-                                        <div>
-                                            <p class="text-sm font-black text-surface-900 group-hover:text-furent-500 transition-colors leading-tight" th:text="${u.nombreCompleto ?: u.nombre}">Nombre</p>
-                                            <p class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mt-1" th:text="${'ID: ' + #strings.substring(u.id, 0, 8)}">ID</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="flex flex-col gap-1">
-                                        <p class="text-xs font-black text-surface-800" th:text="${u.email}">Email</p>
-                                        <p class="text-[10px] font-bold text-surface-400" th:text="${u.telefono ?: 'Sin teléfono'}">Tel</p>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5 text-center">
-                                    <span class="inline-flex items-center justify-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm" th:classappend="${u.role == 'ADMIN' ? 'bg-furent-500 text-white shadow-furent-500/20' : 'bg-surface-100 text-surface-500'}" th:text="${u.role}">USER</span>
-                                </td>
-                                <td class="px-6 py-5">
-                                    <div class="flex items-center gap-2">
-                                        <div class="size-2 rounded-full" th:classappend="${u.activo ? 'bg-green-500 animate-pulse' : 'bg-red-500'}"></div>
-                                        <span class="text-[11px] font-black text-surface-700 uppercase" th:text="${u.activo ? 'Activo' : 'Suspendido'}">Activo</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5 text-right">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                        <!-- NUEVO BOTÓN: VER INFO -->
-                                        <button th:data-id="${u.id}" @click="fetchUserDetails($el.dataset.id)" 
-                                            class="size-10 flex items-center justify-center bg-white border border-surface-100 rounded-[14px] text-surface-400 hover:text-blue-500 shadow-sm hover:shadow-md hover:border-blue-200 transition-all hover:scale-110 active:scale-95" title="Ver detalles extendidos">
-                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.399 8.049 7.234 4.534 12 4.534c4.766 0 8.601 3.515 9.964 7.144a1.012 1.012 0 010 .644C20.6 15.95 16.766 19.466 12 19.466c-4.766 0-8.601-3.515-9.964-7.144z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                        </button>
-                                        
-                                        <button th:data-id="${u.id}" th:data-role="${u.role}" @click="showRoleModal($el.getAttribute('data-id'), $el.getAttribute('data-role'))" 
-                                            class="size-10 flex items-center justify-center bg-white border border-surface-100 rounded-[14px] text-surface-400 hover:text-furent-500 shadow-sm hover:shadow-md hover:border-furent-200 transition-all hover:scale-110 active:scale-95" title="Cambiar rol">
-                                            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
-                                        </button>
-
-                                        <button th:data-id="${u.id}" th:data-activo="${u.activo}" onclick="toggleStatus(this.getAttribute('data-id'), this.getAttribute('data-activo') === 'true')" 
-                                            class="size-10 flex items-center justify-center bg-white border border-surface-100 rounded-[14px] shadow-sm hover:shadow-md transition-all hover:scale-110 active:scale-95" :class="$el.getAttribute('data-activo') === 'true' ? 'text-surface-400 hover:text-amber-500 hover:border-amber-200' : 'text-green-500 border-green-100 hover:bg-green-50'" th:title="${u.activo ? 'Suspender' : 'Activar'}">
-                                            <svg th:if="${u.activo}" class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                            <svg th:unless="${u.activo}" class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div id="empty-state-filter" style="display: none;" class="px-10 py-32 text-center">
-                    <div class="size-20 bg-surface-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-surface-100 shadow-inner text-surface-200">
-                        <svg class="size-10" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                    </div>
-                    <h3 class="text-base font-black text-surface-900">Sin coincidencias</h3>
-                    <p class="text-sm font-medium text-surface-400 mt-2">Prueba cambiando los criterios de búsqueda o filtros.</p>
-                </div>
-
-                <div class="px-10 py-6 border-t border-surface-100 flex items-center justify-between gap-4 flex-wrap">
-                    <a th:if="${currentPage > 0}" th:href="@{/admin/usuarios(page=${currentPage - 1}, size=${pageSize})}" class="px-4 py-2 rounded-xl text-xs font-black border border-surface-200 text-surface-700 hover:bg-surface-50 transition-colors">Anterior</a>
-                    <span th:unless="${currentPage > 0}" class="px-4 py-2 rounded-xl text-xs font-black border border-surface-100 text-surface-300 cursor-not-allowed">Anterior</span>
-
-                    <div class="flex items-center gap-2 text-xs font-bold text-surface-500">
-                        <span th:text="${'Página ' + (currentPage + 1)}">Página 1</span>
-                        <span>/</span>
-                        <span th:text="${totalPages == 0 ? 1 : totalPages}">1</span>
-                    </div>
-
-                    <a th:if="${currentPage + 1 < totalPages}" th:href="@{/admin/usuarios(page=${currentPage + 1}, size=${pageSize})}" class="px-4 py-2 rounded-xl text-xs font-black border border-surface-200 text-surface-700 hover:bg-surface-50 transition-colors">Siguiente</a>
-                    <span th:unless="${currentPage + 1 < totalPages}" class="px-4 py-2 rounded-xl text-xs font-black border border-surface-100 text-surface-300 cursor-not-allowed">Siguiente</span>
-                </div>
-            </div>
-
-            <!-- MODAL DE DETALLES EXTENDIDOS (TailwindPlus Style) -->
-            <div x-show="openDetailsModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface-950/40 backdrop-blur-sm" style="display: none;">
-                <div @click.away="openDetailsModal = false" class="bg-white rounded-[3.5rem] w-full max-w-4xl shadow-2xl border border-surface-100 overflow-hidden transform transition-all relative flex flex-col max-h-[90vh]">
-                    <!-- Close button -->
-                    <button @click="openDetailsModal = false" class="absolute right-8 top-8 z-50 p-3 bg-surface-50 text-surface-400 hover:text-surface-900 rounded-2xl transition-all hover:bg-surface-100">
-                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-
-                    <!-- Loader -->
-                    <div x-show="loadingDetails" class="px-12 py-32 text-center h-full flex flex-col justify-center">
-                        <div class="size-14 border-4 border-furent-500/20 border-t-furent-500 rounded-full animate-spin mx-auto mb-6"></div>
-                        <p class="text-xs font-black text-surface-400 uppercase tracking-widest">Sincronizando expedientes...</p>
-                    </div>
-
-                    <!-- Content -->
-                    <div x-show="!loadingDetails && details" x-transition class="flex flex-col h-full overflow-hidden" x-data="{ 
-                        activeTab: 'perfil',
-                        get primaryAddress() { 
-                            if (details && details.user && details.user.direcciones && details.user.direcciones.length > 0) {
-                                return details.user.direcciones.find(d => d.predeterminada) || details.user.direcciones[0];
-                            }
-                            return null;
-                        }
-                    }">
-                        <!-- HEADER PROFILE -->
-                        <div class="p-8 pb-0 shrink-0">
-                            <div class="flex items-start gap-8 mb-8">
-                                <div class="size-24 rounded-[2.5rem] bg-gradient-to-br from-surface-100 to-surface-200 flex items-center justify-center text-4xl font-black text-surface-400 border-4 border-white shadow-xl shrink-0" x-text="details ? details.user.nombre.substring(0,1) : 'U'"></div>
-                                <div class="flex-1 pt-2">
-                                    <div class="flex items-center gap-3 mb-1">
-                                        <h3 class="text-3xl font-black text-surface-900 leading-tight" x-text="details ? (details.user.nombre + ' ' + (details.user.apellido || '')) : ''">Nombre Usuario</h3>
-                                        <span class="px-3 py-1 bg-furent-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest" x-text="details ? details.user.role : 'USER'">USER</span>
-                                    </div>
-                                    <div class="flex gap-4 mt-2">
-                                        <p class="text-sm font-bold text-surface-400 flex items-center gap-1">
-                                            <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
-                                            <span x-text="details ? details.user.email : ''"></span>
-                                        </p>
-                                        <p class="text-sm font-bold text-surface-400 flex items-center gap-1" x-show="details && details.user.telefono">
-                                            <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                            <span x-text="details ? details.user.telefono : ''"></span>
-                                        </p>
-                                    </div>
-
-                                    <div class="flex items-center gap-4 mt-4">
-                                        <div class="flex items-center gap-2">
-                                            <div class="size-2 rounded-full" :class="details && details.user.activo ? 'bg-green-500' : 'bg-red-500'"></div>
-                                            <span class="text-[11px] font-black text-surface-600 uppercase tracking-wide" x-text="details && details.user.activo ? 'Cuenta Verificada' : 'Cuenta Suspendida'">Activo</span>
-                                        </div>
-                                        <span class="text-[11px] font-black text-surface-300 uppercase">|</span>
-                                        <span class="text-[11px] font-black text-surface-400 uppercase tracking-wide" x-text="details && details.user.ultimaSesion ? 'Visto: ' + new Date(details.user.ultimaSesion).toLocaleDateString('es-ES') : (details ? 'Registro: ' + new Date(details.user.fechaCreacion).toLocaleDateString('es-ES') : '')">Registro</span>
-                                        <span class="text-[11px] font-black text-surface-300 uppercase">|</span>
-                                        <span class="text-[11px] font-bold text-surface-400" x-text="details ? 'ID: ' + details.user.id : ''"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- TABS NAV -->
-                            <div class="flex items-center gap-6 border-b border-surface-100 px-2 overflow-x-auto no-scrollbar">
-                                <button @click="activeTab = 'perfil'" class="pb-4 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap" :class="activeTab === 'perfil' ? 'text-furent-500 border-b-2 border-furent-500' : 'text-surface-400 hover:text-surface-600'">Perfil Completo</button>
-                                <button @click="activeTab = 'actividad'" class="pb-4 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap" :class="activeTab === 'actividad' ? 'text-furent-500 border-b-2 border-furent-500' : 'text-surface-400 hover:text-surface-600'">Actividad y Estadísticas</button>
-                                <button @click="activeTab = 'config'" class="pb-4 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap" :class="activeTab === 'config' ? 'text-furent-500 border-b-2 border-furent-500' : 'text-surface-400 hover:text-surface-600'">Seguridad y Sanciones</button>
-                            </div>
-                        </div>
-
-                        <!-- TABS CONTENT -->
-                        <div class="p-8 overflow-y-auto no-scrollbar flex-1 bg-surface-50/50">
-                            
-                            <!-- TAB: PERFIL COMPLETO -->
-                            <div x-show="activeTab === 'perfil'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
-                                <div class="grid grid-cols-2 gap-6">
-                                    <div class="bg-white p-6 rounded-[2rem] border border-surface-100 shadow-sm">
-                                        <h4 class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4">Información Personal</h4>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Documento</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details && details.user.documentoIdentidad ? ((details.user.tipoDocumento || '') + ' ' + details.user.documentoIdentidad) : 'No registrado'"></p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Fecha de Nacimiento</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details && details.user.fechaNacimiento ? new Date(details.user.fechaNacimiento).toLocaleDateString('es-ES') : 'No registrada'"></p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Género</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details && details.user.genero ? details.user.genero : 'No registrado'"></p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Estado Civil</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details && details.user.estadoCivil ? details.user.estadoCivil : 'No registrado'"></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="bg-white p-6 rounded-[2rem] border border-surface-100 shadow-sm">
-                                        <h4 class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-4">Perfil Corporativo</h4>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Empresa / Negocio</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details && details.user.empresa ? details.user.empresa : 'Independiente'"></p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Cargo</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details && details.user.cargo ? details.user.cargo : 'N/A'"></p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-bold text-surface-400 uppercase">Se unió como cliente en</p>
-                                                <p class="text-sm font-black text-surface-900" x-text="details ? new Date(details.user.fechaCreacion).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : ''"></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-white p-6 rounded-[2rem] border border-surface-100 shadow-sm flex flex-col md:flex-row items-start gap-6">
-                                    <div class="size-12 rounded-[18px] bg-furent-50 text-furent-500 flex items-center justify-center shrink-0 border border-furent-100">
-                                        <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                    </div>
-                                    <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-                                        <div class="col-span-2">
-                                            <p class="text-[10px] font-bold text-surface-400 uppercase flex items-center justify-between">
-                                                <span>Dirección Completa</span>
-                                                <span x-show="primaryAddress && primaryAddress.predeterminada" class="px-2 py-0.5 bg-furent-50 text-furent-600 rounded-md text-[9px] font-black uppercase tracking-widest hidden sm:inline-block">Predeterminada</span>
-                                            </p>
-                                            <p class="text-sm font-black text-surface-900" x-text="primaryAddress ? primaryAddress.direccion : 'No registrada'"></p>
-                                        </div>
-                                        <div>
-                                            <p class="text-[10px] font-bold text-surface-400 uppercase">Ciudad</p>
-                                            <p class="text-sm font-black text-surface-900" x-text="primaryAddress ? primaryAddress.ciudad : 'N/A'"></p>
-                                        </div>
-                                        <div>
-                                            <p class="text-[10px] font-bold text-surface-400 uppercase">Estado / C.P.</p>
-                                            <p class="text-sm font-black text-surface-900" x-text="primaryAddress ? ((primaryAddress.estadoProvincia || '') + (primaryAddress.codigoPostal ? ' ('+primaryAddress.codigoPostal+')' : '')) : 'N/A'"></p>
-                                        </div>
-                                        <div class="col-span-2">
-                                            <p class="text-[10px] font-bold text-surface-400 uppercase">País</p>
-                                            <p class="text-sm font-black text-surface-900" x-text="primaryAddress ? primaryAddress.pais : 'N/A'"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- TAB: ACTIVIDAD -->
-                            <div x-show="activeTab === 'actividad'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6" style="display: none;">
-                                <!-- Stats Grid -->
-                                <div class="grid grid-cols-3 gap-6">
-                                    <div class="p-8 bg-white rounded-[2.5rem] border border-surface-100 text-center shadow-sm">
-                                        <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">Reservas Totales</p>
-                                        <p class="text-4xl font-black text-surface-900" x-text="details ? details.totalReservas : '0'">0</p>
-                                    </div>
-                                    <div class="p-8 bg-white rounded-[2.5rem] border border-surface-100 text-center shadow-premium relative overflow-hidden transform scale-105 border-furent-200">
-                                        <div class="absolute inset-0 bg-furent-50/80 pointer-events-none"></div>
-                                        <p class="text-[10px] font-black text-furent-700 uppercase tracking-widest mb-2 relative z-10">Inversión (Pagos)</p>
-                                        <p class="text-4xl font-black text-furent-600 relative z-10" x-text="details ? '$' + details.totalInvertido.toLocaleString() : '$0'">$0</p>
-                                    </div>
-                                    <div class="p-8 bg-white rounded-[2.5rem] border border-surface-100 text-center shadow-sm">
-                                        <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2">Favoritos ❤️</p>
-                                        <p class="text-4xl font-black text-surface-900" x-text="details ? details.favoritosCount : '0'">0</p>
-                                    </div>
-                                </div>
-                                <!-- Notas Admin -->
-                                <div class="bg-yellow-50 p-6 sm:p-8 rounded-[2.5rem] border border-yellow-200 shadow-sm relative">
-                                    <div class="absolute top-8 right-8 text-yellow-500">
-                                        <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                    </div>
-                                    <h4 class="text-[10px] font-black text-yellow-700 uppercase tracking-widest mb-3">Notas Administrativas Internas</h4>
-                                    <p class="text-sm font-medium text-yellow-900 whitespace-pre-line leading-relaxed" x-text="(details && details.user.notasAdmin) ? details.user.notasAdmin : 'No hay notas registradas para este usuario.'"></p>
-                                </div>
-                            </div>
-
-                            <!-- TAB: SEGURIDAD -->
-                            <div x-show="activeTab === 'config'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6" style="display: none;">
-                                <!-- Sanciones (Solo visible si hubieron) -->
-                                <div x-show="details && (details.user.razonSuspension || !details.user.activo)" class="bg-red-50 p-6 sm:p-8 rounded-[2.5rem] border border-red-100 flex flex-col md:flex-row gap-6 items-start">
-                                    <div class="size-16 rounded-[1.5rem] bg-red-500 flex items-center justify-center text-white shadow-lg shadow-red-500/20 shrink-0">
-                                        <svg class="size-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                    </div>
-                                    <div class="flex-1 w-full space-y-4">
-                                        <h4 class="text-lg font-black text-red-900">Historial de Sanción / Suspensión</h4>
-                                        <div class="grid grid-cols-2 gap-4 bg-white/50 p-5 rounded-2xl w-full">
-                                            <div class="col-span-2">
-                                                <p class="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">Motivo de Suspensión</p>
-                                                <p class="text-sm font-bold text-red-900" x-text="details && details.user.razonSuspension ? details.user.razonSuspension : 'N/A'"></p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">Estado</p>
-                                                <span class="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase rounded-lg shadow-sm" x-text="details && details.user.suspensionPermanente ? 'Bloqueo Permanente' : 'Temporal / Pendiente'"></span>
-                                            </div>
-                                            <div>
-                                                <p class="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">Fecha</p>
-                                                <p class="text-sm font-bold text-red-900" x-text="details && details.user.fechaInicioSuspension ? new Date(details.user.fechaInicioSuspension).toLocaleDateString('es-ES') : 'N/A'"></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-6">
-                                    <!-- Security -->
-                                    <div class="p-8 bg-blue-50/30 rounded-[2.5rem] border border-blue-100/50">
-                                        <div class="flex items-center gap-4 mb-6">
-                                            <div class="size-12 rounded-[1.2rem] bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                                                <svg class="size-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-                                            </div>
-                                            <h4 class="text-base font-black text-blue-900">Seguridad</h4>
-                                        </div>
-                                        <div class="space-y-4">
-                                            <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-blue-100">
-                                                <span class="text-sm font-bold text-blue-800">MFA (2FA TOTP)</span>
-                                                <span class="px-3 py-1 rounded-xl text-[10px] font-black uppercase shadow-sm" :class="details && details.user.totpEnabled ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-400'" x-text="details && details.user.totpEnabled ? 'Habilitado' : 'Inactivo'"></span>
-                                            </div>
-                                            <div class="flex items-center justify-between p-4 bg-white/50 rounded-2xl border border-blue-100">
-                                                <span class="text-sm font-bold text-blue-800">Email Marketing</span>
-                                                <span class="px-3 py-1 rounded-xl text-[10px] font-black uppercase shadow-sm" :class="details && details.user.notificacionesEmail ? 'bg-blue-100 text-blue-700' : 'bg-surface-100 text-surface-400'" x-text="details && details.user.notificacionesEmail ? 'Suscrito' : 'Off'"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Preferences -->
-                                    <div class="p-8 bg-surface-50 rounded-[2.5rem] border border-surface-100 flex flex-col justify-center items-center text-center">
-                                        <div class="size-12 rounded-[1.2rem] bg-surface-900 flex items-center justify-center text-white shadow-lg mb-6">
-                                            <svg class="size-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                        </div>
-                                        <h4 class="text-sm font-black text-surface-900 uppercase tracking-widest mb-4">Ajustes Plataforma</h4>
-                                        <div class="flex flex-wrap justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-surface-400">
-                                            <div class="px-4 py-2 bg-white rounded-xl border border-surface-100 shadow-sm" x-text="'Idioma: ' + (details ? details.user.idioma : 'es')"></div>
-                                            <div class="px-4 py-2 bg-white rounded-xl border border-surface-100 shadow-sm" x-text="'Moneda: ' + (details ? details.user.moneda : 'COP')"></div>
-                                            <div class="px-4 py-2 bg-white rounded-xl border border-surface-100 shadow-sm" x-text="'Tema: ' + (details ? details.user.apariencia : 'light')"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL DE CAMBIO DE ROL (TailwindPlus) -->
-            <div x-show="openRoleModal" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface-950/40 backdrop-blur-sm" style="display: none;">
-                <div @click.away="openRoleModal = false" class="bg-white rounded-[3.5rem] w-full max-w-md shadow-2xl border border-surface-100 overflow-hidden transform transition-all relative">
-                    <!-- Close button -->
-                    <button @click="openRoleModal = false" :disabled="roleModalSaving" class="absolute right-8 top-8 z-50 p-3 bg-surface-50 text-surface-400 hover:text-surface-900 rounded-2xl transition-all hover:bg-surface-100 disabled:opacity-50">
-                        <svg class="size-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-
-                    <div class="px-10 py-10 pt-12">
-                        <h2 class="text-surface-900 font-extrabold text-2xl mb-8 text-center tracking-tight">Gestión de Credencial</h2>
-
-                        <div class="space-y-6">
-                            <div class="flex items-center gap-4 p-5 bg-surface-50/50 rounded-3xl border border-surface-100 shadow-sm">
-                                <div class="w-14 h-14 bg-white rounded-2xl shadow-premium flex items-center justify-center text-furent-500 border border-furent-100 shrink-0">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-0.5">Nivel de Seguridad</p>
-                                    <p class="text-sm font-bold text-surface-900 leading-tight">Modificar permisos de acceso</p>
-                                </div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <label class="text-[10px] font-black text-surface-400 uppercase tracking-widest ml-1">Elegir nuevo rol</label>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <label class="relative flex items-center justify-center p-5 rounded-2xl border-2 cursor-pointer transition-all hover:bg-surface-50/80 group"
-                                           :class="roleModalRole === 'USER' ? 'border-furent-500 bg-furent-50/40 shadow-sm' : 'border-surface-100 bg-white'">
-                                        <input type="radio" value="USER" x-model="roleModalRole" class="sr-only" :disabled="roleModalSaving">
-                                        <div class="text-center">
-                                            <p class="text-sm font-bold transition-colors" :class="roleModalRole === 'USER' ? 'text-furent-600' : 'text-surface-900 group-hover:text-surface-700'">Cliente</p>
-                                            <p class="text-[10px] text-surface-400 uppercase font-black tracking-widest mt-0.5">USER</p>
-                                        </div>
-                                    </label>
-                                    <label class="relative flex items-center justify-center p-5 rounded-2xl border-2 cursor-pointer transition-all hover:bg-surface-50/80 group"
-                                           :class="roleModalRole === 'ADMIN' ? 'border-furent-500 bg-furent-50/40 shadow-sm' : 'border-surface-100 bg-white'">
-                                        <input type="radio" value="ADMIN" x-model="roleModalRole" class="sr-only" :disabled="roleModalSaving">
-                                        <div class="text-center">
-                                            <p class="text-sm font-bold transition-colors" :class="roleModalRole === 'ADMIN' ? 'text-furent-600' : 'text-surface-900 group-hover:text-surface-700'">Admin</p>
-                                            <p class="text-[10px] text-surface-400 uppercase font-black tracking-widest mt-0.5">ADMIN</p>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-3 pt-6 mt-6 border-t border-surface-50">
-                                <button @click="saveRole()" :disabled="roleModalSaving" class="flex-1 rounded-[1.25rem] text-sm font-black px-6 py-4 bg-surface-900 text-white hover:bg-surface-800 transition-all active:scale-95 disabled:opacity-70 disabled:active:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-surface-900/20">
-                                    <svg x-show="roleModalSaving" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    <span x-text="roleModalSaving ? 'Sincronizando...' : 'Aplicar Credencial'"></span>
-                                </button>
-                                <button @click="openRoleModal = false" :disabled="roleModalSaving" class="rounded-[1.25rem] text-sm font-black px-6 py-4 bg-surface-50 text-surface-400 hover:text-surface-600 hover:bg-surface-100 transition-all border-none disabled:opacity-50">
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Soft bg elements -->
-            <div class="absolute top-[10%] left-[20%] w-[30rem] h-[30rem] bg-purple-300/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-            <div class="absolute bottom-[20%] right-0 w-[40rem] h-[30rem] bg-furent-300/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-users mr-2"></i>Gestión de Usuarios
+            </h1>
         </div>
 
-    <script>
-        // Wire up advanced filters & search input
-        const userSearchInput = document.getElementById('userSearchInputBox');
-        let currentRoleFilter = 'ALL';
-        let currentStatusFilter = 'ALL';
+        <!-- Mensajes Flash -->
+        <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <span th:text="${error}"></span>
+        </div>
 
-        // Alpine JS hook
-        window.applyTableAdvancedFilters = function(role, status) {
-             currentRoleFilter = role;
-             currentStatusFilter = status;
-             triggerFullFilter();
-        };
+        <!-- Filtros y Búsqueda -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <form method="get" action="/admin/usuarios" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Búsqueda -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar por email o nombre</label>
+                    <input type="text" name="search" th:value="${searchQuery}" 
+                           placeholder="Buscar usuario..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
 
-        window.sortTableByDate = function(sortType) {
-            const tableBody = document.querySelector('#tablaUsuarios tbody');
-            const rows = Array.from(document.querySelectorAll('.usuario-fila'));
-            
-            rows.sort((a, b) => {
-                const dateA = a.getAttribute('data-date');
-                const dateB = b.getAttribute('data-date');
-                if(sortType === 'NEWEST') {
-                    return dateB.localeCompare(dateA); 
-                } else {
-                    return dateA.localeCompare(dateB);
-                }
-            });
-            
-            rows.forEach(row => tableBody.appendChild(row));
-        };
+                <!-- Filtro por Rol -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                    <select name="rol" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos</option>
+                        <option value="USER" th:selected="${selectedRol == 'USER'}">Usuario</option>
+                        <option value="ADMIN" th:selected="${selectedRol == 'ADMIN'}">Administrador</option>
+                    </select>
+                </div>
 
-        if (userSearchInput) {
-            userSearchInput.addEventListener('input', function(e) {
-                triggerFullFilter();
-            });
-        }
+                <!-- Filtro por Estado -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                    <select name="estado" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todos</option>
+                        <option value="ACTIVO" th:selected="${selectedEstado == 'ACTIVO'}">Activo</option>
+                        <option value="SUSPENDIDO_TEMPORAL" th:selected="${selectedEstado == 'SUSPENDIDO_TEMPORAL'}">Suspendido</option>
+                        <option value="ELIMINADO" th:selected="${selectedEstado == 'ELIMINADO'}">Eliminado</option>
+                    </select>
+                </div>
 
-        function triggerFullFilter() {
-            const searchTerm = userSearchInput ? userSearchInput.value.toLowerCase().trim() : '';
-            const allRows = document.querySelectorAll('.usuario-fila');
-            let hasVisibleElements = false;
-            
-            allRows.forEach(row => {
-                const role = row.getAttribute('data-role');
-                const status = row.getAttribute('data-status');
-                const searchData = row.getAttribute('data-search') || '';
-                
-                let matchesSearch = searchTerm === '' || searchData.includes(searchTerm);
-                let matchesRole = currentRoleFilter === 'ALL' || role === currentRoleFilter;
-                let matchesStatus = currentStatusFilter === 'ALL' || status === currentStatusFilter;
-                
-                if (matchesSearch && matchesRole && matchesStatus) {
-                    row.classList.remove('hidden-by-filter');
-                    hasVisibleElements = true;
-                } else {
-                    row.classList.add('hidden-by-filter');
-                }
-            });
+                <div class="md:col-span-4 flex gap-2">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-search mr-2"></i>Buscar
+                    </button>
+                    <a href="/admin/usuarios" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600">
+                        <i class="fas fa-times mr-2"></i>Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
 
-            const emptyStateEl = document.getElementById('empty-state-filter');
-            if (emptyStateEl) emptyStateEl.style.display = hasVisibleElements ? 'none' : 'block';
-        }
+        <!-- Tabla de Usuarios -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b">
+                <p class="text-sm text-gray-600">
+                    Total de usuarios: <span class="font-semibold" th:text="${totalUsers}">0</span>
+                </p>
+            </div>
 
-        function toggleStatus(id, isActivo) {
-            if (isActivo) {
-                Swal.fire({
-                    title: '<span class="text-surface-900 font-extrabold">Gestionar Suspensión</span>',
-                    html: `
-                        <div class="px-2 text-left space-y-4 py-2">
-                            <div class="space-y-2">
-                                <label class="text-[11px] font-bold text-surface-400 uppercase ml-1">Motivo</label>
-                                <input id="swal-razon" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-red-500/10 outline-none transition-all" placeholder="Ej: Pago pendiente, comportamiento...">
-                            </div>
-                            <div class="flex items-center gap-3 mt-4 p-4 bg-surface-50 rounded-2xl border border-surface-100">
-                                <input type="checkbox" id="swal-permanente" class="size-5 accent-red-500 rounded-lg">
-                                <div>
-                                    <p class="text-sm font-bold text-surface-900">Suspensión Permanente</p>
-                                    <p class="text-[10px] font-medium text-surface-500 text-pretty">El usuario perderá el acceso a Furent definitivamente.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha Registro</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr th:each="user : ${users}" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 text-sm text-gray-900" th:text="${user.email}"></td>
+                            <td class="px-6 py-4 text-sm text-gray-900" th:text="${user.nombreCompleto}"></td>
+                            <td class="px-6 py-4">
+                                <span th:if="${user.role == 'ADMIN'}" 
+                                      class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    Admin
+                                </span>
+                                <span th:if="${user.role == 'USER'}" 
+                                      class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Usuario
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span th:if="${user.estado == 'ACTIVO'}" 
+                                      class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    Activo
+                                </span>
+                                <span th:if="${user.estado == 'SUSPENDIDO_TEMPORAL'}" 
+                                      class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    Suspendido
+                                </span>
+                                <span th:if="${user.estado == 'ELIMINADO'}" 
+                                      class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Eliminado
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500" 
+                                th:text="${#temporals.format(user.fechaCreacion, 'dd/MM/yyyy')}"></td>
+                            <td class="px-6 py-4 text-sm">
+                                <div class="flex gap-2">
+                                    <!-- Botón Suspender (solo si está activo) -->
+                                    <button th:if="${user.estado == 'ACTIVO'}" 
+                                            onclick="openSuspendModal(this)"
+                                            th:data-user-id="${user.id}"
+                                            th:data-user-email="${user.email}"
+                                            class="text-red-600 hover:text-red-800" title="Suspender">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+
+                                    <!-- Botón Activar (solo si está suspendido) -->
+                                    <form th:if="${user.estado == 'SUSPENDIDO_TEMPORAL'}" 
+                                          th:action="@{/admin/usuarios/{id}/activar(id=${user.id})}" 
+                                          method="post" class="inline">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="text-green-600 hover:text-green-800" title="Activar">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    </form>
+
+                                    <!-- Botón Cambiar Rol -->
+                                    <button onclick="openRoleModal(this)"
+                                            th:data-user-id="${user.id}"
+                                            th:data-user-email="${user.email}"
+                                            th:data-current-role="${user.role}"
+                                            class="text-blue-600 hover:text-blue-800" title="Cambiar Rol">
+                                        <i class="fas fa-user-tag"></i>
+                                    </button>
+
+                                    <!-- Botón Eliminar (solo si no está eliminado) -->
+                                    <button th:if="${user.estado != 'ELIMINADO'}" 
+                                            onclick="openDeleteModal(this)"
+                                            th:data-user-id="${user.id}"
+                                            th:data-user-email="${user.email}"
+                                            class="text-gray-600 hover:text-gray-800" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                            </div>
-                        </div>
-                    `,
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    confirmButtonText: 'Banear Cliente',
-                    cancelButtonText: 'Cancelar',
-                    customClass: {
-                        popup: 'rounded-[3rem] p-10',
-                        confirmButton: 'rounded-2xl px-8 py-4',
-                        cancelButton: 'rounded-2xl px-8 py-4'
-                    },
-                    preConfirm: () => {
-                        return {
-                            razon: document.getElementById('swal-razon').value,
-                            permanente: document.getElementById('swal-permanente').checked
-                        }
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const { razon, permanente } = result.value;
-                        const url = `/admin/usuarios/estado/${id}?activo=false&razon=${encodeURIComponent(razon)}&permanente=${permanente}`;
-                        Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); } });
-                        fetch(url, {
-                            method: 'POST',
-                            headers: { [document.querySelector('meta[name="_csrf_header"]').content]: document.querySelector('meta[name="_csrf"]').content }
-                        }).then(res => res.ok ? window.location.reload() : alert('Error'));
-                    }
-                });
-            } else {
-                Swal.fire({
-                    title: '<span class="text-surface-900 font-extrabold text-2xl">Restaurar Acceso</span>',
-                    text: '¿Confirmas la reactivación de la cuenta? El usuario podrá reservar de inmediato.',
-                    showCancelButton: true,
-                    confirmButtonColor: '#22c55e',
-                    confirmButtonText: 'Reactivar ahora',
-                    cancelButtonText: 'Mantener bloqueado',
-                    customClass: {
-                        popup: 'rounded-[3rem] p-10 shadow-2xl',
-                        confirmButton: 'rounded-2xl px-8 py-4',
-                        cancelButton: 'rounded-2xl px-8 py-4 bg-surface-50 text-surface-400 border-none'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        fetch(`/admin/usuarios/estado/${id}?activo=true`, {
-                            method: 'POST',
-                            headers: { [document.querySelector('meta[name="_csrf_header"]').content]: document.querySelector('meta[name="_csrf"]').content }
-                        }).then(res => res.ok ? window.location.reload() : alert('Error'));
-                    }
-                });
-            }
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <div th:if="${totalPages > 1}" class="px-6 py-4 bg-gray-50 border-t flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    Página <span th:text="${currentPage + 1}">1</span> de <span th:text="${totalPages}">1</span>
+                </div>
+                <div class="flex gap-2">
+                    <a th:if="${currentPage > 0}" 
+                       th:href="@{/admin/usuarios(page=${currentPage - 1}, rol=${selectedRol}, estado=${selectedEstado}, search=${searchQuery})}"
+                       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Anterior
+                    </a>
+                    <a th:if="${currentPage < totalPages - 1}" 
+                       th:href="@{/admin/usuarios(page=${currentPage + 1}, rol=${selectedRol}, estado=${selectedEstado}, search=${searchQuery})}"
+                       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Siguiente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Suspender Usuario -->
+    <div id="suspendModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Suspender Usuario</h3>
+            <p class="text-gray-600 mb-4">¿Está seguro de suspender a <span id="suspendUserEmail" class="font-semibold"></span>?</p>
+            
+            <form id="suspendForm" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Razón de suspensión</label>
+                    <textarea name="razon" required 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              rows="3" placeholder="Ingrese la razón de la suspensión..."></textarea>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeSuspendModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        Suspender
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Rol -->
+    <div id="roleModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Cambiar Rol de Usuario</h3>
+            <p class="text-gray-600 mb-4">Cambiar rol de <span id="roleUserEmail" class="font-semibold"></span></p>
+            
+            <form id="roleForm" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nuevo Rol</label>
+                    <select name="nuevoRol" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="USER">Usuario</option>
+                        <option value="ADMIN">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeRoleModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Cambiar Rol
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Eliminar Usuario -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Eliminar Usuario</h3>
+            <p class="text-gray-600 mb-4">¿Está seguro de eliminar a <span id="deleteUserEmail" class="font-semibold"></span>?</p>
+            <p class="text-sm text-gray-500 mb-4">Esta acción marcará al usuario como eliminado pero preservará sus datos.</p>
+            
+            <form id="deleteForm" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="_method" value="DELETE"/>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeDeleteModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openSuspendModal(button) {
+            const userId = button.getAttribute('data-user-id');
+            const userEmail = button.getAttribute('data-user-email');
+            document.getElementById('suspendUserEmail').textContent = userEmail;
+            document.getElementById('suspendForm').action = '/admin/usuarios/' + userId + '/suspender';
+            document.getElementById('suspendModal').classList.remove('hidden');
+        }
+
+        function closeSuspendModal() {
+            document.getElementById('suspendModal').classList.add('hidden');
+        }
+
+        function openRoleModal(button) {
+            const userId = button.getAttribute('data-user-id');
+            const userEmail = button.getAttribute('data-user-email');
+            const currentRole = button.getAttribute('data-current-role');
+            document.getElementById('roleUserEmail').textContent = userEmail;
+            document.getElementById('roleForm').action = '/admin/usuarios/' + userId + '/rol';
+            document.querySelector('#roleForm select[name="nuevoRol"]').value = currentRole;
+            document.getElementById('roleModal').classList.remove('hidden');
+        }
+
+        function closeRoleModal() {
+            document.getElementById('roleModal').classList.add('hidden');
+        }
+
+        function openDeleteModal(button) {
+            const userId = button.getAttribute('data-user-id');
+            const userEmail = button.getAttribute('data-user-email');
+            document.getElementById('deleteUserEmail').textContent = userEmail;
+            document.getElementById('deleteForm').action = '/admin/usuarios/' + userId;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        // Cerrar modales al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target.id === 'suspendModal') closeSuspendModal();
+            if (event.target.id === 'roleModal') closeRoleModal();
+            if (event.target.id === 'deleteModal') closeDeleteModal();
         }
     </script>
-</main>
 </body>
 </html>

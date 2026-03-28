@@ -36,23 +36,27 @@ public class PasswordResetService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public PasswordResetToken createToken(String email) {
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-
-        // Invalidar tokens previos no usados
-        tokenRepository.findByUserIdAndUsedFalse(user.getId()).ifPresent(existing -> {
-            existing.setUsed(true);
-            tokenRepository.save(existing);
+    public PasswordResetToken createToken(String userId) {
+        // Invalidar todos los tokens anteriores del usuario
+        tokenRepository.findByUserId(userId).forEach(existing -> {
+            if (!existing.isUsed()) {
+                existing.setUsed(true);
+                tokenRepository.save(existing);
+            }
         });
 
-        PasswordResetToken token = new PasswordResetToken(user.getId());
-        log.info("Token de recuperación creado para: {}", email);
+        PasswordResetToken token = new PasswordResetToken(userId);
+        log.info("Token de recuperación creado para usuario ID: {}", userId);
         return tokenRepository.save(token);
     }
 
     public Optional<PasswordResetToken> findByToken(String token) {
         return tokenRepository.findByToken(token);
+    }
+
+    public boolean validateToken(String tokenStr) {
+        Optional<PasswordResetToken> tokenOpt = tokenRepository.findByToken(tokenStr);
+        return tokenOpt.isPresent() && tokenOpt.get().isValid();
     }
 
     public void resetPassword(String tokenStr, String newPassword) {

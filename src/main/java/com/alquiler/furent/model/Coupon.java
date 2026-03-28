@@ -63,12 +63,34 @@ public class Coupon {
     public List<String> getCategoriasAplicables() { return categoriasAplicables; }
     public void setCategoriasAplicables(List<String> categoriasAplicables) { this.categoriasAplicables = categoriasAplicables; }
 
-    public boolean isValid() {
+    /**
+     * Verifica si el cupón está vigente (dentro del rango de fechas).
+     * 
+     * @return true si la fecha actual está dentro del rango validoDesde-validoHasta
+     */
+    public boolean isVigente() {
         LocalDate now = LocalDate.now();
-        return activo
-                && (validoDesde == null || !now.isBefore(validoDesde))
-                && (validoHasta == null || !now.isAfter(validoHasta))
-                && (usosMaximos <= 0 || usosActuales < usosMaximos);
+        return (validoDesde == null || !now.isBefore(validoDesde))
+                && (validoHasta == null || !now.isAfter(validoHasta));
+    }
+
+    /**
+     * Verifica si el cupón alcanzó el límite de usos.
+     * 
+     * @return true si usosActuales >= usosMaximos (cuando usosMaximos > 0)
+     */
+    public boolean hasReachedLimit() {
+        return usosMaximos > 0 && usosActuales >= usosMaximos;
+    }
+
+    /**
+     * Verifica si el cupón es válido para usar.
+     * Combina todas las validaciones: activo, vigente y límite de usos.
+     * 
+     * @return true si el cupón puede ser usado
+     */
+    public boolean isValid() {
+        return activo && isVigente() && !hasReachedLimit();
     }
 
     public BigDecimal calcularDescuento(BigDecimal monto) {

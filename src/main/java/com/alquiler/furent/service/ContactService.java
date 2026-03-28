@@ -4,19 +4,15 @@ import com.alquiler.furent.model.ContactMessage;
 import com.alquiler.furent.repository.ContactMessageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Servicio de gestión de mensajes de contacto.
- * Administra el buzón de mensajes recibidos desde el formulario público,
- * con soporte para lectura, conteo de no leídos y eliminación.
- *
- * @author Furent Team
- * @since 1.0
- */
 @Service
 public class ContactService {
 
@@ -41,6 +37,10 @@ public class ContactService {
         return contactMessageRepository.findByLeidoFalseOrderByFechaCreacionDesc();
     }
 
+    public List<ContactMessage> findUnread() {
+        return getUnread();
+    }
+
     public long countUnread() {
         return contactMessageRepository.countByLeidoFalse();
     }
@@ -58,5 +58,17 @@ public class ContactService {
 
     public void delete(String id) {
         contactMessageRepository.deleteById(id);
+    }
+    
+    public Page<ContactMessage> findAll(String estado, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaCreacion"));
+        
+        if ("NO_LEIDO".equalsIgnoreCase(estado)) {
+            return contactMessageRepository.findByLeido(false, pageable);
+        } else if ("LEIDO".equalsIgnoreCase(estado)) {
+            return contactMessageRepository.findByLeido(true, pageable);
+        } else {
+            return contactMessageRepository.findAll(pageable);
+        }
     }
 }

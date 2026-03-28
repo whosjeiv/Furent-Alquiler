@@ -37,24 +37,24 @@ class UserServiceTest {
 
     @Test
     void register_withNewEmail_shouldCreateUser() {
-        when(userRepository.existsByEmail("nuevo@test.com")).thenReturn(false);
+        when(userRepository.existsByEmail("nuevo@gmail.com")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("encoded");
-        User saved = new User("nuevo@test.com", "encoded", "Juan", "Test", "3001234567", "USER");
+        User saved = new User("nuevo@gmail.com", "encoded", "Juan", "Test", "3001234567", "USER");
         when(userRepository.save(any(User.class))).thenReturn(saved);
 
-        User result = userService.register("nuevo@test.com", "password123", "Juan", "Test", "3001234567");
+        User result = userService.register("nuevo@gmail.com", "password123", "Juan", "Test", "3001234567");
 
         assertNotNull(result);
-        assertEquals("nuevo@test.com", result.getEmail());
+        assertEquals("nuevo@gmail.com", result.getEmail());
         verify(userRepository).save(any(User.class));
     }
 
     @Test
     void register_withExistingEmail_shouldThrowDuplicate() {
-        when(userRepository.existsByEmail("existe@test.com")).thenReturn(true);
+        when(userRepository.existsByEmail("existe@gmail.com")).thenReturn(true);
 
         assertThrows(DuplicateResourceException.class, () ->
-                userService.register("existe@test.com", "pass", "A", "B", "123"));
+                userService.register("existe@gmail.com", "Password123!", "A", "B", "123"));
     }
 
     @Test

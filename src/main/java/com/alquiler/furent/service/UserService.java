@@ -45,13 +45,18 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final EventPublisher eventPublisher;
     private final MetricsConfig metricsConfig;
+    private final EmailService emailService;
+    private final AuditLogService auditLogService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       EventPublisher eventPublisher, MetricsConfig metricsConfig) {
+                       EventPublisher eventPublisher, MetricsConfig metricsConfig,
+                       EmailService emailService, AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
         this.metricsConfig = metricsConfig;
+        this.emailService = emailService;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -151,6 +156,14 @@ public class UserService implements UserDetailsService {
         String tenantId = TenantContext.getCurrentTenant() != null ? TenantContext.getCurrentTenant() : "default";
         eventPublisher.publish(new UserRegisteredEvent(this, saved, tenantId));
 
+        // Enviar email de bienvenida de forma asíncrona
+        try {
+            emailService.sendWelcomeEmail(saved);
+        } catch (Exception e) {
+            log.error("Error al enviar email de bienvenida a {}: {}", email, e.getMessage());
+            // No interrumpir el flujo de registro si falla el email
+        }
+
         return saved;
     }
 
@@ -189,5 +202,128 @@ public class UserService implements UserDetailsService {
 
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    /**
+     * Suspende un usuario temporalmente.
+     * 
+     * @param userId ID del usuario a suspender
+     * @param reason Razón de la suspensión
+     * @param admin Email del administrador que realiza la acción
+     * @return Usuario suspendido
+     */
+    public User suspendUser(String userId, String reason, String admin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        user.setEstado("SUSPENDIDO_TEMPORAL");
+        user.setActivo(false);
+        user.setRazonSuspension(reason);
+        user.setFechaSuspension(LocalDateTime.now());
+        user.setFechaInicioSuspension(LocalDateTime.now());
+        
+        User saved = userRepository.save(user);
+        
+        // Registrar en audit log
+        auditLogService.log(admin, "USER_SUSPENDED", "User", userId, 
+                "Usuario " + user.getEmail() + " suspendido. Razón: " + reason);
+        log.info("Usuario {} suspendido por {}", user.getEmail(), admin);
+        
+        return saved;
+    }
+
+    /**
+     * Activa un usuario suspendido.
+     * 
+     * @param userId ID del usuario a activar
+     * @param admin Email del administrador que realiza la acción
+     * @return Usuario activado
+     */
+    public User activateUser(String userId, String admin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        user.setEstado("ACTIVO");
+        user.setActivo(true);
+        user.setRazonSuspension(null);
+        user.setFechaSuspension(null);
+        user.setFechaInicioSuspension(null);
+        user.setFechaFinSuspension(null);
+        user.setSuspensionPermanente(false);
+        
+        User saved = userRepository.save(user);
+        
+        // Registrar en audit log
+        auditLogService.log(admin, "USER_ACTIVATED", "User", userId, 
+                "Usuario " + user.getEmail() + " activado");
+        log.info("Usuario {} activado por {}", user.getEmail(), admin);
+        
+        return saved;
+    }
+
+    /**
+     * Cambia el rol de un usuario.
+     * 
+     * @param userId ID del usuario
+     * @param newRole Nuevo rol (USER, ADMIN)
+     * @param admin Email del administrador que realiza la acción
+     * @return Usuario actualizado
+     */
+    public User changeUserRole(String userId, String newRole, String admin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        String oldRole = user.getRole();
+        user.setRole(newRole);
+        
+        User saved = userRepository.save(user);
+        
+        // Registrar en audit log
+        auditLogService.log(admin, "USER_ROLE_CHANGED", "User", userId, 
+                "Rol de usuario " + user.getEmail() + " cambiado de " + oldRole + " a " + newRole);
+        log.info("Rol de usuario {} cambiado de {} a {} por {}", user.getEmail(), oldRole, newRole, admin);
+        
+        return saved;
+    }
+
+    /**
+     * Realiza soft delete de un usuario (marca como eliminado sin borrar datos).
+     * 
+     * @param userId ID del usuario
+     * @param admin Email del administrador que realiza la acción
+     * @return Usuario marcado como eliminado
+     */
+    public User softDeleteUser(String userId, String admin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        user.setDeleted(true);
+        user.setEstado("ELIMINADO");
+        user.setActivo(false);
+        
+        User saved = userRepository.save(user);
+        
+        // Registrar en audit log
+        auditLogService.log(admin, "USER_SOFT_DELETED", "User", userId, 
+                "Usuario " + user.getEmail() + " marcado como eliminado");
+        log.info("Usuario {} marcado como eliminado por {}", user.getEmail(), admin);
+        
+        return saved;
+    }
+
+    /**
+     * Actualiza la contraseña de un usuario.
+     * 
+     * @param userId ID del usuario
+     * @param newPassword Nueva contraseña (será encriptada)
+     */
+    public void updatePassword(String userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        log.info("Contraseña actualizada para usuario {}", user.getEmail());
     }
 }

@@ -138,4 +138,117 @@ class CouponTest {
         assertTrue(c.isActivo());
         assertEquals(0, c.getUsosActuales());
     }
+
+    @Test
+    void isVigente_withinDateRange_returnsTrue() {
+        Coupon c = new Coupon();
+        c.setValidoDesde(LocalDate.now().minusDays(5));
+        c.setValidoHasta(LocalDate.now().plusDays(5));
+
+        assertTrue(c.isVigente());
+    }
+
+    @Test
+    void isVigente_beforeValidoDesde_returnsFalse() {
+        Coupon c = new Coupon();
+        c.setValidoDesde(LocalDate.now().plusDays(1));
+        c.setValidoHasta(LocalDate.now().plusDays(10));
+
+        assertFalse(c.isVigente());
+    }
+
+    @Test
+    void isVigente_afterValidoHasta_returnsFalse() {
+        Coupon c = new Coupon();
+        c.setValidoDesde(LocalDate.now().minusDays(10));
+        c.setValidoHasta(LocalDate.now().minusDays(1));
+
+        assertFalse(c.isVigente());
+    }
+
+    @Test
+    void isVigente_nullDates_returnsTrue() {
+        Coupon c = new Coupon();
+        c.setValidoDesde(null);
+        c.setValidoHasta(null);
+
+        assertTrue(c.isVigente());
+    }
+
+    @Test
+    void isVigente_onlyValidoDesde_checksStartDate() {
+        Coupon c = new Coupon();
+        c.setValidoDesde(LocalDate.now().minusDays(1));
+        c.setValidoHasta(null);
+
+        assertTrue(c.isVigente());
+    }
+
+    @Test
+    void isVigente_onlyValidoHasta_checksEndDate() {
+        Coupon c = new Coupon();
+        c.setValidoDesde(null);
+        c.setValidoHasta(LocalDate.now().plusDays(1));
+
+        assertTrue(c.isVigente());
+    }
+
+    @Test
+    void hasReachedLimit_belowLimit_returnsFalse() {
+        Coupon c = new Coupon();
+        c.setUsosMaximos(10);
+        c.setUsosActuales(5);
+
+        assertFalse(c.hasReachedLimit());
+    }
+
+    @Test
+    void hasReachedLimit_atLimit_returnsTrue() {
+        Coupon c = new Coupon();
+        c.setUsosMaximos(10);
+        c.setUsosActuales(10);
+
+        assertTrue(c.hasReachedLimit());
+    }
+
+    @Test
+    void hasReachedLimit_aboveLimit_returnsTrue() {
+        Coupon c = new Coupon();
+        c.setUsosMaximos(10);
+        c.setUsosActuales(15);
+
+        assertTrue(c.hasReachedLimit());
+    }
+
+    @Test
+    void hasReachedLimit_unlimitedUses_returnsFalse() {
+        Coupon c = new Coupon();
+        c.setUsosMaximos(0); // 0 means unlimited
+        c.setUsosActuales(999);
+
+        assertFalse(c.hasReachedLimit());
+    }
+
+    @Test
+    void hasReachedLimit_negativeMaxUsos_returnsFalse() {
+        Coupon c = new Coupon();
+        c.setUsosMaximos(-1);
+        c.setUsosActuales(10);
+
+        assertFalse(c.hasReachedLimit());
+    }
+
+    @Test
+    void isValid_combinesAllValidations() {
+        Coupon c = new Coupon();
+        c.setActivo(true);
+        c.setValidoDesde(LocalDate.now().minusDays(1));
+        c.setValidoHasta(LocalDate.now().plusDays(5));
+        c.setUsosMaximos(10);
+        c.setUsosActuales(3);
+
+        assertTrue(c.isValid());
+        assertTrue(c.isVigente());
+        assertFalse(c.hasReachedLimit());
+    }
 }

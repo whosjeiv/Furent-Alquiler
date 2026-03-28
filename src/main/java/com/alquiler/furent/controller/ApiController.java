@@ -239,9 +239,16 @@ public class ApiController {
 
         // Validar fechas
         if (req.getFechaInicio() != null && req.getFechaFin() != null) {
+            // Validar que fechaFin no sea anterior a fechaInicio
             if (req.getFechaFin().isBefore(req.getFechaInicio())) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message",
                         "La fecha de fin no puede ser anterior a la fecha de inicio"));
+            }
+            
+            // Validar que fechaInicio no sea anterior a la fecha actual
+            if (req.getFechaInicio().isBefore(java.time.LocalDate.now())) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message",
+                        "La fecha de inicio no puede ser en el pasado"));
             }
         }
 
@@ -338,7 +345,7 @@ public class ApiController {
                 "SUCCESS", "/panel");
 
         if (user.isNotificacionesEmail()) {
-            emailService.sendReservationConfirmation(user.getEmail(), res.getId(), res.getTotal());
+            emailService.sendReservationConfirmation(res);
             if (res.getCodigoPagoEfectivo() != null) {
                 emailService.sendCashPaymentCodeEmail(user.getEmail(), user.getNombreCompleto(),
                         res.getCodigoPagoEfectivo(), res.getTotal(), res.getId());
@@ -376,8 +383,19 @@ public class ApiController {
                     "message", "El pago con tarjeta no está disponible porque no se han configurado las claves de PayU."));
         }
 
-        if (req.getFechaInicio() != null && req.getFechaFin() != null && req.getFechaFin().isBefore(req.getFechaInicio())) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "La fecha de fin no puede ser anterior a la de inicio."));
+        // Validar fechas
+        if (req.getFechaInicio() != null && req.getFechaFin() != null) {
+            // Validar que fechaFin no sea anterior a fechaInicio
+            if (req.getFechaFin().isBefore(req.getFechaInicio())) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", 
+                        "La fecha de fin no puede ser anterior a la fecha de inicio"));
+            }
+            
+            // Validar que fechaInicio no sea anterior a la fecha actual
+            if (req.getFechaInicio().isBefore(java.time.LocalDate.now())) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message",
+                        "La fecha de inicio no puede ser en el pasado"));
+            }
         }
 
         Reservation res = new Reservation();

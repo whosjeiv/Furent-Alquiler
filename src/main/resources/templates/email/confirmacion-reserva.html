@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Confirmación de Reserva - Furent</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f1fa;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1fa;padding:32px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.08);">
+                    
+                    <!-- Header con gradiente -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);padding:32px;text-align:center;">
+                            <h1 style="margin:0;font-size:28px;color:#ffffff;letter-spacing:1px;">🏠 FURENT</h1>
+                            <p style="margin:8px 0 0;font-size:12px;color:rgba(255,255,255,0.85);letter-spacing:0.5px;">Alquiler de Mobiliarios para Eventos</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Cuerpo del mensaje -->
+                    <tr>
+                        <td style="padding:40px 32px;">
+                            <h2 style="margin:0 0 20px;font-size:24px;color:#1f2937;">
+                                ¡Reserva Confirmada! ✅
+                            </h2>
+                            
+                            <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#4b5563;">
+                                Hola <strong th:text="${reservation.usuarioNombre}" style="color:#7c3aed;">Usuario</strong>,
+                            </p>
+                            
+                            <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#4b5563;">
+                                Tu reserva ha sido confirmada exitosamente. A continuación encontrarás todos los detalles de tu alquiler.
+                            </p>
+                            
+                            <!-- Información de la reserva -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf5ff;border-radius:10px;border:1px solid #e9d5ff;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <p style="margin:0 0 12px;font-size:14px;color:#1f2937;font-weight:600;">
+                                            📋 Detalles de la Reserva
+                                        </p>
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.8;color:#4b5563;">
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Número de Reserva:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${reservation.id}">RES-12345</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Tipo de Evento:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${reservation.tipoEvento}">Boda</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Fecha de Inicio:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${#temporals.format(reservation.fechaInicio, 'dd/MM/yyyy')}">01/01/2025</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Fecha de Fin:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${#temporals.format(reservation.fechaFin, 'dd/MM/yyyy')}">03/01/2025</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Días de Alquiler:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${reservation.diasAlquiler} + ' días'">3 días</td>
+                                            </tr>
+                                            <tr th:if="${reservation.horaEntrega}">
+                                                <td style="padding:4px 0;"><strong>Hora de Entrega:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${reservation.horaEntrega}">10:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Dirección del Evento:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="${reservation.direccionEvento}">Calle Principal 123</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Productos reservados -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                                <tr>
+                                    <td>
+                                        <p style="margin:0 0 12px;font-size:14px;color:#1f2937;font-weight:600;">
+                                            📦 Productos Reservados
+                                        </p>
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+                                            <thead>
+                                                <tr style="background-color:#f9fafb;">
+                                                    <th style="padding:12px;text-align:left;font-size:13px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;">Producto</th>
+                                                    <th style="padding:12px;text-align:center;font-size:13px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;">Cantidad</th>
+                                                    <th style="padding:12px;text-align:right;font-size:13px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;">Precio/Día</th>
+                                                    <th style="padding:12px;text-align:right;font-size:13px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;">Subtotal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="item : ${reservation.items}" style="border-bottom:1px solid #f3f4f6;">
+                                                    <td style="padding:12px;font-size:14px;color:#1f2937;" th:text="${item.productoNombre}">Silla Elegante</td>
+                                                    <td style="padding:12px;text-align:center;font-size:14px;color:#4b5563;" th:text="${item.cantidad}">10</td>
+                                                    <td style="padding:12px;text-align:right;font-size:14px;color:#4b5563;" th:text="'$' + ${#numbers.formatDecimal(item.precioPorDia, 1, 2)}">$50.00</td>
+                                                    <td style="padding:12px;text-align:right;font-size:14px;color:#1f2937;font-weight:600;" th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">$500.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Resumen de costos -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf5ff;border-radius:10px;border:1px solid #e9d5ff;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.8;color:#4b5563;">
+                                            <tr>
+                                                <td style="padding:4px 0;"><strong>Subtotal:</strong></td>
+                                                <td style="padding:4px 0;text-align:right;" th:text="'$' + ${#numbers.formatDecimal(reservation.subtotal, 1, 2)}">$1,500.00</td>
+                                            </tr>
+                                            <tr th:if="${reservation.descuento != null and reservation.descuento > 0}">
+                                                <td style="padding:4px 0;color:#10b981;">
+                                                    <strong>Descuento</strong>
+                                                    <span th:if="${reservation.codigoCupon}" th:text="'(' + ${reservation.codigoCupon} + ')'" style="font-size:12px;">(VERANO2024)</span>:
+                                                </td>
+                                                <td style="padding:4px 0;text-align:right;color:#10b981;" th:text="'-$' + ${#numbers.formatDecimal(reservation.descuento, 1, 2)}">-$150.00</td>
+                                            </tr>
+                                            <tr style="border-top:2px solid #e9d5ff;">
+                                                <td style="padding:12px 0 0;font-size:16px;"><strong style="color:#7c3aed;">Total:</strong></td>
+                                                <td style="padding:12px 0 0;text-align:right;font-size:18px;font-weight:700;color:#7c3aed;" th:text="'$' + ${#numbers.formatDecimal(reservation.total, 1, 2)}">$1,350.00</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Próximos pasos -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#ecfdf5;border-radius:10px;border:1px solid #a7f3d0;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <p style="margin:0 0 12px;font-size:14px;color:#1f2937;font-weight:600;">
+                                            🚀 Próximos Pasos
+                                        </p>
+                                        <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#065f46;">
+                                            <li>Nuestro equipo preparará los productos para tu evento</li>
+                                            <li>Te contactaremos 24 horas antes para coordinar la entrega</li>
+                                            <li>Los productos serán entregados en la dirección indicada</li>
+                                            <li>Después del evento, coordinaremos la recolección</li>
+                                        </ol>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Información de contacto -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fef3c7;border-radius:10px;border:1px solid #fde68a;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <p style="margin:0 0 8px;font-size:14px;color:#1f2937;font-weight:600;">
+                                            📞 ¿Necesitas ayuda?
+                                        </p>
+                                        <p style="margin:0;font-size:13px;line-height:1.6;color:#78350f;">
+                                            Si tienes alguna pregunta o necesitas modificar tu reserva, no dudes en contactarnos. 
+                                            Estamos aquí para ayudarte a que tu evento sea perfecto.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:24px 32px;background-color:#faf5ff;border-top:1px solid #ede9fe;text-align:center;">
+                            <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#7c3aed;">
+                                Equipo Furent 💜
+                            </p>
+                            <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;">
+                                Este correo fue enviado automáticamente desde Furent.
+                            </p>
+                            <p style="margin:0;font-size:11px;color:#9ca3af;">
+                                © 2025 Furent — Alquiler de Mobiliarios. Todos los derechos reservados.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

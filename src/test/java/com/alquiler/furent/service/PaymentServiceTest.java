@@ -34,6 +34,9 @@ class PaymentServiceTest {
     private NotificationService notificationService;
 
     @Mock
+    private EmailService emailService;
+
+    @Mock
     private AuditLogService auditLogService;
 
     @Mock
@@ -65,7 +68,8 @@ class PaymentServiceTest {
 
     @Test
     void initPayment_validReservation_createsPayment() {
-        when(reservationService.getById("res-001")).thenReturn(Optional.of(testReservation));
+        testReservation.setEstado("CONFIRMADA");
+        when(reservationService.getByIdOrThrow("res-001")).thenReturn(testReservation);
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> {
             Payment p = i.getArgument(0);
             p.setId("pay-new");
@@ -78,15 +82,41 @@ class PaymentServiceTest {
         assertEquals(0, BigDecimal.valueOf(150000).compareTo(result.getMonto()));
         assertEquals("PENDIENTE", result.getEstado());
         assertEquals("NEQUI", result.getMetodoPago());
-        verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("INFO"), anyString());
+        assertNotNull(result.getReferencia());
+        assertTrue(result.getReferencia().startsWith("PAY-"));
+        assertEquals(12, result.getReferencia().length()); // PAY- + 8 chars
+        verify(notificationService).notify(eq("user-001"), eq("Pago iniciado"), anyString(), eq("PAGO"), anyString());
     }
 
     @Test
     void initPayment_reservationNotFound_throwsException() {
-        when(reservationService.getById("res-999")).thenReturn(Optional.empty());
+        when(reservationService.getByIdOrThrow("res-999")).thenThrow(new ResourceNotFoundException("Reserva", "res-999"));
 
         assertThrows(ResourceNotFoundException.class,
                 () -> paymentService.initPayment("res-999", "user-001", "NEQUI"));
+    }
+
+    @Test
+    void initPayment_reservationNotConfirmed_throwsException() {
+        testReservation.setEstado("PENDIENTE");
+        when(reservationService.getByIdOrThrow("res-001")).thenReturn(testReservation);
+
+        InvalidOperationException exception = assertThrows(InvalidOperationException.class,
+                () -> paymentService.initPayment("res-001", "user-001", "NEQUI"));
+        
+        assertTrue(exception.getMessage().contains("CONFIRMADA"));
+        verify(paymentRepository, never()).save(any());
+        verify(notificationService, never()).notify(anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void generateReference_createsValidFormat() {
+        String ref = paymentService.generateReference();
+        
+        assertNotNull(ref);
+        assertTrue(ref.startsWith("PAY-"));
+        assertEquals(12, ref.length()); // PAY- (4) + 8 alphanumeric
+        assertTrue(ref.substring(4).matches("[A-Z0-9]{8}"));
     }
 
     @Test
@@ -97,10 +127,11 @@ class PaymentServiceTest {
         Payment result = paymentService.confirmPayment("pay-001", "REF-123", "admin@test.com");
 
         assertEquals("PAGADO", result.getEstado());
-        assertEquals("REF-123", result.getReferencia());
         assertNotNull(result.getFechaPago());
-        verify(reservationService).updateStatus("res-001", "ACTIVA");
-        verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("SUCCESS"), anyString());
+        verify(reservationService).updateStatus(eq("res-001"), eq("ENTREGADA"), eq("admin@test.com"), anyString());
+        verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("PAGO"), anyString());
+        verify(metricsConfig.getPaymentsCompleted()).increment();
+        verify(auditLogService).log(eq("admin@test.com"), eq("CONFIRMAR_PAGO"), eq("PAGO"), eq("pay-001"), anyString());
     }
 
     @Test
@@ -120,6 +151,26 @@ class PaymentServiceTest {
         Payment result = paymentService.failPayment("pay-001", "Comprobante inválido", "admin@test.com");
 
         assertEquals("FALLIDO", result.getEstado());
-        verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("ALERT"), anyString());
+        verify(notificationService).notify(eq("user-001"), anyString(), anyString(), eq("PAGO"), anyString());
+        verify(metricsConfig.getPaymentsFailed()).increment();
+        verify(auditLogService).log(eq("admin@test.com"), eq("RECHAZAR_PAGO"), eq("PAGO"), eq("pay-001"), anyString());
+    }
+
+    @Test
+    void getByIdOrThrow_existingPayment_returnsPayment() {
+        when(paymentRepository.findById("pay-001")).thenReturn(Optional.of(testPayment));
+
+        Payment result = paymentService.getByIdOrThrow("pay-001");
+
+        assertNotNull(result);
+        assertEquals("pay-001", result.getId());
+    }
+
+    @Test
+    void getByIdOrThrow_nonExistingPayment_throwsException() {
+        when(paymentRepository.findById("pay-999")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> paymentService.getByIdOrThrow("pay-999"));
     }
 }

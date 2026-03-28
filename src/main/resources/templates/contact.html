@@ -30,25 +30,41 @@
                             <span th:text="${success}">Mensaje enviado</span>
                         </div>
                         
-                        <form th:action="@{/contacto}" method="post" class="space-y-5">
+                        <!-- Validation errors -->
+                        <div th:if="${#fields.hasErrors('contactMessage.*')}" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li th:each="err : ${#fields.errors('contactMessage.*')}" th:text="${err}">Error</li>
+                            </ul>
+                        </div>
+                        
+                        <form th:action="@{/contacto}" th:object="${contactMessage}" method="post" class="space-y-5">
+                            <!-- CSRF Token -->
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Nombre</label>
-                                    <input type="text" name="nombre" required placeholder="Tu nombre" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                                    <input type="text" th:field="*{nombre}" required placeholder="Tu nombre" 
+                                           th:classappend="${#fields.hasErrors('nombre')} ? 'border-red-500' : ''"
+                                           class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Email</label>
-                                    <input type="email" name="email" required placeholder="tu@email.com" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                                    <input type="email" th:field="*{email}" required placeholder="tu@email.com" 
+                                           th:classappend="${#fields.hasErrors('email')} ? 'border-red-500' : ''"
+                                           class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Teléfono</label>
-                                <input type="tel" name="telefono" placeholder="+57 300 000 0000" class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                                <input type="tel" th:field="*{telefono}" placeholder="+57 300 000 0000" 
+                                       th:classappend="${#fields.hasErrors('telefono')} ? 'border-red-500' : ''"
+                                       class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
                             </div>
                             <div x-data="{ open: false, selectedValue: '', selectedLabel: 'Seleccionar tipo de evento' }">
                                 <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Asunto</label>
                                 
-                                <input type="hidden" name="asunto" x-model="selectedValue" required>
+                                <input type="hidden" th:field="*{asunto}" x-model="selectedValue" required>
                                 
                                 <div class="relative">
                                     <button type="button" @click="open = !open" @click.away="open = false" 
@@ -129,7 +145,9 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-surface-600 uppercase tracking-wider mb-2">Mensaje</label>
-                                <textarea name="mensaje" rows="4" required placeholder="Cuéntanos sobre tu evento..." class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all resize-none"></textarea>
+                                <textarea th:field="*{mensaje}" rows="4" required placeholder="Cuéntanos sobre tu evento..." 
+                                          th:classappend="${#fields.hasErrors('mensaje')} ? 'border-red-500' : ''"
+                                          class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all resize-none"></textarea>
                             </div>
                             <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-colors">
                                 Enviar mensaje

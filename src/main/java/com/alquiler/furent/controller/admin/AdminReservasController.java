@@ -79,7 +79,11 @@ public class AdminReservasController {
                 return "redirect:/admin/reservas";
             }
 
-            reservationService.updateStatus(id, estado, authentication.getName(), nota);
+                String previousStatus = reservationService.getById(id)
+                    .map(Reservation::getEstado)
+                    .orElse(estado);
+
+                reservationService.updateStatus(id, estado, authentication.getName(), nota);
             auditLogService.log(authentication.getName(), "CAMBIAR_ESTADO", "RESERVA", id, "Estado: " + estado);
 
             Reservation res = reservationService.getById(id).orElse(null);
@@ -89,7 +93,7 @@ public class AdminReservasController {
 
                 userService.findById(res.getUsuarioId()).ifPresent(user -> {
                     if (user.isNotificacionesEmail()) {
-                        emailService.sendStatusChange(user.getEmail(), res.getId(), estado);
+                        emailService.sendStatusChange(res, previousStatus);
                     }
                 });
             }

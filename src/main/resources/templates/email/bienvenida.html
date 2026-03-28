@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Bienvenido a Furent</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f1fa;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1fa;padding:32px 0;">
+        <tr>
+            <td align="center">
+                <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.08);">
+                    
+                    <!-- Header con gradiente -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);padding:32px;text-align:center;">
+                            <h1 style="margin:0;font-size:28px;color:#ffffff;letter-spacing:1px;">🏠 FURENT</h1>
+                            <p style="margin:8px 0 0;font-size:12px;color:rgba(255,255,255,0.85);letter-spacing:0.5px;">Alquiler de Mobiliarios para Eventos</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Cuerpo del mensaje -->
+                    <tr>
+                        <td style="padding:40px 32px;">
+                            <h2 style="margin:0 0 20px;font-size:24px;color:#1f2937;">
+                                ¡Bienvenido/a, <span th:text="${nombre}" style="color:#7c3aed;">Usuario</span>! 🎉
+                            </h2>
+                            
+                            <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#4b5563;">
+                                Gracias por unirte a <strong style="color:#7c3aed;">Furent</strong>. 
+                                Tu cuenta ha sido creada exitosamente y ya puedes comenzar a explorar 
+                                nuestro catálogo completo de mobiliarios para tus eventos.
+                            </p>
+                            
+                            <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#4b5563;">
+                                Con Furent puedes cotizar, reservar y gestionar el alquiler de mobiliarios 
+                                de manera rápida, sencilla y profesional. Estamos aquí para hacer que tu 
+                                evento sea inolvidable.
+                            </p>
+                            
+                            <!-- Botón de acción -->
+                            <table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+                                <tr>
+                                    <td style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);border-radius:12px;padding:16px 48px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">
+                                        <a th:href="@{${catalogoUrl}}" 
+                                           href="http://localhost:8080/catalogo" 
+                                           style="color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;letter-spacing:0.5px;">
+                                            Ver Catálogo Completo
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Información adicional -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf5ff;border-radius:10px;border:1px solid #e9d5ff;margin-top:24px;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <p style="margin:0 0 12px;font-size:14px;color:#1f2937;font-weight:600;">
+                                            ¿Qué puedes hacer ahora?
+                                        </p>
+                                        <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.8;color:#4b5563;">
+                                            <li>Explorar nuestro catálogo de productos</li>
+                                            <li>Crear cotizaciones personalizadas</li>
+                                            <li>Gestionar tus reservas en tiempo real</li>
+                                            <li>Contactar a nuestro equipo de soporte</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:24px 32px;background-color:#faf5ff;border-top:1px solid #ede9fe;text-align:center;">
+                            <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#7c3aed;">
+                                Equipo Furent 💜
+                            </p>
+                            <p style="margin:0 0 4px;font-size:11px;color:#9ca3af;">
+                                Este correo fue enviado automáticamente desde Furent.
+                            </p>
+                            <p style="margin:0;font-size:11px;color:#9ca3af;">
+                                © 2025 Furent — Alquiler de Mobiliarios. Todos los derechos reservados.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

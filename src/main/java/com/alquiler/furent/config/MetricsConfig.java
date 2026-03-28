@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Métricas registradas:
  * - furent.reservations.created (Counter): Total de reservas creadas
  * - furent.reservations.cancelled (Counter): Total de reservas canceladas
+ * - furent.payments.created (Counter): Total de pagos creados
  * - furent.payments.completed (Counter): Total de pagos completados
  * - furent.payments.failed (Counter): Total de pagos fallidos
  * - furent.users.registered (Counter): Total de registros de usuario
@@ -33,6 +34,7 @@ public class MetricsConfig {
     // === Counters ===
     private final Counter reservationsCreated;
     private final Counter reservationsCancelled;
+    private final Counter paymentsCreated;
     private final Counter paymentsCompleted;
     private final Counter paymentsFailed;
     private final Counter usersRegistered;
@@ -59,6 +61,11 @@ public class MetricsConfig {
         this.reservationsCancelled = Counter.builder("furent.reservations.cancelled")
                 .description("Total de reservas canceladas")
                 .tag("module", "reservations")
+                .register(registry);
+
+        this.paymentsCreated = Counter.builder("furent.payments.created")
+                .description("Total de pagos creados")
+                .tag("module", "payments")
                 .register(registry);
 
         this.paymentsCompleted = Counter.builder("furent.payments.completed")
@@ -123,6 +130,7 @@ public class MetricsConfig {
     // === Accessors para inyectar en servicios ===
     public Counter getReservationsCreated() { return reservationsCreated; }
     public Counter getReservationsCancelled() { return reservationsCancelled; }
+    public Counter getPaymentsCreated() { return paymentsCreated; }
     public Counter getPaymentsCompleted() { return paymentsCompleted; }
     public Counter getPaymentsFailed() { return paymentsFailed; }
     public Counter getUsersRegistered() { return usersRegistered; }

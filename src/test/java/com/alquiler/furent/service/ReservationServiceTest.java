@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -44,6 +45,12 @@ class ReservationServiceTest {
     @Mock(answer = org.mockito.Answers.RETURNS_DEEP_STUBS)
     private MetricsConfig metricsConfig;
 
+    @Mock
+    private MongoTemplate mongoTemplate;
+
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private ReservationService reservationService;
 
@@ -69,55 +76,32 @@ class ReservationServiceTest {
         @Test
         void pendiente_to_confirmada() {
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
+            when(mongoTemplate.save(any(Reservation.class))).thenReturn(testReservation);
 
             reservationService.updateStatus("res-001", "CONFIRMADA", "admin@test.com", "Aprobado");
 
             assertEquals("CONFIRMADA", testReservation.getEstado());
             verify(statusHistoryRepository).save(any());
-            verify(reservationRepository).save(testReservation);
         }
 
         @Test
-        void confirmada_to_activa() {
+        void confirmada_to_entregada() {
             testReservation.setEstado("CONFIRMADA");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
+            when(mongoTemplate.save(any(Reservation.class))).thenReturn(testReservation);
 
-            reservationService.updateStatus("res-001", "ACTIVA", "admin", null);
+            reservationService.updateStatus("res-001", "ENTREGADA", "admin", null);
 
-            assertEquals("ACTIVA", testReservation.getEstado());
+            assertEquals("ENTREGADA", testReservation.getEstado());
         }
 
         @Test
-        void activa_to_enCurso() {
-            testReservation.setEstado("ACTIVA");
+        void entregada_to_completada() {
+            testReservation.setEstado("ENTREGADA");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
-
-            reservationService.updateStatus("res-001", "EN_CURSO", "admin", "Entrega en camino");
-
-            assertEquals("EN_CURSO", testReservation.getEstado());
-        }
-
-        @Test
-        void enCurso_to_completada() {
-            testReservation.setEstado("EN_CURSO");
-            when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
+            when(mongoTemplate.save(any(Reservation.class))).thenReturn(testReservation);
 
             reservationService.updateStatus("res-001", "COMPLETADA", "admin", "Entrega completada");
-
-            assertEquals("COMPLETADA", testReservation.getEstado());
-        }
-
-        @Test
-        void activa_to_completada() {
-            testReservation.setEstado("ACTIVA");
-            when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
-
-            reservationService.updateStatus("res-001", "COMPLETADA", "admin", "Completada directamente");
 
             assertEquals("COMPLETADA", testReservation.getEstado());
         }
@@ -135,7 +119,7 @@ class ReservationServiceTest {
         void cancelar_desde_pendiente() {
             testReservation.setEstado("PENDIENTE");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
+            when(mongoTemplate.save(any(Reservation.class))).thenReturn(testReservation);
 
             reservationService.updateStatus("res-001", "CANCELADA", "admin@test.com", null);
 
@@ -147,7 +131,7 @@ class ReservationServiceTest {
         void cancelar_desde_confirmada() {
             testReservation.setEstado("CONFIRMADA");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
+            when(mongoTemplate.save(any(Reservation.class))).thenReturn(testReservation);
 
             reservationService.updateStatus("res-001", "CANCELADA", "admin", "Cliente desistió");
 
@@ -155,23 +139,12 @@ class ReservationServiceTest {
         }
 
         @Test
-        void cancelar_desde_activa() {
-            testReservation.setEstado("ACTIVA");
+        void cancelar_desde_entregada() {
+            testReservation.setEstado("ENTREGADA");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
+            when(mongoTemplate.save(any(Reservation.class))).thenReturn(testReservation);
 
             reservationService.updateStatus("res-001", "CANCELADA", "admin", null);
-
-            assertEquals("CANCELADA", testReservation.getEstado());
-        }
-
-        @Test
-        void cancelar_desde_enCurso() {
-            testReservation.setEstado("EN_CURSO");
-            when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-            when(reservationRepository.save(any())).thenReturn(testReservation);
-
-            reservationService.updateStatus("res-001", "CANCELADA", "admin", "Emergencia");
 
             assertEquals("CANCELADA", testReservation.getEstado());
         }
@@ -186,7 +159,7 @@ class ReservationServiceTest {
     class InvalidTransitions {
 
         @ParameterizedTest(name = "PENDIENTE → {0} debe fallar")
-        @CsvSource({"ACTIVA", "EN_CURSO", "COMPLETADA"})
+        @CsvSource({"ENTREGADA", "COMPLETADA"})
         void pendiente_invalid_transitions(String target) {
             testReservation.setEstado("PENDIENTE");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
@@ -196,7 +169,7 @@ class ReservationServiceTest {
         }
 
         @ParameterizedTest(name = "CONFIRMADA → {0} debe fallar")
-        @CsvSource({"PENDIENTE", "EN_CURSO", "COMPLETADA"})
+        @CsvSource({"PENDIENTE", "COMPLETADA"})
         void confirmada_invalid_transitions(String target) {
             testReservation.setEstado("CONFIRMADA");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
@@ -205,20 +178,10 @@ class ReservationServiceTest {
                     () -> reservationService.updateStatus("res-001", target, "admin", null));
         }
 
-        @ParameterizedTest(name = "ACTIVA → {0} debe fallar")
-        @CsvSource({"PENDIENTE", "CONFIRMADA"})
-        void activa_invalid_transitions(String target) {
-            testReservation.setEstado("ACTIVA");
-            when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
-
-            assertThrows(InvalidOperationException.class,
-                    () -> reservationService.updateStatus("res-001", target, "admin", null));
-        }
-
-        @ParameterizedTest(name = "EN_CURSO → {0} debe fallar")
-        @CsvSource({"PENDIENTE", "CONFIRMADA", "ACTIVA"})
-        void enCurso_invalid_transitions(String target) {
-            testReservation.setEstado("EN_CURSO");
+        @ParameterizedTest(name = "ENTREGADA → {0} debe fallar")
+        @CsvSource({"PENDIENTE", "CONFIRMADA", "ENTREGADA"})
+        void entregada_invalid_transitions(String target) {
+            testReservation.setEstado("ENTREGADA");
             when(reservationRepository.findById("res-001")).thenReturn(Optional.of(testReservation));
 
             assertThrows(InvalidOperationException.class,
@@ -234,7 +197,7 @@ class ReservationServiceTest {
             assertThrows(InvalidOperationException.class,
                     () -> reservationService.updateStatus("res-001", "PENDIENTE", "admin", null));
             assertThrows(InvalidOperationException.class,
-                    () -> reservationService.updateStatus("res-001", "ACTIVA", "admin", null));
+                    () -> reservationService.updateStatus("res-001", "ENTREGADA", "admin", null));
         }
 
         @Test
@@ -336,16 +299,16 @@ class ReservationServiceTest {
     class RevenueCalculations {
 
         @Test
-        @DisplayName("calculateTotalRevenue incluye solo estados COMPLETADA, ACTIVA, CONFIRMADA")
+        @DisplayName("calculateTotalRevenue incluye solo estados COMPLETADA, ENTREGADA, CONFIRMADA")
         void calculateTotalRevenue_filtersCorrectStates() {
             Reservation completada = createReservation("r1", "COMPLETADA", new BigDecimal("100000"));
-            Reservation activa = createReservation("r2", "ACTIVA", new BigDecimal("50000"));
+            Reservation entregada = createReservation("r2", "ENTREGADA", new BigDecimal("50000"));
             Reservation confirmada = createReservation("r3", "CONFIRMADA", new BigDecimal("75000"));
             Reservation pendiente = createReservation("r4", "PENDIENTE", new BigDecimal("200000"));
             Reservation cancelada = createReservation("r5", "CANCELADA", new BigDecimal("300000"));
 
             when(reservationRepository.findAll()).thenReturn(
-                    List.of(completada, activa, confirmada, pendiente, cancelada));
+                    List.of(completada, entregada, confirmada, pendiente, cancelada));
 
             BigDecimal total = reservationService.calculateTotalRevenue();
 
@@ -367,14 +330,14 @@ class ReservationServiceTest {
         void getStatusDistribution_groupsByState() {
             Reservation r1 = createReservation("r1", "PENDIENTE", BigDecimal.ZERO);
             Reservation r2 = createReservation("r2", "PENDIENTE", BigDecimal.ZERO);
-            Reservation r3 = createReservation("r3", "ACTIVA", BigDecimal.ZERO);
+            Reservation r3 = createReservation("r3", "ENTREGADA", BigDecimal.ZERO);
 
             when(reservationRepository.findAll()).thenReturn(List.of(r1, r2, r3));
 
             Map<String, Long> dist = reservationService.getStatusDistribution();
 
             assertEquals(2L, dist.get("PENDIENTE"));
-            assertEquals(1L, dist.get("ACTIVA"));
+            assertEquals(1L, dist.get("ENTREGADA"));
         }
 
         @Test
@@ -382,7 +345,7 @@ class ReservationServiceTest {
         void getRevenueByDay_groupsByDay() {
             Reservation r1 = createReservation("r1", "COMPLETADA", new BigDecimal("100000"));
             r1.setFechaCreacion(LocalDateTime.of(2025, 1, 15, 10, 0));
-            Reservation r2 = createReservation("r2", "ACTIVA", new BigDecimal("50000"));
+            Reservation r2 = createReservation("r2", "ENTREGADA", new BigDecimal("50000"));
             r2.setFechaCreacion(LocalDateTime.of(2025, 1, 15, 14, 0));
             Reservation r3 = createReservation("r3", "CONFIRMADA", new BigDecimal("75000"));
             r3.setFechaCreacion(LocalDateTime.of(2025, 1, 16, 9, 0));

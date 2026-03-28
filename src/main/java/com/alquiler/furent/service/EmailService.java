@@ -1,5 +1,8 @@
 package com.alquiler.furent.service;
 
+import com.alquiler.furent.model.Payment;
+import com.alquiler.furent.model.Reservation;
+import com.alquiler.furent.model.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -8,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,6 +19,7 @@ import java.math.BigDecimal;
 /**
  * Servicio de envío de correos electrónicos.
  * Utiliza JavaMailSender para envío SMTP real a través de Gmail.
+ * Todos los métodos de envío son asíncronos (@Async) para no bloquear el flujo principal.
  *
  * @author Furent Team
  * @since 1.0
@@ -25,14 +30,41 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
+    private final UserService userService;
+    private final ReservationService reservationService;
 
     @Value("${spring.mail.username}")
     private String fromAddress;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, UserService userService, ReservationService reservationService) {
         this.mailSender = mailSender;
+        this.userService = userService;
+        this.reservationService = reservationService;
     }
 
+    /**
+     * Envía email de bienvenida a nuevo usuario.
+     * Ejecuta de forma asíncrona (@Async).
+     * 
+     * @param user Usuario registrado
+     */
+    @Async
+    public void sendWelcomeEmail(User user) {
+        String nombre = user.getNombre() != null ? user.getNombre() : "Usuario";
+        String subject = "¡Bienvenido a Furent, " + nombre + "! 🎉";
+        String html = buildGenericHtmlEmail(
+                "¡Bienvenido, " + nombre + "!",
+                "Gracias por registrarte en <strong>Furent</strong>. Tu cuenta está lista para usar.<br><br>" +
+                        "Ahora puedes explorar nuestro catálogo de mobiliarios para eventos y crear tus cotizaciones."
+        );
+        sendHtmlEmail(user.getEmail(), subject, html);
+    }
+
+    /**
+     * Método legacy para compatibilidad con código existente.
+     * @deprecated Use sendWelcomeEmail(User user) instead
+     */
+    @Deprecated
     public void sendWelcomeEmail(String toEmail, String nombre) {
         String subject = "¡Bienvenido a Furent, " + nombre + "! 🎉";
         String html = buildGenericHtmlEmail(
@@ -43,6 +75,55 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+    /**
+     * Envía email de confirmación de reserva.
+     * Incluye detalles de productos, fechas y total.
+     * Ejecuta de forma asíncrona (@Async).
+     * 
+     * @param reservation Reserva confirmada
+     */
+    @Async
+    public void sendReservationConfirmation(Reservation reservation) {
+        String subject = "Cotización recibida — Furent";
+        
+        // Construir lista de productos
+        StringBuilder productosHtml = new StringBuilder();
+        productosHtml.append("<table style='width:100%; border-collapse:collapse; margin:16px 0;'>");
+        productosHtml.append("<tr style='background-color:#f3f4f6;'>");
+        productosHtml.append("<th style='padding:8px; text-align:left; border:1px solid #e5e7eb;'>Producto</th>");
+        productosHtml.append("<th style='padding:8px; text-align:center; border:1px solid #e5e7eb;'>Cantidad</th>");
+        productosHtml.append("<th style='padding:8px; text-align:right; border:1px solid #e5e7eb;'>Subtotal</th>");
+        productosHtml.append("</tr>");
+        
+        for (Reservation.ItemReserva item : reservation.getItems()) {
+            productosHtml.append("<tr>");
+            productosHtml.append("<td style='padding:8px; border:1px solid #e5e7eb;'>").append(item.getProductoNombre()).append("</td>");
+            productosHtml.append("<td style='padding:8px; text-align:center; border:1px solid #e5e7eb;'>").append(item.getCantidad()).append("</td>");
+            productosHtml.append("<td style='padding:8px; text-align:right; border:1px solid #e5e7eb;'>$").append(String.format("%,.0f", item.getSubtotal())).append("</td>");
+            productosHtml.append("</tr>");
+        }
+        productosHtml.append("</table>");
+        
+        String bodyContent = "Tu cotización <strong>#" + reservation.getId() + "</strong> ha sido creada exitosamente.<br><br>" +
+                "<strong>Detalles de la reserva:</strong><br>" +
+                "Fecha inicio: <strong>" + reservation.getFechaInicio() + "</strong><br>" +
+                "Fecha fin: <strong>" + reservation.getFechaFin() + "</strong><br>" +
+                "Días de alquiler: <strong>" + reservation.getDiasAlquiler() + "</strong><br>" +
+                "Dirección del evento: <strong>" + (reservation.getDireccionEvento() != null ? reservation.getDireccionEvento() : "No especificada") + "</strong><br><br>" +
+                "<strong>Productos:</strong><br>" +
+                productosHtml.toString() +
+                "<br>Total: <strong>$" + String.format("%,.0f", reservation.getTotal()) + "</strong><br><br>" +
+                "Pronto nos pondremos en contacto contigo para confirmar los detalles.";
+        
+        String html = buildGenericHtmlEmail("Cotización Recibida", bodyContent);
+        sendHtmlEmail(reservation.getUsuarioEmail(), subject, html);
+    }
+
+    /**
+     * Método legacy para compatibilidad con código existente.
+     * @deprecated Use sendReservationConfirmation(Reservation reservation) instead
+     */
+    @Deprecated
     public void sendReservationConfirmation(String toEmail, String reservaId, BigDecimal total) {
         String subject = "Cotización recibida — Furent";
         String html = buildGenericHtmlEmail(
@@ -54,6 +135,29 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+    /**
+     * Envía email notificando cambio de estado de reserva.
+     * Ejecuta de forma asíncrona (@Async).
+     * 
+     * @param reservation Reserva actualizada
+     * @param oldStatus Estado anterior
+     */
+    @Async
+    public void sendStatusChange(Reservation reservation, String oldStatus) {
+        String subject = "Actualización de reserva — Furent";
+        String bodyContent = "Tu reserva <strong>#" + reservation.getId() + "</strong> cambió de estado.<br><br>" +
+                "Estado anterior: <strong>" + oldStatus + "</strong><br>" +
+                "Estado actual: <strong>" + reservation.getEstado() + "</strong><br><br>" +
+                "Si tienes alguna pregunta, no dudes en contactarnos.";
+        String html = buildGenericHtmlEmail("Actualización de Reserva", bodyContent);
+        sendHtmlEmail(reservation.getUsuarioEmail(), subject, html);
+    }
+
+    /**
+     * Método legacy para compatibilidad con código existente.
+     * @deprecated Use sendStatusChange(Reservation reservation, String oldStatus) instead
+     */
+    @Deprecated
     public void sendStatusChange(String toEmail, String reservaId, String nuevoEstado) {
         String subject = "Actualización de reserva — Furent";
         String html = buildGenericHtmlEmail(
@@ -63,10 +167,39 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
-    public void sendPasswordResetEmail(String toEmail, String resetLink) {
+    /**
+     * Envía email con token de recuperación de contraseña.
+     * Incluye link con token válido por 1 hora.
+     * Ejecuta de forma asíncrona (@Async).
+     * 
+     * @param user Usuario que solicita reset
+     * @param token Token UUID generado
+     */
+    @Async
+    public void sendPasswordResetToken(User user, String token) {
+        String resetLink = "http://localhost:8080/password-reset/" + token;
+        String subject = "Recuperar contraseña — Furent";
+        String html = buildPasswordResetHtmlEmail(resetLink);
+        sendHtmlEmail(user.getEmail(), subject, html);
+    }
+
+    /**
+     * Envía email con enlace absoluto de recuperación de contraseña.
+     */
+    @Async
+    public void sendPasswordResetLink(String toEmail, String resetLink) {
         String subject = "Recuperar contraseña — Furent";
         String html = buildPasswordResetHtmlEmail(resetLink);
         sendHtmlEmail(toEmail, subject, html);
+    }
+
+    /**
+     * Método legacy para compatibilidad con código existente.
+     * @deprecated Use sendPasswordResetToken(User user, String token) instead
+     */
+    @Deprecated
+    public void sendPasswordResetEmail(String toEmail, String resetLink) {
+        sendPasswordResetLink(toEmail, resetLink);
     }
 
     private String buildPasswordResetHtmlEmail(String resetLink) {
@@ -197,6 +330,50 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, html);
     }
 
+    /**
+     * Envía recibo de pago confirmado.
+     * Formato HTML con detalles de pago y reserva.
+     * Ejecuta de forma asíncrona (@Async).
+     * 
+     * @param payment Pago confirmado
+     */
+    @Async
+    public void sendPaymentConfirmation(Payment payment) {
+        try {
+            // Obtener la reserva asociada
+            Reservation reservation = reservationService.getByIdOrThrow(payment.getReservaId());
+            
+            // Obtener el usuario
+            User user = userService.findById(payment.getUsuarioId())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+            String subject = "Pago confirmado — Furent";
+            
+            String bodyContent = "¡Tu pago ha sido confirmado exitosamente!<br><br>" +
+                    "<strong>Detalles del pago:</strong><br>" +
+                    "Referencia: <strong>" + payment.getReferencia() + "</strong><br>" +
+                    "Monto: <strong>$" + String.format("%,.0f", payment.getMonto()) + "</strong><br>" +
+                    "Método de pago: <strong>" + payment.getMetodoPago() + "</strong><br>" +
+                    "Fecha de pago: <strong>" + payment.getFechaPago() + "</strong><br><br>" +
+                    "<strong>Reserva asociada:</strong><br>" +
+                    "ID de reserva: <strong>#" + reservation.getId() + "</strong><br>" +
+                    "Fecha inicio: <strong>" + reservation.getFechaInicio() + "</strong><br>" +
+                    "Fecha fin: <strong>" + reservation.getFechaFin() + "</strong><br>" +
+                    "Estado: <strong>" + reservation.getEstado() + "</strong><br><br>" +
+                    "¡Gracias por confiar en Furent!";
+            
+            String html = buildGenericHtmlEmail("Pago Confirmado", bodyContent);
+            sendHtmlEmail(user.getEmail(), subject, html);
+        } catch (Exception e) {
+            log.error("[EMAIL] Error al enviar confirmación de pago: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Método legacy para compatibilidad con código existente.
+     * @deprecated Use sendPaymentConfirmation(Payment payment) instead
+     */
+    @Deprecated
     public void sendPaymentConfirmation(String toEmail, String reservaId) {
         String subject = "Pago confirmado — Furent";
         String html = buildGenericHtmlEmail(
@@ -261,6 +438,15 @@ public class EmailService {
     // Private helpers
     // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Envía email HTML usando template.
+     * Maneja errores sin interrumpir flujo principal.
+     * Los errores se registran en logs pero no se propagan.
+     * 
+     * @param to Email destinatario
+     * @param subject Asunto del email
+     * @param htmlBody Contenido HTML renderizado
+     */
     private void sendHtmlEmail(String to, String subject, String htmlBody) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -273,7 +459,10 @@ public class EmailService {
             log.info("[EMAIL] ✅ Correo enviado a: {} | Asunto: {}", to, subject);
         } catch (MessagingException e) {
             log.error("[EMAIL] ❌ Error enviando correo a: {} | Asunto: {} | Error: {}", to, subject, e.getMessage());
-            throw new RuntimeException("Error al enviar correo: " + e.getMessage(), e);
+            // NO lanzar excepción - solo registrar el error para no interrumpir el flujo principal
+        } catch (Exception e) {
+            log.error("[EMAIL] ❌ Error inesperado enviando correo a: {} | Asunto: {} | Error: {}", to, subject, e.getMessage());
+            // NO lanzar excepción - solo registrar el error para no interrumpir el flujo principal
         }
     }
 
@@ -291,7 +480,10 @@ public class EmailService {
             log.info("[EMAIL] ✅ Correo con adjunto enviado a: {} | Asunto: {} | Archivo: {}", to, subject, attachmentFilename);
         } catch (MessagingException e) {
             log.error("[EMAIL] ❌ Error enviando correo con adjunto a: {} | Error: {}", to, e.getMessage());
-            throw new RuntimeException("Error al enviar correo con PDF adjunto: " + e.getMessage(), e);
+            // NO lanzar excepción - solo registrar el error para no interrumpir el flujo principal
+        } catch (Exception e) {
+            log.error("[EMAIL] ❌ Error inesperado enviando correo con adjunto a: {} | Error: {}", to, e.getMessage());
+            // NO lanzar excepción - solo registrar el error para no interrumpir el flujo principal
         }
     }
 

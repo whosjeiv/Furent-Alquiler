@@ -156,7 +156,9 @@ public class SecurityConfig {
                                         "img-src 'self' data: blob: https: *.payulatam.com; " +
                                         "connect-src 'self' https://cdn.jsdelivr.net https://api.payulatam.com https://*.payulatam.com; " +
                                         "frame-src https://checkout.payulatam.com;"))
-                        .frameOptions(frame -> frame.deny()));
+                        .frameOptions(frame -> frame.deny())
+                        .xssProtection(xss -> xss
+                                .headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)));
 
         return http.build();
     }

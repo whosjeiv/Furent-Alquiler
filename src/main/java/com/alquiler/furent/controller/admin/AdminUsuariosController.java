@@ -1,117 +1,185 @@
 package com.alquiler.furent.controller.admin;
 
-import com.alquiler.furent.dto.UserAdminDetailsDTO;
-import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.User;
-import com.alquiler.furent.service.AuditLogService;
-import com.alquiler.furent.service.ReservationService;
 import com.alquiler.furent.service.UserService;
+import com.alquiler.furent.repository.UserRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalDateTime;
+import java.security.Principal;
 
+/**
+ * Controlador para gestión administrativa de usuarios.
+ * Permite CRUD completo: listar, suspender, activar, cambiar rol, eliminar.
+ */
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/admin/usuarios")
 public class AdminUsuariosController {
 
     private final UserService userService;
-    private final ReservationService reservationService;
-    private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
 
-    public AdminUsuariosController(UserService userService, ReservationService reservationService, AuditLogService auditLogService) {
+    public AdminUsuariosController(UserService userService, UserRepository userRepository) {
         this.userService = userService;
-        this.reservationService = reservationService;
-        this.auditLogService = auditLogService;
+        this.userRepository = userRepository;
     }
 
-    @GetMapping("/usuarios")
-    public String listUsers(@RequestParam(defaultValue = "0") int page,
-                            @RequestParam(defaultValue = "25") int size,
-                            Model model) {
-        int safePage = Math.max(page, 0);
-        int safeSize = Math.max(10, Math.min(size, 100));
-
-        Page<User> usersPage = userService.getUsersPage(safePage, safeSize);
-        model.addAttribute("usuarios", usersPage.getContent());
-        model.addAttribute("currentPage", safePage);
-        model.addAttribute("pageSize", safeSize);
+    /**
+     * Lista usuarios con paginación y filtros.
+     * 
+     * @param rol Filtro por rol (opcional)
+     * @param estado Filtro por estado (opcional)
+     * @param search Búsqueda por email o nombre (opcional)
+     * @param page Número de página
+     * @param model Modelo para la vista
+     * @return Vista de lista de usuarios
+     */
+    @GetMapping
+    public String listUsers(
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+        
+        int pageSize = 20;
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "fechaCreacion"));
+        
+        Page<User> usersPage;
+        
+        // Aplicar filtros
+        if (search != null && !search.trim().isEmpty()) {
+            // Búsqueda por email o nombre
+            usersPage = userRepository.findByEmailContainingIgnoreCaseOrNombreContainingIgnoreCase(
+                    search, search, pageable);
+        } else if (rol != null && !rol.isEmpty() && estado != null && !estado.isEmpty()) {
+            // Filtrar por rol y estado
+            usersPage = userRepository.findByRoleAndEstado(rol, estado, pageable);
+        } else if (rol != null && !rol.isEmpty()) {
+            // Filtrar solo por rol
+            usersPage = userRepository.findByRole(rol, pageable);
+        } else if (estado != null && !estado.isEmpty()) {
+            // Filtrar solo por estado
+            usersPage = userRepository.findByEstado(estado, pageable);
+        } else {
+            // Sin filtros
+            usersPage = userRepository.findAll(pageable);
+        }
+        
+        model.addAttribute("users", usersPage.getContent());
+        model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", usersPage.getTotalPages());
-        model.addAttribute("totalUsuarios", usersPage.getTotalElements());
+        model.addAttribute("totalUsers", usersPage.getTotalElements());
+        model.addAttribute("selectedRol", rol);
+        model.addAttribute("selectedEstado", estado);
+        model.addAttribute("searchQuery", search);
+        
         return "admin/usuarios";
     }
 
-    @PostMapping("/usuarios/rol/{id}")
-    @ResponseBody
-    public String updateRole(@PathVariable String id, @RequestParam String role) {
-        com.alquiler.furent.model.User user = userService.findById(id).orElseThrow();
-        user.setRole(role);
-        userService.save(user);
-        return "OK";
-    }
-
-    @PostMapping("/usuarios/estado/{id}")
-    @ResponseBody
-    public String updateEstado(@PathVariable String id, @RequestParam boolean activo,
-            @RequestParam(required = false) String razon,
-            @RequestParam(required = false) String fechaInicio,
-            @RequestParam(required = false) String fechaFin,
-            @RequestParam(defaultValue = "false") boolean permanente,
-            Authentication authentication) {
-
-        User user = userService.findById(id).orElseThrow();
-        user.setActivo(activo);
-
-        if (!activo) {
-            user.setRazonSuspension(razon != null && !razon.isEmpty() ? razon : "Violación de términos del sistema");
-            user.setSuspensionPermanente(permanente);
-
-            if (fechaInicio != null && !fechaInicio.isEmpty()) {
-                user.setFechaInicioSuspension(LocalDateTime.parse(fechaInicio + "T00:00:00"));
-            } else {
-                user.setFechaInicioSuspension(LocalDateTime.now());
-            }
-
-            if (!permanente && fechaFin != null && !fechaFin.isEmpty()) {
-                user.setFechaFinSuspension(LocalDateTime.parse(fechaFin + "T23:59:59"));
-            } else if (!permanente) {
-                user.setFechaFinSuspension(user.getFechaInicioSuspension().plusDays(7));
-            } else {
-                user.setFechaFinSuspension(null);
-            }
-        } else {
-            user.setRazonSuspension(null);
-            user.setFechaInicioSuspension(null);
-            user.setFechaFinSuspension(null);
-            user.setSuspensionPermanente(false);
+    /**
+     * Suspende un usuario.
+     * 
+     * @param id ID del usuario
+     * @param razon Razón de la suspensión
+     * @param principal Usuario autenticado (admin)
+     * @param redirectAttributes Atributos para mensaje flash
+     * @return Redirección a lista de usuarios
+     */
+    @PostMapping("/{id}/suspender")
+    public String suspendUser(
+            @PathVariable String id,
+            @RequestParam String razon,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            userService.suspendUser(id, razon, principal.getName());
+            redirectAttributes.addFlashAttribute("success", "Usuario suspendido exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al suspender usuario: " + e.getMessage());
         }
-
-        userService.save(user);
-        String action = activo ? "ACTIVAR_USUARIO" : "SUSPENDER_USUARIO";
-        String detail = activo ? "Usuario activado: " + user.getEmail()
-                : "Usuario suspendido: " + user.getEmail() + " | Razón: " + user.getRazonSuspension();
-        auditLogService.log(authentication.getName(), action, "USUARIO", id, detail);
-        return "OK";
+        
+        return "redirect:/admin/usuarios";
     }
 
-    @GetMapping("/usuarios/detalles/{id}")
-    @ResponseBody
-    public UserAdminDetailsDTO getDetalles(@PathVariable String id) {
-        User user = userService.findById(id).orElseThrow();
-        java.util.List<Reservation> userReservas = reservationService.getByUsuarioId(id);
+    /**
+     * Activa un usuario suspendido.
+     * 
+     * @param id ID del usuario
+     * @param principal Usuario autenticado (admin)
+     * @param redirectAttributes Atributos para mensaje flash
+     * @return Redirección a lista de usuarios
+     */
+    @PostMapping("/{id}/activar")
+    public String activateUser(
+            @PathVariable String id,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
         
-        long totalReservas = userReservas.size();
-        java.math.BigDecimal totalInvertido = userReservas.stream()
-                .filter(r -> "COMPLETADA".equals(r.getEstado()) || "CONFIRMADA".equals(r.getEstado()) || "ENTREGADA".equals(r.getEstado()))
-                .map(Reservation::getTotal)
-                .filter(t -> t != null)
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        try {
+            userService.activateUser(id, principal.getName());
+            redirectAttributes.addFlashAttribute("success", "Usuario activado exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al activar usuario: " + e.getMessage());
+        }
         
-        long favoritosCount = user.getFavoritos() != null ? user.getFavoritos().size() : 0;
+        return "redirect:/admin/usuarios";
+    }
+
+    /**
+     * Cambia el rol de un usuario.
+     * 
+     * @param id ID del usuario
+     * @param nuevoRol Nuevo rol (USER, ADMIN)
+     * @param principal Usuario autenticado (admin)
+     * @param redirectAttributes Atributos para mensaje flash
+     * @return Redirección a lista de usuarios
+     */
+    @PostMapping("/{id}/rol")
+    public String changeUserRole(
+            @PathVariable String id,
+            @RequestParam String nuevoRol,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
         
-        return new UserAdminDetailsDTO(user, totalReservas, totalInvertido, favoritosCount);
+        try {
+            userService.changeUserRole(id, nuevoRol, principal.getName());
+            redirectAttributes.addFlashAttribute("success", "Rol de usuario actualizado exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al cambiar rol: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/usuarios";
+    }
+
+    /**
+     * Realiza soft delete de un usuario.
+     * 
+     * @param id ID del usuario
+     * @param principal Usuario autenticado (admin)
+     * @param redirectAttributes Atributos para mensaje flash
+     * @return Redirección a lista de usuarios
+     */
+    @DeleteMapping("/{id}")
+    public String softDeleteUser(
+            @PathVariable String id,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            userService.softDeleteUser(id, principal.getName());
+            redirectAttributes.addFlashAttribute("success", "Usuario eliminado exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al eliminar usuario: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/usuarios";
     }
 }

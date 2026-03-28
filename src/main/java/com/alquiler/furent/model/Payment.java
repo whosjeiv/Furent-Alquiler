@@ -2,11 +2,18 @@ package com.alquiler.furent.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Document(collection = "pagos")
+@Document(collection = "payments")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_tenant_usuario", def = "{'tenantId': 1, 'usuarioId': 1}"),
+    @CompoundIndex(name = "idx_tenant_estado", def = "{'tenantId': 1, 'estado': 1}"),
+    @CompoundIndex(name = "idx_reserva", def = "{'reservaId': 1}")
+})
 public class Payment {
 
     @Id
@@ -14,28 +21,47 @@ public class Payment {
 
     @Indexed
     private String tenantId;
+    
+    @Indexed
     private String reservaId;
+    
+    @Indexed
     private String usuarioId;
+    
     private BigDecimal monto;
-    private String metodoPago;
-    private String estado;
-    private String referencia;
-    private String comprobante;
-
-    private LocalDateTime fechaPago;
+    
+    private String metodoPago; // EFECTIVO, TRANSFERENCIA, TARJETA
+    
+    @Indexed
+    private String estado; // PENDIENTE, PAGADO, FALLIDO
+    
+    private String referencia; // PAY-XXXXXXXX
+    
     private LocalDateTime fechaCreacion;
-
+    
+    private LocalDateTime fechaPago; // Cuando se confirma
+    
     public Payment() {
         this.fechaCreacion = LocalDateTime.now();
         this.estado = "PENDIENTE";
     }
 
+    // Getters & Setters
+    
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+    
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getReservaId() {
@@ -86,12 +112,12 @@ public class Payment {
         this.referencia = referencia;
     }
 
-    public String getComprobante() {
-        return comprobante;
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
     }
 
-    public void setComprobante(String comprobante) {
-        this.comprobante = comprobante;
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
     public LocalDateTime getFechaPago() {
@@ -101,22 +127,4 @@ public class Payment {
     public void setFechaPago(LocalDateTime fechaPago) {
         this.fechaPago = fechaPago;
     }
-
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
-
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-
 }

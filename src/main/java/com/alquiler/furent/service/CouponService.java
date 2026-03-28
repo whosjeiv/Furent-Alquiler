@@ -1,5 +1,6 @@
 package com.alquiler.furent.service;
 
+import com.alquiler.furent.exception.InvalidOperationException;
 import com.alquiler.furent.model.Coupon;
 import com.alquiler.furent.repository.CouponRepository;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -30,6 +32,84 @@ public class CouponService {
 
     public CouponService(CouponRepository couponRepository) {
         this.couponRepository = couponRepository;
+    }
+
+    /**
+     * Valida un cupón verificando existencia, vigencia y límite de usos.
+     * 
+     * @param codigo Código del cupón a validar
+     * @return Cupón válido
+     * @throws InvalidOperationException si el cupón no existe, no está vigente o alcanzó el límite de usos
+     */
+    public Coupon validateCoupon(String codigo) {
+        Optional<Coupon> opt = couponRepository.findByCodigoIgnoreCase(codigo);
+        
+        if (opt.isEmpty()) {
+            throw new InvalidOperationException("Cupón no encontrado");
+        }
+        
+        Coupon coupon = opt.get();
+        
+        if (!coupon.isActivo()) {
+            throw new InvalidOperationException("El cupón no está activo");
+        }
+        
+        if (!coupon.isVigente()) {
+            throw new InvalidOperationException("El cupón ha expirado o aún no es válido");
+        }
+        
+        if (coupon.hasReachedLimit()) {
+            throw new InvalidOperationException("El cupón ha alcanzado su límite de usos");
+        }
+        
+        return coupon;
+    }
+
+    /**
+     * Aplica un descuento de cupón al total.
+     * Fórmula: totalConDescuento = total * (1 - descuento/100)
+     * 
+     * @param coupon Cupón a aplicar
+     * @param total Total original
+     * @return Total con descuento aplicado
+     */
+    public BigDecimal applyDiscount(Coupon coupon, BigDecimal total) {
+        if ("PORCENTAJE".equals(coupon.getTipo())) {
+            // totalConDescuento = total * (1 - descuento/100)
+            BigDecimal descuentoDecimal = coupon.getValor().divide(BigDecimal.valueOf(100));
+            BigDecimal factor = BigDecimal.ONE.subtract(descuentoDecimal);
+            return total.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+        } else if ("MONTO_FIJO".equals(coupon.getTipo())) {
+            // Restar el monto fijo, pero no permitir valores negativos
+            BigDecimal resultado = total.subtract(coupon.getValor());
+            return resultado.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+        }
+        return total;
+    }
+
+    /**
+     * Incrementa el contador de usos de un cupón.
+     * 
+     * @param couponId ID del cupón
+     * @throws InvalidOperationException si el cupón alcanzó el límite de usos
+     */
+    public void incrementUsage(String couponId) {
+        Optional<Coupon> opt = couponRepository.findById(couponId);
+        
+        if (opt.isEmpty()) {
+            throw new InvalidOperationException("Cupón no encontrado");
+        }
+        
+        Coupon coupon = opt.get();
+        
+        if (coupon.hasReachedLimit()) {
+            throw new InvalidOperationException("El cupón ha alcanzado su límite de usos");
+        }
+        
+        coupon.setUsosActuales(coupon.getUsosActuales() + 1);
+        couponRepository.save(coupon);
+        
+        log.info("Cupón {} incrementado. Usos: {}/{}", coupon.getCodigo(), coupon.getUsosActuales(), coupon.getUsosMaximos());
     }
 
     public Map<String, Object> validateCoupon(String codigo, BigDecimal montoTotal) {
