@@ -4,21 +4,55 @@
 <title>Inspiración — Admin Furent</title>
 <main>
 <style>
-    .inspiration-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-    .inspiration-grid.is-wide { grid-template-columns: 1fr; }
-    .inspiration-card { position: relative; border-radius: 1rem; overflow: hidden; background: white; border: 1px solid #e4e4e7; transition: all 0.3s ease; }
+    .inspiration-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+    .inspiration-grid.is-wide { grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); }
+    .inspiration-card { 
+        position: relative; 
+        border-radius: 1.25rem; 
+        overflow: hidden; 
+        background: white; 
+        border: 1px solid #f0f0f0; 
+        transition: all 0.3s cubic-bezier(.4,0,.2,1); 
+        display: flex;
+        flex-direction: column;
+    }
     html.dark .inspiration-card { background: #18181b; border-color: #27272a; }
-    .inspiration-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
-    .inspiration-card .card-image { width: 100%; height: 220px; object-fit: cover; }
-    .inspiration-card .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s; }
+    .inspiration-card:hover { 
+        transform: translateY(-4px); 
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08); 
+        border-color: #E07A3A;
+    }
+    .inspiration-card .card-image-wrapper {
+        position: relative;
+        padding-top: 75%; /* 4:3 aspect ratio */
+        overflow: hidden;
+    }
+    .inspiration-card .card-image { 
+        position: absolute;
+        inset: 0;
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover; 
+        transition: transform 0.5s ease;
+    }
+    .inspiration-card:hover .card-image {
+        transform: scale(1.05);
+    }
+    .inspiration-card .card-overlay { 
+        position: absolute; 
+        inset: 0; 
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%); 
+        opacity: 0; 
+        transition: opacity 0.3s; 
+    }
     .inspiration-card:hover .card-overlay { opacity: 1; }
     .inspiration-card.is-hidden { display: none; }
+    
     /* Wide view mode */
-    .inspiration-grid.is-wide .inspiration-card { display: flex; flex-direction: row; }
-    .inspiration-grid.is-wide .inspiration-card:hover { transform: none; }
-    .inspiration-grid.is-wide .card-image-wrapper { width: 280px; flex-shrink: 0; }
-    .inspiration-grid.is-wide .card-image { height: 100%; min-height: 200px; }
-    .inspiration-grid.is-wide .card-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .inspiration-grid.is-wide .inspiration-card { flex-direction: row; }
+    .inspiration-grid.is-wide .inspiration-card:hover { transform: translateY(-4px); }
+    .inspiration-grid.is-wide .card-image-wrapper { width: 45%; padding-top: 0; flex-shrink: 0; }
+    .inspiration-grid.is-wide .card-content { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 1.5rem; }
     .inspiration-grid.is-wide .card-description { display: block !important; }
     .pin-editor-container { position: relative; width: 100%; background: #f4f4f5; border-radius: 1rem; overflow: hidden; }
     html.dark .pin-editor-container { background: #18181b; }
@@ -83,95 +117,159 @@
     html.dark .editor-toolbox .tool-btn:not(.active):hover { background: rgba(255,255,255,0.08); }
 </style>
 
-<div class="p-8">
+<div class="px-6 py-8 md:px-10 max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-            <h1 class="text-3xl font-black text-surface-900 dark:text-white">Galería de Inspiración</h1>
-            <p class="text-surface-500 mt-1">Gestiona las imágenes y puntos de mobiliario para la página de inspiración</p>
+            <h1 class="text-3xl font-black text-surface-900 dark:text-white mb-2">Galería de Inspiración</h1>
+            <p class="text-surface-500 text-sm max-w-xl leading-relaxed">Sube imágenes de eventos reales y etiqueta los productos que tus clientes usaron. Esta sección aparecerá en el inicio de la tienda para inspirar a nuevos clientes.</p>
         </div>
-        <button onclick="openUploadModal()" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-furent-500 to-furent-600 text-white font-bold rounded-xl shadow-lg shadow-furent-500/30 hover:shadow-xl hover:shadow-furent-500/40 transition-all">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-            Nueva Imagen
+        <button onclick="openUploadModal()" class="group flex items-center gap-2 px-6 py-3 bg-surface-900 text-white font-bold rounded-xl shadow-md hover:bg-furent-500 hover:shadow-xl hover:shadow-furent-500/30 transition-all shrink-0">
+            <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            Subir nueva imagen
         </button>
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-furent-50 dark:bg-furent-500/10 flex items-center justify-center">
-                    <svg class="w-7 h-7 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-surface-500">Total Imágenes</p>
-                    <p class="text-2xl font-black text-surface-900 dark:text-white" th:text="${#lists.size(images)}">0</p>
-                </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+        <div class="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-100 dark:border-surface-700 shadow-sm flex items-center gap-4 hover:border-furent-200 transition-colors">
+            <div class="w-12 h-12 rounded-xl bg-surface-50 dark:bg-surface-700 flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6 text-surface-600 dark:text-surface-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-0.5">Imágenes Subidas</p>
+                <p class="text-2xl font-black text-surface-900 dark:text-white leading-none" th:text="${#lists.size(images)}">0</p>
             </div>
         </div>
-        <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
-                    <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-surface-500">Puntos Activos</p>
-                    <p class="text-2xl font-black text-surface-900 dark:text-white" id="totalPins">0</p>
-                </div>
+        <div class="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-100 dark:border-surface-700 shadow-sm flex items-center gap-4 hover:border-furent-200 transition-colors">
+            <div class="w-12 h-12 rounded-xl bg-furent-50 dark:bg-furent-500/10 flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-0.5">Puntos Etiquetados</p>
+                <p class="text-2xl font-black text-surface-900 dark:text-white leading-none" id="totalPins">0</p>
             </div>
         </div>
-        <div class="bg-white dark:bg-surface-800 rounded-2xl p-6 border border-surface-200 dark:border-surface-700">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                    <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-surface-500">Mobiliarios Vinculados</p>
-                    <p class="text-2xl font-black text-surface-900 dark:text-white" id="linkedProducts">0</p>
-                </div>
+        <div class="bg-white dark:bg-surface-800 rounded-2xl p-5 border border-surface-100 dark:border-surface-700 shadow-sm flex items-center gap-4 hover:border-furent-200 transition-colors">
+            <div class="w-12 h-12 rounded-xl bg-surface-50 dark:bg-surface-700 flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6 text-surface-600 dark:text-surface-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-0.5">Mobiliarios Vinculados</p>
+                <p class="text-2xl font-black text-surface-900 dark:text-white leading-none" id="linkedProducts">0</p>
             </div>
         </div>
     </div>
 
     <!-- Search, Filters and View Toggle -->
-    <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+    <div class="bg-white dark:bg-surface-800 p-4 rounded-2xl border border-surface-100 dark:border-surface-700 shadow-sm mb-8 flex flex-col xl:flex-row items-center justify-between gap-4">
         <!-- Search -->
-        <div class="relative flex-1 max-w-md">
+        <div class="relative w-full xl:w-96 shrink-0">
             <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
             <input type="text" id="pageSearchInput" placeholder="Buscar por título, evento o ubicación..."
-                class="w-full pl-12 pr-4 py-3 text-sm border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-white dark:bg-surface-800 shadow-sm">
+                class="w-full pl-11 pr-4 py-2.5 text-sm border border-surface-200 dark:border-surface-600 rounded-xl focus:ring-2 focus:ring-furent-500 focus:border-transparent bg-surface-50 hover:bg-white dark:bg-surface-900 transition-colors">
         </div>
-        <!-- Filters -->
-        <div class="flex items-center gap-3 flex-wrap">
-            <select id="filterEventType" class="px-4 py-3 text-sm border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 focus:ring-2 focus:ring-furent-500 focus:border-transparent shadow-sm">
-                <option value="">Todos los eventos</option>
-                <option value="Boda">Bodas</option>
-                <option value="Quinceañera">Quinceañeras</option>
-                <option value="Cumpleaños">Cumpleaños</option>
-                <option value="Grado">Graduaciones</option>
-                <option value="Corporativo">Corporativos</option>
-                <option value="Social">Social / Fiesta</option>
-                <option value="Bautizo">Bautizo / Baby Shower</option>
+        
+        <!-- Filters (Alpine.js custom dropdowns) -->
+        <div class="flex items-center gap-3 w-full xl:w-auto overflow-x-auto pb-1 xl:pb-0 scrollbar-hide z-10" x-data="{ eventFilter: '', statusFilter: '' }">
+            
+            <!-- Event Type Dropdown -->
+            <div class="relative min-w-[180px]" x-data="{ open: false }">
+                <button @click="open = !open" @click.away="open = false" type="button" class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm border border-surface-200 dark:border-surface-600 rounded-xl bg-surface-50 hover:bg-white dark:bg-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent transition-colors font-medium text-surface-700 dark:text-surface-300 shadow-sm">
+                    <span class="flex items-center gap-2 truncate" x-html="
+                        eventFilter === '' ? 'Todos los eventos' :
+                        eventFilter === 'Boda' ? '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z\'/></svg> Bodas' :
+                        eventFilter === 'Quinceañera' ? '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z\'/></svg> Quinceañeras' :
+                        eventFilter === 'Cumpleaños' ? '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12\'/></svg> Cumpleaños' :
+                        eventFilter === 'Grado' ? '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5z\'/></svg> Graduaciones' :
+                        eventFilter === 'Corporativo' ? '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21\'/></svg> Corporativos' :
+                        eventFilter === 'Social' ? '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z\'/></svg> Social / Fiesta' :
+                        '<svg class=\'w-4 h-4 text-surface-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z\'/></svg> Bautizo / Baby Shower'
+                    "></span>
+                    <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                </button>
+                <div x-show="open" x-transition.opacity.duration.200ms class="absolute top-full left-0 mt-2 w-full min-w-[200px] bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl shadow-xl py-1.5 z-50" style="display: none;">
+                    <div @click="eventFilter = ''; open = false; document.getElementById('filterEventType').value = ''; document.getElementById('filterEventType').dispatchEvent(new Event('change'))" 
+                         class="px-3 py-2 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 cursor-pointer transition-colors" :class="{'text-furent-600 bg-furent-50/50': eventFilter === ''}">
+                        Todos los eventos
+                    </div>
+                    <div class="h-px bg-surface-100 dark:bg-surface-700 my-1"></div>
+                    <template x-for="ev in [
+                        {val: 'Boda', label: 'Bodas', icon: 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z'},
+                        {val: 'Quinceañera', label: 'Quinceañeras', icon: 'M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z'},
+                        {val: 'Cumpleaños', label: 'Cumpleaños', icon: 'M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12'},
+                        {val: 'Grado', label: 'Graduaciones', icon: 'M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5z'},
+                        {val: 'Corporativo', label: 'Corporativos', icon: 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21'},
+                        {val: 'Social', label: 'Social / Fiesta', icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z'},
+                        {val: 'Bautizo', label: 'Bautizo / Baby Shower', icon: 'M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z'}
+                    ]">
+                        <div @click="eventFilter = ev.val; open = false; document.getElementById('filterEventType').value = ev.val; document.getElementById('filterEventType').dispatchEvent(new Event('change'))" 
+                             class="px-3 py-2 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 cursor-pointer flex items-center gap-2 transition-colors"
+                             :class="{'text-furent-600 bg-furent-50/50': eventFilter === ev.val}">
+                            <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" :d="ev.icon"/></svg>
+                            <span x-text="ev.label"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <select id="filterEventType" class="hidden">
+                <option value=""></option>
+                <option value="Boda"></option>
+                <option value="Quinceañera"></option>
+                <option value="Cumpleaños"></option>
+                <option value="Grado"></option>
+                <option value="Corporativo"></option>
+                <option value="Social"></option>
+                <option value="Bautizo"></option>
             </select>
-            <select id="filterStatus" class="px-4 py-3 text-sm border border-surface-200 dark:border-surface-600 rounded-xl bg-white dark:bg-surface-800 focus:ring-2 focus:ring-furent-500 focus:border-transparent shadow-sm">
-                <option value="">Todos los estados</option>
-                <option value="active">Activas</option>
-                <option value="inactive">Inactivas</option>
+
+            <!-- Status Dropdown -->
+            <div class="relative min-w-[170px]" x-data="{ open: false }">
+                <button @click="open = !open" @click.away="open = false" type="button" class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm border border-surface-200 dark:border-surface-600 rounded-xl bg-surface-50 hover:bg-white dark:bg-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent transition-colors font-medium text-surface-700 dark:text-surface-300 shadow-sm">
+                    <span class="flex items-center gap-2 truncate" x-html="
+                        statusFilter === '' ? 'Todos los estados' :
+                        statusFilter === 'active' ? '<span class=\'w-2 h-2 rounded-full bg-green-500 shrink-0\'></span> Activas' :
+                        '<span class=\'w-2 h-2 rounded-full bg-surface-400 shrink-0\'></span> Inactivas'
+                    "></span>
+                    <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                </button>
+                <div x-show="open" x-transition.opacity.duration.200ms class="absolute top-full left-0 mt-2 w-full min-w-[170px] bg-white dark:bg-surface-800 border border-surface-100 dark:border-surface-700 rounded-xl shadow-xl py-1.5 z-50" style="display: none;">
+                    <div @click="statusFilter = ''; open = false; document.getElementById('filterStatus').value = ''; document.getElementById('filterStatus').dispatchEvent(new Event('change'))" 
+                         class="px-3 py-2 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 cursor-pointer transition-colors" :class="{'text-furent-600 bg-furent-50/50': statusFilter === ''}">
+                        Todos los estados
+                    </div>
+                    <div class="h-px bg-surface-100 dark:bg-surface-700 my-1"></div>
+                    <div @click="statusFilter = 'active'; open = false; document.getElementById('filterStatus').value = 'active'; document.getElementById('filterStatus').dispatchEvent(new Event('change'))" 
+                         class="px-3 py-2 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 cursor-pointer flex items-center gap-2 transition-colors" :class="{'text-furent-600 bg-furent-50/50': statusFilter === 'active'}">
+                        <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span> Activas
+                    </div>
+                    <div @click="statusFilter = 'inactive'; open = false; document.getElementById('filterStatus').value = 'inactive'; document.getElementById('filterStatus').dispatchEvent(new Event('change'))" 
+                         class="px-3 py-2 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-700 cursor-pointer flex items-center gap-2 transition-colors" :class="{'text-furent-600 bg-furent-50/50': statusFilter === 'inactive'}">
+                        <span class="w-2 h-2 rounded-full bg-surface-400 shrink-0"></span> Inactivas
+                    </div>
+                </div>
+            </div>
+            <select id="filterStatus" class="hidden">
+                <option value=""></option>
+                <option value="active"></option>
+                <option value="inactive"></option>
             </select>
-            <button onclick="clearPageFilters()" class="px-4 py-3 text-sm font-medium text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-xl transition-colors">
+
+            <button onclick="clearPageFilters(); document.querySelector('[x-data]').__x.$data.eventFilter = ''; document.querySelector('[x-data]').__x.$data.statusFilter = ''" class="p-2.5 text-surface-400 hover:text-furent-500 hover:bg-furent-50 dark:hover:bg-furent-500/10 rounded-xl transition-colors shrink-0" title="Limpiar filtros">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
             </button>
-        </div>
-        <!-- View Toggle -->
-        <div class="flex items-center gap-1 p-1 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 shadow-sm">
-            <button id="compactViewBtn" onclick="setPageViewMode('compact')" class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg bg-furent-500 text-white transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
-                Compacto
-            </button>
-            <button id="wideViewBtn" onclick="setPageViewMode('wide')" class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
-                Amplio
-            </button>
+            
+            <div class="h-8 w-px bg-surface-200 dark:bg-surface-700 mx-1 shrink-0"></div>
+
+            <!-- View Toggle -->
+            <div class="flex items-center p-1 rounded-xl bg-surface-100 dark:bg-surface-900 shrink-0">
+                <button id="compactViewBtn" onclick="setPageViewMode('compact')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm transition-all" title="Vista cuadrícula">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                </button>
+                <button id="wideViewBtn" onclick="setPageViewMode('wide')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg text-surface-500 hover:text-surface-900 dark:hover:text-white transition-all" title="Vista lista">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"/></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -189,58 +287,58 @@
             <div class="card-image-wrapper relative">
                 <img th:src="${image.imageUrl}" th:alt="${image.title}" class="card-image w-full h-56 object-cover">
                 <div class="card-overlay"></div>
-                <!-- Drag handle -->
-                <div class="drag-handle absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/40 hover:bg-black/60 rounded-full cursor-grab active:cursor-grabbing transition-all opacity-0 group-hover:opacity-100 z-20 backdrop-blur-sm">
-                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 6a1 1 0 110-2 1 1 0 010 2zM8 13a1 1 0 110-2 1 1 0 010 2zM8 20a1 1 0 110-2 1 1 0 010 2zM16 6a1 1 0 110-2 1 1 0 010 2zM16 13a1 1 0 110-2 1 1 0 010 2zM16 20a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                <div class="drag-handle absolute top-3 right-3 px-2 py-1.5 bg-black/50 hover:bg-black/80 rounded-lg cursor-grab active:cursor-grabbing transition-all opacity-0 group-hover:opacity-100 z-20 backdrop-blur-md shadow-lg" title="Arrastrar para ordenar">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
                 </div>
                 <!-- Badges -->
-                <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
-                    <div class="flex flex-wrap gap-2">
-                        <span th:if="${image.eventType}" class="px-2.5 py-1 bg-white/90 dark:bg-surface-800/90 backdrop-blur text-xs font-bold text-surface-700 dark:text-surface-300 rounded-lg flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
-                            <span th:text="${image.eventType}">Evento</span>
-                        </span>
-                        <span class="px-2.5 py-1 bg-white/90 dark:bg-surface-800/90 backdrop-blur text-xs font-bold text-surface-700 dark:text-surface-300 rounded-lg flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-                            <span th:text="${#lists.size(image.pins)}">0</span> puntos
-                        </span>
-                    </div>
-                    <span th:if="${image.active}" class="px-2.5 py-1 bg-green-500 text-white text-xs font-bold rounded-lg shadow-sm">Activa</span>
-                    <span th:unless="${image.active}" class="px-2.5 py-1 bg-surface-500 text-white text-xs font-bold rounded-lg shadow-sm">Inactiva</span>
+                <div class="absolute top-3 left-3 flex flex-col gap-2">
+                    <span th:if="${image.active}" class="px-2 py-1 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest rounded shadow-md w-fit">Visible</span>
+                    <span th:unless="${image.active}" class="px-2 py-1 bg-surface-800 text-white text-[10px] font-black uppercase tracking-widest rounded shadow-md w-fit">Oculta</span>
                 </div>
             </div>
             <!-- Content -->
-            <div class="card-content p-5">
-                <h3 class="font-black text-lg text-surface-900 dark:text-white mb-1 truncate" th:text="${image.title}">Título</h3>
-                <p class="text-sm text-surface-500 mb-1 flex items-center gap-2">
-                    <span th:if="${image.category}" class="inline-flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z"/></svg>
-                        <span th:text="${image.category}">Categoría</span>
-                    </span>
-                    <span th:if="${image.location}" class="inline-flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-                        <span th:text="${image.location}">Ubicación</span>
-                    </span>
-                </p>
+            <div class="card-content p-5 flex flex-col flex-1">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="min-w-0 flex-1">
+                        <h3 class="font-bold text-lg text-surface-900 dark:text-white truncate leading-tight" th:text="${image.title}">Título</h3>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-surface-500 font-medium">
+                            <span th:if="${image.eventType}" class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                                <span th:text="${image.eventType}">Evento</span>
+                            </span>
+                            <span th:if="${image.location}" class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                                <span th:text="${image.location}" class="truncate max-w-[120px]">Ubicación</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 flex flex-col items-end gap-1">
+                        <span class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md bg-surface-100 text-surface-600">
+                            <span th:text="${#lists.size(image.pins)}">0</span> 
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.671zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"/></svg>
+                        </span>
+                    </div>
+                </div>
+                
                 <!-- Wide mode: extra info (hidden in compact) -->
-                <p class="card-description text-sm text-surface-400 dark:text-surface-500 mt-2 line-clamp-2 hidden">
-                    <span th:if="${image.guestCount != null}" th:text="'Capacidad: ' + ${image.guestCount} + ' personas'">Capacidad</span>
+                <p class="card-description text-sm text-surface-500 mb-4 line-clamp-2 hidden">
+                    <span th:if="${image.guestCount != null}" th:text="'Para ' + ${image.guestCount} + ' personas'">Capacidad</span>
                 </p>
-                <!-- Buttons -->
-                <div class="flex gap-2 mt-4">
-                    <button th:data-id="${image.id}" onclick="openEditor(this.dataset.id)" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-furent-500 to-furent-600 text-white text-sm font-bold rounded-xl hover:shadow-lg hover:shadow-furent-500/30 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-                        Editar Puntos
+                
+                <div class="mt-auto pt-4 border-t border-surface-100 dark:border-surface-700/50 flex gap-2">
+                    <button th:data-id="${image.id}" onclick="openEditor(this.dataset.id)" class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-furent-50 text-furent-600 hover:bg-furent-100 hover:text-furent-700 text-sm font-bold rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.671z"/></svg>
+                        Puntos
                     </button>
-                    <button th:data-id="${image.id}" onclick="editImageInfo(this.dataset.id)" class="px-3 py-2.5 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors" title="Editar información">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                    <button th:data-id="${image.id}" onclick="editImageInfo(this.dataset.id)" class="p-2 text-surface-400 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors" title="Editar detalles">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
                     </button>
-                    <button th:data-id="${image.id}" onclick="toggleImageStatus(this.dataset.id)" th:title="${image.active} ? 'Desactivar' : 'Activar'" class="px-3 py-2.5 bg-surface-100 dark:bg-surface-700 text-surface-600 dark:text-surface-300 rounded-xl hover:bg-surface-200 dark:hover:bg-surface-600 transition-colors">
-                        <svg th:if="${image.active}" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <svg th:unless="${image.active}" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                    <button th:data-id="${image.id}" onclick="toggleImageStatus(this.dataset.id)" th:title="${image.active} ? 'Ocultar' : 'Mostrar'" class="p-2 text-surface-400 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors">
+                        <svg th:if="${image.active}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <svg th:unless="${image.active}" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
                     </button>
-                    <button th:data-id="${image.id}" onclick="deleteImage(this.dataset.id)" class="px-3 py-2.5 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors" title="Eliminar">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                    <button th:data-id="${image.id}" onclick="deleteImage(this.dataset.id)" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
                     </button>
                 </div>
             </div>
