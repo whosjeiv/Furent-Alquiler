@@ -38,6 +38,8 @@ public class AdminPrediccionesController {
         
         model.addAttribute("historyReservas", data.get("history_reservas"));
         model.addAttribute("forecastReservas", data.get("forecast_reservas"));
+        model.addAttribute("j48Insights", data.get("j48_insights"));
+        model.addAttribute("recommendations", data.get("recommendations"));
 
         model.addAttribute("h", h);
         model.addAttribute("f", f);
