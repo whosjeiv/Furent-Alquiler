@@ -210,19 +210,17 @@ public class PaymentService {
 
         // Determinar estado financiero
         BigDecimal totalReserva = reserva.getTotal() != null ? reserva.getTotal() : BigDecimal.ZERO;
-        if (nuevoAbonado.compareTo(totalReserva) >= 0) {
+        if ("SALDO_FINAL".equals(tipoPago) || nuevoAbonado.compareTo(totalReserva) >= 0) {
+            // Pago final explícito O montos que cubren el total → PAGADO
             reserva.setEstadoPago("PAGADO");
-        } else if (nuevoAbonado.compareTo(BigDecimal.ZERO) > 0) {
-            // Primer pago = ANTICIPO, pagos subsiguientes = PARCIAL
-            reserva.setEstadoPago("ANTICIPO".equals(tipoPago) || reserva.getPorcentajePagado() <= 50 ? "ANTICIPO" : "PARCIAL");
+        } else if ("ANTICIPO".equals(tipoPago)) {
+            reserva.setEstadoPago("ANTICIPO");
+        } else {
+            // ABONO u otro tipo con saldo aún pendiente → PARCIAL
+            reserva.setEstadoPago("PARCIAL");
         }
         reserva.setFechaActualizacion(LocalDateTime.now());
-        reservationService.getById(reservaId).ifPresent(r -> {
-            r.setMontoAbonado(nuevoAbonado);
-            r.setEstadoPago(reserva.getEstadoPago());
-            r.setFechaActualizacion(LocalDateTime.now());
-            reservationService.save(r);
-        });
+        reservationService.save(reserva);
 
         // Notificar al usuario
         notificationService.notify(reserva.getUsuarioId(), "Abono Registrado",

@@ -1,5 +1,6 @@
 package com.alquiler.furent.controller;
 
+import com.alquiler.furent.model.InspirationImage;
 import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.User;
@@ -48,13 +49,14 @@ public class PageController {
     private final PayUProperties payUProperties;
     private final EmailService emailService;
     private final TotpService totpService;
+    private final InspirationService inspirationService;
 
     public PageController(ProductService productService, ReservationService reservationService,
             UserService userService, PasswordEncoder passwordEncoder, ReviewService reviewService,
             ContactService contactService, NotificationService notificationService,
             PasswordResetService passwordResetService, PendingCardPaymentRepository pendingCardPaymentRepository,
             PayUService payUService, PayUProperties payUProperties, EmailService emailService,
-            TotpService totpService) {
+            TotpService totpService, InspirationService inspirationService) {
         this.productService = productService;
         this.reservationService = reservationService;
         this.userService = userService;
@@ -68,6 +70,7 @@ public class PageController {
         this.payUProperties = payUProperties;
         this.emailService = emailService;
         this.totpService = totpService;
+        this.inspirationService = inspirationService;
     }
 
     @GetMapping("/")
@@ -345,9 +348,13 @@ public class PageController {
     }
 
     @GetMapping("/inspiracion")
-    public String inspiration(Model model) {
+    public String inspiration(@RequestParam(required = false) String category, Model model) {
         model.addAttribute("pageTitle", "Inspiración");
-        model.addAttribute("products", productService.getAllProducts());
+        String tenantId = com.alquiler.furent.config.TenantContext.getCurrentTenant();
+        if (tenantId == null || tenantId.isBlank()) tenantId = "default";
+        List<InspirationImage> images = inspirationService.getActiveImagesByCategory(tenantId, category);
+        model.addAttribute("inspirationImages", images);
+        model.addAttribute("selectedCategory", category);
         return "inspiration";
     }
 

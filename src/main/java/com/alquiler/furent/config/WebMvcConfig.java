@@ -2,6 +2,7 @@ package com.alquiler.furent.config;
 
 import jakarta.servlet.MultipartConfigElement;
 import org.apache.catalina.connector.Connector;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.servlet.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
@@ -14,11 +15,19 @@ import java.nio.file.Paths;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    @Value("${furent.upload.inspiration-dir:uploads/inspiration}")
+    private String inspirationUploadDir;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadDir = Paths.get("uploads");
         String uploadPath = uploadDir.toFile().getAbsolutePath();
         registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + uploadPath + "/");
+
+        Path inspirationDir = Paths.get(inspirationUploadDir);
+        String inspirationPath = inspirationDir.toAbsolutePath().toString();
+        registry.addResourceHandler("/uploads/inspiration/**")
+                .addResourceLocations("file:" + inspirationPath + "/");
     }
 
     /**
