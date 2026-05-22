@@ -3,10 +3,12 @@ package com.alquiler.furent.config;
 import com.alquiler.furent.model.Category;
 import com.alquiler.furent.model.Permission;
 import com.alquiler.furent.model.Product;
+import com.alquiler.furent.model.Reservation;
 import com.alquiler.furent.model.Review;
 import com.alquiler.furent.repository.CategoryRepository;
 import com.alquiler.furent.repository.PermissionRepository;
 import com.alquiler.furent.repository.ProductRepository;
+import com.alquiler.furent.repository.ReservationRepository;
 import com.alquiler.furent.repository.ReviewRepository;
 import com.alquiler.furent.service.TenantService;
 import com.alquiler.furent.service.UserService;
@@ -17,7 +19,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -27,6 +34,7 @@ public class DataInitializer implements CommandLineRunner {
         private final ProductRepository productRepository;
         private final CategoryRepository categoryRepository;
         private final ReviewRepository reviewRepository;
+        private final ReservationRepository reservationRepository;
         private final UserService userService;
         private final TenantService tenantService;
         private final PermissionRepository permissionRepository;
@@ -35,12 +43,13 @@ public class DataInitializer implements CommandLineRunner {
         private String adminPassword;
 
         public DataInitializer(ProductRepository productRepository, CategoryRepository categoryRepository,
-                        ReviewRepository reviewRepository,
+                        ReviewRepository reviewRepository, ReservationRepository reservationRepository,
                         UserService userService, TenantService tenantService,
                         PermissionRepository permissionRepository) {
                 this.productRepository = productRepository;
                 this.categoryRepository = categoryRepository;
                 this.reviewRepository = reviewRepository;
+                this.reservationRepository = reservationRepository;
                 this.userService = userService;
                 this.tenantService = tenantService;
                 this.permissionRepository = permissionRepository;
@@ -68,6 +77,12 @@ public class DataInitializer implements CommandLineRunner {
                 if (productRepository.count() == 0) {
                         seedProducts();
                         log.info("Productos seed creados");
+                }
+
+                // Seed reservations for predictive model (only if no seed data exists yet)
+                if (reservationRepository.countByNotasEvento("Reserva seed para modelo predictivo") == 0) {
+                        seedReservations();
+                        log.info("=== Reservaciones seed creadas para modelo predictivo ===");
                 }
 
                 // Sync product ratings from actual reviews in DB
@@ -149,6 +164,136 @@ public class DataInitializer implements CommandLineRunner {
                                 BigDecimal.valueOf(32000), "/images/manteleria.jpg", null, "Decoración",
                                 4.4, 187, true, "Poliéster satinado", "Varios tamaños", "Blanco", 1, 200, 160, 20,
                                 "EXCELENTE"));
+        }
+
+        /**
+         * Genera reservaciones mock distribuidas en los últimos 30 días para alimentar
+         * el modelo predictivo J48 de Weka. Se crean datos variados con distintos
+         * tipos de evento, cantidades y días (semana vs fin de semana) para que el
+         * árbol de decisión produzca splits significativos.
+         */
+        private void seedReservations() {
+                Random rng = new Random(42); // seed fija para reproducibilidad
+                LocalDate today = LocalDate.now();
+
+                // Productos disponibles con sus precios por día
+                String[][] productos = {
+                        {"seed-silla-chiavari", "Silla Chiavari Dorada", "/images/silla-chiavari.jpg", "60000"},
+                        {"seed-mesa-cristal", "Mesa Redonda Cristal", "/images/mesa-cristal.jpg", "180000"},
+                        {"seed-carpa-pagoda", "Carpa Pagoda Premium", "/images/carpa-pagoda.jpg", "480000"},
+                        {"seed-centro-mesa", "Centro de Mesa Floral", "/images/centro-mesa.jpg", "100000"},
+                        {"seed-silla-ghost", "Silla Ghost Transparente", "/images/silla-ghost.jpg", "48000"},
+                        {"seed-mesa-imperial", "Mesa Rectangular Imperial", "/images/mesa-imperial.jpg", "220000"},
+                        {"seed-guirnalda", "Guirnalda LED Cálida", "/images/guirnalda-led.jpg", "72000"},
+                        {"seed-manteleria", "Mantelería Premium Blanca", "/images/manteleria.jpg", "32000"}
+                };
+
+                String[] tiposEvento = {"Boda", "Corporativo", "Cumpleaños", "Social", "Graduación"};
+                String[] estados = {"CONFIRMADA", "COMPLETADA", "ENTREGADA"};
+                String[] direcciones = {
+                        "Salón Royal, Calle 80 #45-12", "Finca Villa Real, Km 5 vía La Calera",
+                        "Hotel Hilton, Carrera 7 #73-55", "Centro de Convenciones, Av. 68",
+                        "Club El Nogal, Carrera 9 #76-33", "Hacienda San Fernando, Chía"
+                };
+                String[][] clientes = {
+                        {"seed-user-1", "María García", "maria.garcia@email.com"},
+                        {"seed-user-2", "Carlos Rodríguez", "carlos.rod@email.com"},
+                        {"seed-user-3", "Ana Martínez", "ana.martinez@email.com"},
+                        {"seed-user-4", "Pedro Sánchez", "pedro.sanchez@email.com"},
+                        {"seed-user-5", "Laura Díaz", "laura.diaz@email.com"},
+                        {"seed-user-6", "Empresa ABC S.A.S", "eventos@empresaabc.com"},
+                        {"seed-user-7", "Juan López", "juan.lopez@email.com"},
+                        {"seed-user-8", "Sofía Herrera", "sofia.herrera@email.com"}
+                };
+
+                // Generar reservaciones para los últimos 30 días
+                for (int dayOffset = 30; dayOffset >= 0; dayOffset--) {
+                        LocalDate fecha = today.minusDays(dayOffset);
+                        boolean esFinDeSemana = fecha.getDayOfWeek() == DayOfWeek.SATURDAY
+                                        || fecha.getDayOfWeek() == DayOfWeek.SUNDAY;
+
+                        // Fines de semana: 2-3 reservas grandes (Bodas/Social) → demanda ALTA
+                        // Entre semana: 0-2 reservas pequeñas (Corporativo/Cumpleaños) → demanda BAJA/MEDIA
+                        int numReservas;
+                        if (esFinDeSemana) {
+                                numReservas = 2 + rng.nextInt(2); // 2-3
+                        } else {
+                                numReservas = rng.nextInt(3); // 0-2
+                        }
+
+                        for (int r = 0; r < numReservas; r++) {
+                                Reservation reserva = new Reservation();
+                                reserva.setTenantId("default");
+
+                                // Cliente aleatorio
+                                String[] cliente = clientes[rng.nextInt(clientes.length)];
+                                reserva.setUsuarioId(cliente[0]);
+                                reserva.setUsuarioNombre(cliente[1]);
+                                reserva.setUsuarioEmail(cliente[2]);
+
+                                // Tipo de evento según día
+                                String tipoEvento;
+                                if (esFinDeSemana) {
+                                        tipoEvento = rng.nextDouble() < 0.6 ? "Boda" : tiposEvento[rng.nextInt(tiposEvento.length)];
+                                } else {
+                                        tipoEvento = rng.nextDouble() < 0.5 ? "Corporativo" : tiposEvento[2 + rng.nextInt(3)];
+                                }
+                                reserva.setTipoEvento(tipoEvento);
+
+                                // Items de la reserva
+                                List<Reservation.ItemReserva> items = new ArrayList<>();
+                                int numItems = 1 + rng.nextInt(4); // 1-4 productos distintos
+                                BigDecimal subtotalReserva = BigDecimal.ZERO;
+
+                                for (int i = 0; i < numItems; i++) {
+                                        String[] prod = productos[rng.nextInt(productos.length)];
+                                        BigDecimal precioPorDia = new BigDecimal(prod[3]);
+
+                                        // Cantidad según tipo de evento
+                                        int cantidad;
+                                        if (tipoEvento.equals("Boda")) {
+                                                cantidad = 10 + rng.nextInt(41); // 10-50 uds
+                                        } else if (tipoEvento.equals("Corporativo")) {
+                                                cantidad = 2 + rng.nextInt(9); // 2-10 uds
+                                        } else {
+                                                cantidad = 5 + rng.nextInt(16); // 5-20 uds
+                                        }
+
+                                        Reservation.ItemReserva item = new Reservation.ItemReserva(
+                                                        prod[0], prod[1], prod[2], precioPorDia, cantidad);
+                                        items.add(item);
+                                        subtotalReserva = subtotalReserva.add(
+                                                        precioPorDia.multiply(BigDecimal.valueOf(cantidad)));
+                                }
+
+                                reserva.setItems(items);
+                                reserva.setFechaInicio(fecha);
+                                int diasAlquiler = 1 + rng.nextInt(3); // 1-3 días
+                                reserva.setDiasAlquiler(diasAlquiler);
+                                reserva.setFechaFin(fecha.plusDays(diasAlquiler));
+
+                                BigDecimal totalConDias = subtotalReserva.multiply(BigDecimal.valueOf(diasAlquiler));
+                                reserva.setSubtotal(totalConDias);
+                                reserva.setDescuento(BigDecimal.ZERO);
+                                reserva.setTotal(totalConDias);
+
+                                reserva.setEstado(estados[rng.nextInt(estados.length)]);
+                                reserva.setEstadoPago("PAGADO");
+                                reserva.setMontoAbonado(totalConDias);
+                                reserva.setMetodoPago(rng.nextBoolean() ? "TRANSFERENCIA" : "EFECTIVO");
+                                reserva.setDireccionEvento(direcciones[rng.nextInt(direcciones.length)]);
+                                reserva.setNotasEvento("Reserva seed para modelo predictivo");
+                                reserva.setHoraEntrega(String.format("%02d:00", 8 + rng.nextInt(10)));
+
+                                // Timestamps coherentes
+                                LocalDateTime creacion = fecha.minusDays(3 + rng.nextInt(5)).atTime(9 + rng.nextInt(10), rng.nextInt(60));
+                                reserva.setFechaCreacion(creacion);
+                                reserva.setFechaActualizacion(creacion.plusHours(rng.nextInt(48)));
+
+                                reservationRepository.save(reserva);
+                        }
+                }
+                log.info("Reservaciones seed: {} registros creados para {} días", reservationRepository.count(), 31);
         }
 
         private void initializePermissions() {
