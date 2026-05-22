@@ -1,267 +1,171 @@
+<p align="center">
+  <img src="src/main/resources/static/images/furent-logo.png" alt="Furent Logo" width="120" height="120"/>
+</p>
+
 # 🪑 Furent — Plataforma de Alquiler de Mobiliarios
 
-[![CI](https://github.com/tu-usuario/furent/actions/workflows/ci.yml/badge.svg)](https://github.com/tu-usuario/furent/actions/workflows/ci.yml)
-[![Java](https://img.shields.io/badge/Java-17-orange)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.3-green)](https://spring.io/projects/spring-boot)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7-brightgreen)](https://www.mongodb.com/)
+Furent es una solución SaaS completa para la gestión integral y alquiler de mobiliario para eventos. El sistema está diseñado en una arquitectura robusta de capas sobre Spring Boot y MongoDB, proporcionando una interfaz moderna, responsiva y veloz para clientes finales, y un potente panel de administración con analítica predictiva avanzada para los gerentes del negocio.
 
-## � Colaboradores
+---
 
-- Luis Troconis (@Ldtro)
+## 👥 Colaboradores
 
-## �📋 Descripción
+* **Luis Troconis** (@Ldtro)
 
-**Furent** es una plataforma web completa para la gestión de alquiler de mobiliarios para eventos. Permite a los clientes explorar catálogos, solicitar cotizaciones, gestionar reservas y realizar pagos; mientras que los administradores gestionan inventario, logística, usuarios, cupones y métricas de negocio.
+---
+
+## 📋 Descripción General
+
+La plataforma automatiza el flujo completo del negocio de alquileres, desde la navegación interactiva del catálogo de productos y el armado de cotizaciones personalizadas, hasta la confirmación de reservas mediante pasarelas de pago, gestión de logística y entregas en terreno, y auditoría administrativa de acciones críticas.
+
+Adicionalmente, incorpora un **módulo de inteligencia artificial** con el algoritmo J48 de Weka para predecir la demanda futura, permitiendo optimizar el inventario y planificar recursos de forma científica.
+
+---
 
 ## ✨ Características Principales
 
-### Para Clientes
-- 🔍 **Catálogo con buscador** — búsqueda en tiempo real por nombre, categoría y material
-- 📋 **Cotizaciones Online** — sistema completo de solicitud con carrito
-- ❤️ **Favoritos** — guardar productos para consulta rápida
-- 💳 **Pagos** — flujo completo con múltiples métodos (Nequi, Daviplata, Transferencia, Efectivo)
-- 🔔 **Notificaciones** — alertas en tiempo real sobre estado de reservas y pagos
-- 🎟️ **Cupones** — sistema de descuentos con validación automática
-- ⭐ **Reseñas** — calificación de productos con promedio
-- 📱 **Responsive** — diseño adaptativo para cualquier dispositivo
-- 🔐 **Inicio de Sesión con Google** — autenticación OAuth2 integrada
+### 👤 Para Clientes (Portal Público)
+* 🔍 **Buscador Inteligente en Tiempo Real**: Filtrado dinámico por nombre, material, precio y categorías.
+* 📋 **Carrito de Cotizaciones**: Permite armar una cotización, simular fechas de alquiler y calcular subtotales.
+* 💳 **Pasarela de Pago Simulada**: Flujo completo de pagos integrando múltiples métodos (Transferencia, Efectivo, Nequi, Daviplata).
+* 🎟️ **Cupones de Descuento**: Aplicación y validación automática de códigos promocionales activos.
+* ⭐ **Calificaciones y Reseñas**: Sistema de valoraciones por producto con promedio de estrellas.
+* 🔐 **Autenticación Social (Google OAuth2)**: Inicio de sesión rápido y seguro mediante cuentas de Google.
+* ❤️ **Lista de Favoritos**: Guardado persistente de productos de interés para el cliente.
+* 🔔 **Bandeja de Notificaciones**: Alertas en tiempo real sobre aprobaciones de reservas, pagos exitosos y cambios de estado.
 
-### Para Administradores
-- 📊 **Dashboard** — métricas en tiempo real (ingresos, reservas, usuarios)
-- 📦 **Gestión de Inventario** — productos, categorías, stock, mantenimiento
-- 🗓️ **Logística** — calendario de entregas/recogidas, hojas de ruta PDF
-- 📝 **Reservas** — máquina de estados (PENDIENTE → CONFIRMADA → ACTIVA → COMPLETADA)
-- 👥 **Gestión de Usuarios** — roles, suspensión temporal/permanente
-- 📧 **Mensajes de Contacto** — bandeja de entrada con indicador de no leídos
-- 🎫 **Cupones de Descuento** — crear, editar, gestionar vigencia
-- 📜 **Auditoría** — registro completo de acciones del sistema
-- 📄 **PDFs** — contratos y hojas de ruta generadas automáticamente
+### 🛡️ Para Administradores (Panel de Control)
+* 📊 **Dashboard Ejecutivo**: Resumen de indicadores clave de rendimiento (Ingresos mensuales, Reservas activas, Registros nuevos).
+* 📈 **Módulo Predictivo (J48 & Weka)**: Visualización y afinamiento de proyecciones de demanda diaria y recomendaciones de inventario basadas en IA.
+* 📦 **Gestión de Mobiliario y Stock**: Control total del inventario de productos, asignación a mantenimiento, y alertas automáticas de bajo stock.
+* 🗓️ **Calendario y Logística**: Calendario mensual con entregas/recogidas agendadas y exportación de hojas de ruta en PDF.
+* 📝 **Gestión de Reservas y Estados**: Máquina de estados para rastrear órdenes (Pendiente ➜ Confirmada ➜ Entregada ➜ Completada / Cancelada).
+* 👥 **Administración de Personal y Usuarios**: Asignación de roles, auditoría de logs, y suspensión temporal o permanente de cuentas.
+* 🎫 **Gestión de Cupones**: Creación de descuentos con fechas de vigencia y límites de uso.
+* 📄 **Generación de PDFs**: Contratos formales de alquiler y reportes de logística generados dinámicamente.
+
+---
+
+## 🧠 Módulo de Analítica y Predicciones (Weka J48)
+
+Furent cuenta con un motor predictivo que estima la demanda de mobiliario para los siguientes **14 días**. 
+
+### ¿Cómo funciona el modelo?
+1. **Clasificación de Demanda**: Agrupa los días en tres niveles de demanda basados en percentiles históricos: **BAJA**, **MEDIA** o **ALTA**.
+2. **Entrenamiento con Árbol J48**: El clasificador evalúa atributos clave del día como:
+   * Día de la semana (y si es fin de semana).
+   * Mes del año (para detectar estacionalidad vacacional o navideña).
+   * Promedio móvil de unidades del último bloque de 7 días.
+   * Total de ingresos esperados y cantidad de reservas creadas.
+3. **Conversión a Unidades**: A partir del nivel de demanda predicho, calcula las unidades de mobiliario proyectadas utilizando el promedio de uso de días similares en el pasado.
+4. **Recomendaciones Inteligentes**: Genera acciones automatizadas de gestión de stock, asignación de personal para días de carga máxima y oportunidades de precios dinámicos (suspender cupones en días de sobredemanda).
+
+---
 
 ## 🛠️ Stack Tecnológico
 
 | Capa | Tecnología |
-|------|-----------|
-| **Backend** | Java 17 · Spring Boot 4.0.3 · Spring Security 6 |
-| **Base de Datos** | MongoDB 7 |
-| **Frontend** | Thymeleaf · Tailwind CSS 4 · Chart.js · DataTables |
-| **PDF** | OpenHTMLToPDF |
-| **API Docs** | SpringDoc OpenAPI (Swagger UI) |
-| **Infraestructura** | Docker · Docker Compose · GitHub Actions |
+| :--- | :--- |
+| **Backend Core** | Java 17 · Spring Boot 4.0.3 · Spring Data MongoDB |
+| **Seguridad** | Spring Security 6 · OAuth2 Client (Google) · BCrypt |
+| **Base de Datos** | MongoDB 7.0 |
+| **Inteligencia Artificial** | Weka 3.8 (Clasificador J48 / Árboles de Decisión C4.5) |
+| **Frontend** | Thymeleaf · Tailwind CSS 4 · Chart.js · Alpine.js |
+| **Reportes y PDFs** | OpenHTMLToPDF |
+| **Documentación API** | SpringDoc OpenAPI (Swagger UI) |
+| **Entorno e Infraestructura** | Docker · Docker Compose · GitHub Actions |
+
+---
 
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
-- Java 17+
-- MongoDB 7+ (local o MongoDB Atlas)
-- Maven 3.9+
+* **Java SDK 17** o superior.
+* **MongoDB 7.0** ejecutándose de forma local o en la nube (Atlas).
+* **Maven 3.9+** (o utilizar el wrapper `./mvnw` provisto).
 
-### Instalación Local
-
-```bash
-# Clonar
-git clone https://github.com/tu-usuario/furent.git
-cd furent
-
-# Ejecutar (asegúrate de tener MongoDB corriendo en localhost:27017)
-./mvnw spring-boot:run
-```
-
-La aplicación estará disponible en **http://localhost:8080**
+### Ejecución Local
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/whosjeiv/Furent-Alquiler.git
+   cd Furent-Alquiler
+   ```
+2. Asegurar que MongoDB esté corriendo en `localhost:27017` o configurar tu URI en las variables de entorno.
+3. Arrancar la aplicación con Maven:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+4. Abrir en el navegador: **http://localhost:8080**
 
 ### Con Docker Compose
-
+Puedes levantar todo el entorno (Aplicación + Base de datos MongoDB) en un solo paso:
 ```bash
 docker compose up -d
 ```
 
-Esto levanta MongoDB + la aplicación automáticamente.
+---
 
-### Variables de Entorno
+## ⚙️ Variables de Entorno Clave
 
-| Variable | Descripción | Default |
-|----------|-------------|---------|
-| `SPRING_DATA_MONGODB_URI` | URI de conexión a MongoDB | `mongodb://localhost:27017/furent` |
-| `SPRING_PROFILES_ACTIVE` | Perfil activo | `dev` |
-| `FURENT_ADMIN_PASSWORD` | Contraseña del admin inicial | `admin123` |
-| `GOOGLE_CLIENT_ID` | Client ID de Google OAuth2 | - |
-| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth2 | - |
+| Variable | Descripción | Valor por Defecto |
+| :--- | :--- | :--- |
+| `SPRING_DATA_MONGODB_URI` | Dirección de conexión a la BD | `mongodb://localhost:27017/furent` |
+| `SPRING_PROFILES_ACTIVE` | Perfil de ejecución activo | `dev` (opciones: `dev`, `prod`) |
+| `FURENT_ADMIN_PASSWORD` | Contraseña por defecto del admin inicial | `admin123` |
+| `GOOGLE_CLIENT_ID` | Client ID de Google Console para OAuth2 | *Opcional* |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google Console para OAuth2 | *Opcional* |
 
-> 💡 **Nota:** Para configurar el inicio de sesión con Google, consulta [GOOGLE_OAUTH_QUICKSTART.md](GOOGLE_OAUTH_QUICKSTART.md)
+---
 
 ## 📁 Estructura del Proyecto
 
-```
+```text
 furent/
 ├── src/main/java/com/alquiler/furent/
-│   ├── config/        # SecurityConfig, DataInitializer, MVC
-│   ├── controller/    # PageController, AdminController, ApiController
-│   ├── dto/           # ProductResponse, UserResponse, ReservationResponse
-│   ├── enums/         # EstadoReserva, EstadoPago, RolUsuario, etc.
-│   ├── exception/     # GlobalExceptionHandler, ResourceNotFound, etc.
-│   ├── model/         # User, Product, Reservation, Payment, etc.
-│   ├── repository/    # MongoRepository interfaces
-│   └── service/       # Lógica de negocio
+│   ├── config/        # Configuración de Seguridad, Inicialización de Datos (DataInitializer)
+│   ├── controller/    # Controladores de Thymeleaf (Públicos) y de Administración (Admin)
+│   ├── dto/           # Data Transfer Objects para respuestas y peticiones API
+│   ├── enums/         # Estados de reservas, pagos, roles y categorías
+│   ├── exception/     # Manejador global de excepciones del sistema
+│   ├── model/         # Entidades de MongoDB (User, Product, Reservation, Payment, etc.)
+│   ├── repository/    # Interfaces de Spring Data MongoRepository
+│   └── service/       # Lógica de negocio e IA (PredictiveService, EmailService, etc.)
 ├── src/main/resources/
-│   ├── templates/     # Thymeleaf (public + admin)
-│   ├── static/        # JS, imágenes
-│   └── application.properties
-├── Dockerfile
-├── docker-compose.yml
-└── pom.xml
+│   ├── templates/     # Páginas y layouts en Thymeleaf (carpetas public, admin, fragments)
+│   ├── static/        # Hojas de estilo CSS, scripts JS, y recursos gráficos (images/logo)
+│   └── application.properties # Parámetros globales del framework
+├── docs/              # Documentación detallada del proyecto (UML, arquitectura, flujo de reservas)
+├── Dockerfile         # Archivo de construcción de imagen Docker
+├── docker-compose.yml # Orquestación local de contenedores
+└── pom.xml            # Dependencias y configuración de Maven
 ```
 
-## 🔐 Seguridad
+---
 
-- **CSRF** habilitado (excepto endpoints API REST)
-- **Content Security Policy** (CSP) configurado
-- **Sesiones** con timeout, cookie HttpOnly, SameSite=Lax
-- **BCrypt** para hashing de contraseñas
-- **Roles** USER / ADMIN con control de acceso por ruta
-- **Suspensión de cuentas** temporal y permanente
-- **Auditoría** completa de acciones administrativas
+## 🛡️ Seguridad y Buenas Prácticas
+* **Protección CSRF**: Habilitada por defecto en todos los formularios Thymeleaf.
+* **Content Security Policy (CSP)**: Cabeceras estrictas configuradas para evitar inyecciones XSS.
+* **Control de Acceso basado en Roles (RBAC)**: Rutas administrativas protegidas estrictamente bajo el rol `ADMIN`.
+* **Cifrado Seguro**: Contraseñas de usuario cifradas mediante `BCryptPasswordEncoder`.
+* **Registro de Auditoría**: Trazabilidad completa de las acciones del panel de control almacenadas en la colección `audit_logs`.
 
-## 📖 API Endpoints
+---
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/productos/search?q=` | Buscar productos |
-| POST | `/api/cotizacion` | Crear cotización |
-| POST/DELETE | `/api/favoritos/{id}` | Gestionar favoritos |
-| GET | `/api/notificaciones` | Obtener notificaciones |
-| POST | `/api/cupones/validar` | Validar cupón |
-| POST | `/api/pagos/iniciar/{id}` | Iniciar pago |
-| GET | `/api/pagos/mis-pagos` | Mis pagos |
-
-Documentación interactiva en: **http://localhost:8080/swagger-ui.html**
-
-## 🧪 Testing
-
+## 🧪 Pruebas Unitarias e Integración
+Para validar que todos los servicios y el modelo predictivo funcionen correctamente, ejecuta:
 ```bash
-# Ejecutar todos los tests
 ./mvnw test
-
-# Tests con reporte
-./mvnw test -Dmaven.test.failure.ignore=false
 ```
 
-## 👤 Credenciales por Defecto
+---
 
-| Rol | Email | Contraseña |
-|-----|-------|------------|
-| Admin | admin@furent.com | admin123 |
+## 👤 Credenciales Administrativas Iniciales
 
-> ⚠️ Cambiar la contraseña del admin en producción mediante la variable `FURENT_ADMIN_PASSWORD`
+Al arrancar por primera vez, el sistema autogenera un administrador base si no existe ninguno:
+* **Usuario**: `admin@furent.com`
+* **Contraseña**: `admin123` (se recomienda redefinir mediante la variable de entorno `FURENT_ADMIN_PASSWORD`).
 
-## 🏗️ Arquitectura
-
-### Diagrama de Componentes
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                         CLIENTE (Browser)                        │
-│   Thymeleaf + Tailwind CSS 4 + Chart.js + FullCalendar + Swal   │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │ HTTP / HTTPS
-┌──────────────────────────▼───────────────────────────────────────┐
-│                     Spring Boot 4.0.3                             │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │                    Controllers                               │ │
-│  │  PageController · AdminController · ApiController            │ │
-│  │  PaymentController · ReviewController                        │ │
-│  └──────────────────────────┬──────────────────────────────────┘ │
-│  ┌──────────────────────────▼──────────────────────────────────┐ │
-│  │                     Services                                 │ │
-│  │  UserService · ProductService · ReservationService           │ │
-│  │  PaymentService · EmailService · NotificationService         │ │
-│  │  CouponService · PdfService · ExportService                  │ │
-│  │  AuditLogService · ReviewService · ContactService            │ │
-│  └──────────────────────────┬──────────────────────────────────┘ │
-│  ┌──────────────────────────▼──────────────────────────────────┐ │
-│  │                   Repositories (MongoRepository)             │ │
-│  │  UserRepo · ProductRepo · ReservationRepo · PaymentRepo     │ │
-│  │  CategoryRepo · NotificationRepo · CouponRepo · etc.        │ │
-│  └──────────────────────────┬──────────────────────────────────┘ │
-│  ┌──────────────┐  ┌────────┴───────┐  ┌────────────────────┐   │
-│  │ Security     │  │ Config         │  │ Exception Handler  │   │
-│  │ Spring Sec 6 │  │ DataInitializer│  │ GlobalException    │   │
-│  │ CSRF · RBAC  │  │ RateLimit      │  │ Handler            │   │
-│  └──────────────┘  └────────────────┘  └────────────────────┘   │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │
-              ┌────────────▼────────────┐
-              │     MongoDB 7           │
-              │  FurentDataBase         │
-              │  usuarios · productos   │
-              │  reservas · pagos       │
-              │  categorias · reviews   │
-              │  notificaciones · etc.  │
-              └─────────────────────────┘
-```
-
-### Diagrama de Entidades
-
-```
-┌──────────┐     ┌─────────────┐     ┌──────────┐
-│   User   │────<│ Reservation │>────│ Product  │
-│          │     │             │     │          │
-│ email    │     │ items[]     │     │ nombre   │
-│ password │     │ estado      │     │ precio   │
-│ role     │     │ total       │     │ stock    │
-│ favoritos│     │ fechaInicio │     │ categoria│
-└────┬─────┘     └──────┬──────┘     └────┬─────┘
-     │                  │                  │
-     │           ┌──────▼──────┐    ┌──────▼─────┐
-     │           │  Payment    │    │  Review    │
-     │           │  monto      │    │  rating    │
-     │           │  metodoPago │    │  comentario│
-     │           │  estado     │    └────────────┘
-     │           └─────────────┘
-     │
-┌────▼──────────┐  ┌──────────────┐  ┌────────────┐
-│ Notification  │  │ AuditLog     │  │ Category   │
-│ titulo        │  │ accion       │  │ nombre     │
-│ mensaje       │  │ entidad      │  │ descripcion│
-│ leida         │  │ usuario      │  │ icono      │
-└───────────────┘  └──────────────┘  └────────────┘
-
-┌───────────────┐  ┌──────────────┐  ┌────────────┐
-│ Coupon        │  │ContactMessage│  │ StatusHist.│
-│ codigo        │  │ nombre       │  │ reservaId  │
-│ descuento     │  │ email        │  │ estadoAntes│
-│ vigencia      │  │ mensaje      │  │ estadoNuevo│
-└───────────────┘  └──────────────┘  └────────────┘
-```
-
-### Máquina de Estados — Reserva
-
-```
- ┌───────────┐    confirmar    ┌────────────┐    activar     ┌─────────┐
- │ PENDIENTE ├───────────────>│ CONFIRMADA ├──────────────>│ ACTIVA  │
- └─────┬─────┘                └─────┬──────┘               └────┬────┘
-       │                            │                           │
-       │ cancelar                   │ cancelar                  │ en curso
-       │                            │                           │
-       ▼                            ▼                    ┌──────▼──────┐
- ┌───────────┐              ┌───────────┐                │  EN_CURSO   │
- │ CANCELADA │◄─────────────│ CANCELADA │◄───────────────┤             │
- └───────────┘              └───────────┘                └──────┬──────┘
-                                                                │
-                                                                │ completar
-                                                                ▼
-                                                         ┌─────────────┐
-                                                         │ COMPLETADA  │
-                                                         └─────────────┘
-```
-
-## 🔑 Perfiles de Configuración
-
-| Perfil | Archivo | Uso |
-|--------|---------|-----|
-| **dev** (default) | `application-dev.properties` | Desarrollo local, logs DEBUG, email deshabilitado |
-| **prod** | `application-prod.properties` | Producción, cache habilitado, sesiones estrictas |
-
-Activar perfil: `SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run`
+---
 
 ## 📜 Licencia
-
-MIT © Furent
+Este proyecto está distribuido bajo la licencia MIT. Consúltala en el archivo correspondiente para más información.
