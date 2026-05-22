@@ -1,8 +1,11 @@
 package com.alquiler.furent.service;
 
+import com.alquiler.furent.model.Product;
 import com.alquiler.furent.model.Reservation;
+import com.alquiler.furent.repository.ProductRepository;
 import com.alquiler.furent.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
+import weka.classifiers.Evaluation;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -31,19 +34,33 @@ import java.util.stream.Collectors;
 public class PredictiveService {
 
     private final ReservationRepository reservationRepository;
+    private final ProductRepository productRepository;
     private static final List<String> DEMAND_CLASSES = List.of("BAJA", "MEDIA", "ALTA");
 
-    public PredictiveService(ReservationRepository reservationRepository) {
+    public PredictiveService(ReservationRepository reservationRepository, ProductRepository productRepository) {
         this.reservationRepository = reservationRepository;
+        this.productRepository = productRepository;
     }
 
     /**
-     * Genera una serie histórica y proyecciones para:
-     * - unidades (suma de cantidades de todos los items)
-     * - ingresos (suma del total de las reservas)
-     * - reservas (cantidad de reservas)
+     * Genera una serie histórica y proyecciones con hiperparámetros por defecto.
      */
     public Map<String, Object> generateForecasts(int historyDays, int forecastDays) {
+        return generateForecasts(historyDays, forecastDays, 0.25, 2, false, false, false, 10);
+    }
+
+    /**
+     * Genera una serie histórica y proyecciones completas permitiendo afinar el clasificador J48 de Weka.
+     */
+    public Map<String, Object> generateForecasts(
+            int historyDays,
+            int forecastDays,
+            double confidenceFactor,
+            int minNumObj,
+            boolean unpruned,
+            boolean useLaplace,
+            boolean reducedErrorPruning,
+            int cvFolds) {
         if (historyDays <= 0) historyDays = 60;
         if (forecastDays <= 0) forecastDays = 14;
 
@@ -92,9 +109,14 @@ public class PredictiveService {
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> j48Insights = new LinkedHashMap<>();
         
         result.put("history_unidades", convertToStringMap(agregadosUnidades, historyDays, from, 0));
-        LinkedHashMap<String, BigDecimal> forecastUnidades = createJ48Forecast(agregadosUnidades, agregadosIngresos, agregadosReservas, forecastDays, today);
+        
+        LinkedHashMap<String, BigDecimal> forecastUnidades = createJ48Forecast(
+                agregadosUnidades, agregadosIngresos, agregadosReservas, forecastDays, today,
+                confidenceFactor, minNumObj, unpruned, useLaplace, reducedErrorPruning, cvFolds, j48Insights);
+        
         result.put("forecast_unidades", forecastUnidades);
         
         result.put("history_ingresos", convertToStringMap(agregadosIngresos, historyDays, from, 2));
@@ -102,7 +124,8 @@ public class PredictiveService {
         
         result.put("history_reservas", convertToStringMap(agregadosReservas, historyDays, from, 0));
         result.put("forecast_reservas", createForecast(agregadosReservas, forecastDays, today, 0));
-        result.put("j48_insights", buildJ48Insights(agregadosUnidades));
+        
+        result.put("j48_insights", j48Insights);
         result.put("recommendations", buildDynamicRecommendations(agregadosUnidades, forecastUnidades, demandaPorProducto, demandaPorTipoEvento));
         
         return result;
@@ -153,10 +176,23 @@ public class PredictiveService {
         return forecast;
     }
 
-    private LinkedHashMap<String, BigDecimal> createJ48Forecast(Map<LocalDate, BigDecimal> unidades, Map<LocalDate, BigDecimal> ingresos, Map<LocalDate, BigDecimal> reservas, int forecastDays, LocalDate today) {
+    private LinkedHashMap<String, BigDecimal> createJ48Forecast(
+            Map<LocalDate, BigDecimal> unidades,
+            Map<LocalDate, BigDecimal> ingresos,
+            Map<LocalDate, BigDecimal> reservas,
+            int forecastDays,
+            LocalDate today,
+            double confidenceFactor,
+            int minNumObj,
+            boolean unpruned,
+            boolean useLaplace,
+            boolean reducedErrorPruning,
+            int cvFolds,
+            Map<String, Object> j48Insights) {
         try {
             List<BigDecimal> values = new ArrayList<>(unidades.values());
             if (values.stream().filter(v -> v.compareTo(BigDecimal.ZERO) > 0).count() < 7) {
+                j48Insights.put("error", "Datos insuficientes para entrenar J48 (se requieren al menos 7 días con reservas). Mostrando proyecciones basadas en media móvil simple.");
                 return createForecast(unidades, forecastDays, today, 0);
             }
 
@@ -173,10 +209,124 @@ public class PredictiveService {
             }
 
             J48 tree = new J48();
-            tree.setUnpruned(false);
-            tree.setConfidenceFactor(0.25f);
-            tree.setMinNumObj(2);
+            tree.setUnpruned(unpruned);
+            tree.setConfidenceFactor((float) confidenceFactor);
+            tree.setMinNumObj(minNumObj);
+            tree.setUseLaplace(useLaplace);
+            tree.setReducedErrorPruning(reducedErrorPruning);
             tree.buildClassifier(training);
+
+            // Populate insights
+            j48Insights.put("model", "J48 (Weka)");
+            j48Insights.put("target", "Clasificación diaria de demanda: BAJA, MEDIA, ALTA");
+            j48Insights.put("lowThreshold", BigDecimal.valueOf(lowThreshold).setScale(0, RoundingMode.HALF_UP));
+            j48Insights.put("highThreshold", BigDecimal.valueOf(highThreshold).setScale(0, RoundingMode.HALF_UP));
+            j48Insights.put("trainingDays", training.numInstances());
+            j48Insights.put("numLeaves", (int) tree.measureNumLeaves());
+            j48Insights.put("treeSize", (int) tree.measureTreeSize());
+            j48Insights.put("rawTree", tree.toString());
+            j48Insights.put("visualTree", parseJ48Tree(tree.toString()));
+
+            // Hyperparameters info
+            Map<String, Object> params = new LinkedHashMap<>();
+            params.put("unpruned", unpruned);
+            params.put("confidenceFactor", confidenceFactor);
+            params.put("minNumObj", minNumObj);
+            params.put("useLaplace", useLaplace);
+            params.put("reducedErrorPruning", reducedErrorPruning);
+            params.put("cvFolds", cvFolds);
+            j48Insights.put("parameters", params);
+
+            // Attributes metadata
+            List<Map<String, Object>> attributeList = new ArrayList<>();
+            for (int k = 0; k < training.numAttributes(); k++) {
+                Attribute attr = training.attribute(k);
+                Map<String, Object> attrMap = new LinkedHashMap<>();
+                attrMap.put("name", attr.name());
+                attrMap.put("type", attr.isNumeric() ? "Numérico" : "Nominal");
+                if (attr.isNominal()) {
+                    List<String> valList = new ArrayList<>();
+                    for (int v = 0; v < attr.numValues(); v++) {
+                        valList.add(attr.value(v));
+                    }
+                    attrMap.put("values", valList);
+                } else {
+                    attrMap.put("values", null);
+                }
+                attributeList.add(attrMap);
+            }
+            j48Insights.put("attributes", attributeList);
+
+            // Model Evaluations
+            Evaluation trainEval = new Evaluation(training);
+            trainEval.evaluateModel(tree, training);
+
+            Evaluation cvEval = null;
+            boolean hasCv = false;
+            int actualFolds = cvFolds;
+            if (training.numInstances() >= 2) {
+                actualFolds = Math.max(2, Math.min(cvFolds, training.numInstances()));
+                cvEval = new Evaluation(training);
+                cvEval.crossValidateModel(tree, training, actualFolds, new java.util.Random(1));
+                hasCv = true;
+            }
+
+            Map<String, Object> evalMap = new LinkedHashMap<>();
+            evalMap.put("trainingAccuracy", trainEval.pctCorrect());
+            evalMap.put("trainingCorrect", trainEval.correct());
+            evalMap.put("trainingIncorrect", trainEval.incorrect());
+            evalMap.put("trainingTotal", training.numInstances());
+            evalMap.put("trainingKappa", trainEval.kappa());
+            evalMap.put("trainingMae", trainEval.meanAbsoluteError());
+            evalMap.put("trainingRmse", trainEval.rootMeanSquaredError());
+
+            List<String> classNames = new ArrayList<>();
+            for (int k = 0; k < training.numClasses(); k++) {
+                classNames.add(training.classAttribute().value(k));
+            }
+            evalMap.put("classNames", classNames);
+
+            if (hasCv && cvEval != null) {
+                evalMap.put("hasCv", true);
+                evalMap.put("cvAccuracy", cvEval.pctCorrect());
+                evalMap.put("cvCorrect", cvEval.correct());
+                evalMap.put("cvIncorrect", cvEval.incorrect());
+                evalMap.put("cvKappa", cvEval.kappa());
+                evalMap.put("cvMae", cvEval.meanAbsoluteError());
+                evalMap.put("cvRmse", cvEval.rootMeanSquaredError());
+                evalMap.put("cvFolds", actualFolds);
+                evalMap.put("confusionMatrix", cvEval.confusionMatrix());
+
+                List<Map<String, Object>> classDetails = new ArrayList<>();
+                for (int k = 0; k < training.numClasses(); k++) {
+                    Map<String, Object> classMap = new LinkedHashMap<>();
+                    classMap.put("className", training.classAttribute().value(k));
+                    classMap.put("precision", cvEval.precision(k));
+                    classMap.put("recall", cvEval.recall(k));
+                    classMap.put("fMeasure", cvEval.fMeasure(k));
+                    classMap.put("truePositiveRate", cvEval.truePositiveRate(k));
+                    classMap.put("falsePositiveRate", cvEval.falsePositiveRate(k));
+                    classDetails.add(classMap);
+                }
+                evalMap.put("classDetails", classDetails);
+            } else {
+                evalMap.put("hasCv", false);
+                evalMap.put("confusionMatrix", trainEval.confusionMatrix());
+
+                List<Map<String, Object>> classDetails = new ArrayList<>();
+                for (int k = 0; k < training.numClasses(); k++) {
+                    Map<String, Object> classMap = new LinkedHashMap<>();
+                    classMap.put("className", training.classAttribute().value(k));
+                    classMap.put("precision", trainEval.precision(k));
+                    classMap.put("recall", trainEval.recall(k));
+                    classMap.put("fMeasure", trainEval.fMeasure(k));
+                    classMap.put("truePositiveRate", trainEval.truePositiveRate(k));
+                    classMap.put("falsePositiveRate", trainEval.falsePositiveRate(k));
+                    classDetails.add(classMap);
+                }
+                evalMap.put("classDetails", classDetails);
+            }
+            j48Insights.put("evaluation", evalMap);
 
             LinkedHashMap<String, BigDecimal> forecast = new LinkedHashMap<>();
             BigDecimal movingIncome = averageLast(new ArrayList<>(ingresos.values()), 7, 2);
@@ -195,6 +345,7 @@ public class PredictiveService {
 
             return forecast;
         } catch (Exception ex) {
+            j48Insights.put("error", "Error entrenando clasificador J48: " + ex.getMessage() + ". Mostrando proyecciones basadas en media móvil simple.");
             return createForecast(unidades, forecastDays, today, 0);
         }
     }
@@ -268,53 +419,272 @@ public class PredictiveService {
         return sum.divide(BigDecimal.valueOf(matching.size()), 0, RoundingMode.HALF_UP);
     }
 
-    private Map<String, Object> buildJ48Insights(Map<LocalDate, BigDecimal> unidades) {
-        Map<String, Object> insights = new LinkedHashMap<>();
-        List<BigDecimal> values = new ArrayList<>(unidades.values());
-        double low = percentile(values, 0.33);
-        double high = percentile(values, 0.66);
-        insights.put("model", "J48 (Weka)");
-        insights.put("target", "Clasificación diaria de demanda: BAJA, MEDIA, ALTA");
-        insights.put("lowThreshold", BigDecimal.valueOf(low).setScale(0, RoundingMode.HALF_UP));
-        insights.put("highThreshold", BigDecimal.valueOf(high).setScale(0, RoundingMode.HALF_UP));
-        insights.put("trainingDays", values.size());
-        return insights;
-    }
-
-    private List<Map<String, String>> buildDynamicRecommendations(Map<LocalDate, BigDecimal> history, Map<String, BigDecimal> forecast, Map<String, Integer> demandaPorProducto, Map<String, Integer> demandaPorTipoEvento) {
-        List<Map<String, String>> recommendations = new ArrayList<>();
+    private List<Map<String, Object>> buildDynamicRecommendations(
+            Map<LocalDate, BigDecimal> history,
+            Map<String, BigDecimal> forecast,
+            Map<String, Integer> demandaPorProducto,
+            Map<String, Integer> demandaPorTipoEvento) {
+        List<Map<String, Object>> recommendations = new ArrayList<>();
         BigDecimal historicalAvg = averageLast(new ArrayList<>(history.values()), Math.min(30, history.size()), 1);
         BigDecimal forecastAvg = averageLast(new ArrayList<>(forecast.values()), forecast.size(), 1);
-        BigDecimal forecastPeak = forecast.values().stream().max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO);
 
+        // 1. Recomendación por volumen de demanda
         if (forecastAvg.compareTo(historicalAvg.multiply(BigDecimal.valueOf(1.2))) > 0) {
-            recommendations.add(recommendation("Alta demanda prevista", "Refuerza inventario, personal de logística y ventanas de entrega para los próximos días."));
+            double percent = historicalAvg.compareTo(BigDecimal.ZERO) > 0 
+                ? (forecastAvg.subtract(historicalAvg)).doubleValue() / historicalAvg.doubleValue() * 100 
+                : 100.0;
+            recommendations.add(recommendation(
+                "Alta demanda prevista (+" + String.format("%.0f", percent) + "%)",
+                "El volumen diario proyectado supera considerablemente el promedio histórico reciente. Te sugerimos reforzar personal en logística, revisar disponibilidad de camiones y ajustar las ventanas de entrega.",
+                "OPERACION",
+                "ALTA",
+                "trending-up",
+                "Ver Logística",
+                "/admin/logistica"
+            ));
         } else if (forecastAvg.compareTo(historicalAvg.multiply(BigDecimal.valueOf(0.8))) < 0) {
-            recommendations.add(recommendation("Demanda moderada o baja", "Aprovecha para mantenimiento de mobiliario, promociones y optimización de rutas."));
+            recommendations.add(recommendation(
+                "Demanda moderada a baja",
+                "El modelo prevé un periodo de baja actividad en reservas. Te recomendamos aprovechar esta ventana para realizar mantenimiento al mobiliario dañado o lanzar promociones especiales.",
+                "MARKETING",
+                "MEDIA",
+                "tag",
+                "Crear Cupón",
+                "/admin/cupones"
+            ));
         } else {
-            recommendations.add(recommendation("Demanda estable", "Mantén la planificación operativa actual y monitorea cambios en reservas nuevas."));
+            recommendations.add(recommendation(
+                "Demanda estable y regular",
+                "Los niveles previstos se alinean con tu flujo habitual de operaciones. No se requiere personal extra. Mantén los cronogramas normales y enfócate en el mantenimiento de rutina.",
+                "OPERACION",
+                "BAJA",
+                "check-circle",
+                "Ver Reservas",
+                "/admin/reservas"
+            ));
         }
 
+        // 2. Recomendación por día pico estimado
         forecast.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .ifPresent(entry -> recommendations.add(recommendation("Pico estimado", "El día " + entry.getKey() + " concentra el mayor volumen previsto con " + forecastPeak.setScale(0, RoundingMode.HALF_UP) + " unidades.")));
+                .ifPresent(entry -> {
+                    if (entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                        recommendations.add(recommendation(
+                            "Día de Carga Máxima",
+                            "El " + entry.getKey() + " registrará el pico de demanda más alto con " + entry.getValue().setScale(0, RoundingMode.HALF_UP) + " unidades a entregar. Prepara los despachos el día anterior.",
+                            "LOGISTICA",
+                            "ALTA",
+                            "calendar",
+                            "Ver Agenda",
+                            "/admin/logistica"
+                        ));
+                    }
+                });
 
+        // 3. Recomendación por producto estrella & posibles alertas de stock
         demandaPorProducto.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .ifPresent(entry -> recommendations.add(recommendation("Producto más demandado", "Prioriza disponibilidad de " + entry.getKey() + " por su comportamiento histórico reciente.")));
+                .ifPresent(entry -> {
+                    String prodName = entry.getKey();
+                    boolean bajoStock = false;
+                    try {
+                        List<Product> products = productRepository.searchProducts(prodName);
+                        if (!products.isEmpty()) {
+                            Product p = products.get(0);
+                            if (p.isBajoStock()) {
+                                bajoStock = true;
+                            }
+                        }
+                    } catch (Exception ignored) {}
 
+                    if (bajoStock) {
+                        recommendations.add(recommendation(
+                            "Alerta: Stock de Producto Estrella",
+                            "El producto '" + prodName + "' es tu mobiliario más demandado, pero actualmente se encuentra por debajo de su stock mínimo de seguridad. Compra o repara unidades con urgencia.",
+                            "LOGISTICA",
+                            "ALTA",
+                            "alert-circle",
+                            "Reponer Stock",
+                            "/admin/mobiliarios"
+                        ));
+                    } else {
+                        recommendations.add(recommendation(
+                            "Mobiliario más demandado",
+                            "'" + prodName + "' sigue siendo tu producto estrella (" + entry.getValue() + " uds solicitadas). Asegúrate de realizar limpieza profunda al recibirlo de vuelta.",
+                            "OPERACION",
+                            "MEDIA",
+                            "star",
+                            "Ver Catálogo",
+                            "/admin/mobiliarios"
+                        ));
+                    }
+                });
+
+        // 4. Recomendación por tipo de evento dominante
         demandaPorTipoEvento.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .ifPresent(entry -> recommendations.add(recommendation("Tipo de evento dominante", "Ajusta paquetes y comunicación comercial hacia eventos de tipo " + entry.getKey() + ".")));
+                .ifPresent(entry -> {
+                    recommendations.add(recommendation(
+                        "Segmento Dominante: " + entry.getKey(),
+                        "Los eventos tipo '" + entry.getKey() + "' concentran la mayor cantidad de piezas reservadas (" + entry.getValue() + " uds). Te sugerimos crear colecciones o combos con precios preferenciales.",
+                        "PRECIO",
+                        "MEDIA",
+                        "package",
+                        "Ver Colecciones",
+                        "/admin/categorias"
+                    ));
+                });
+
+        // 5. Recomendación de optimización de tarifas
+        List<String> peakDays = forecast.entrySet().stream()
+                .filter(e -> e.getValue().compareTo(historicalAvg.multiply(BigDecimal.valueOf(1.3))) > 0)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+        if (!peakDays.isEmpty()) {
+            recommendations.add(recommendation(
+                "Oportunidad de Dynamic Pricing",
+                "Se proyecta un exceso de demanda para los días: " + String.join(", ", peakDays.stream().limit(2).collect(Collectors.toList())) + ". Considera deshabilitar cupones de descuento generales en estas fechas.",
+                "PRECIO",
+                "MEDIA",
+                "dollar-sign",
+                "Gestionar Cupones",
+                "/admin/cupones"
+            ));
+        }
+
+        // 6. Alerta general de stock mínimo
+        try {
+            List<Product> stockCritico = productRepository.findAll().stream()
+                .filter(Product::isBajoStock)
+                .collect(Collectors.toList());
+            if (!stockCritico.isEmpty()) {
+                String nombres = stockCritico.stream().map(Product::getNombre).limit(3).collect(Collectors.joining(", "));
+                int resto = Math.max(0, stockCritico.size() - 3);
+                String listado = nombres + (resto > 0 ? " y " + resto + " más" : "");
+                recommendations.add(recommendation(
+                    "Alerta de Stock Crítico",
+                    "Actualmente tienes " + stockCritico.size() + " mobiliarios con existencias críticas: " + listado + ". Planifica la adquisición de inventario.",
+                    "LOGISTICA",
+                    "ALTA",
+                    "alert-triangle",
+                    "Revisar Stock",
+                    "/admin/mobiliarios"
+                ));
+            }
+        } catch (Exception ignored) {}
 
         return recommendations;
     }
 
-    private Map<String, String> recommendation(String title, String detail) {
-        Map<String, String> recommendation = new LinkedHashMap<>();
+    private Map<String, Object> recommendation(String title, String detail, String type, String priority, String icon, String actionLabel, String actionUrl) {
+        Map<String, Object> recommendation = new LinkedHashMap<>();
         recommendation.put("title", title);
         recommendation.put("detail", detail);
+        recommendation.put("type", type);
+        recommendation.put("priority", priority);
+        recommendation.put("icon", icon);
+        recommendation.put("actionLabel", actionLabel);
+        recommendation.put("actionUrl", actionUrl);
         return recommendation;
+    }
+
+    // === PARSER DEL ARBOL J48 DE WEKA A JSON ===
+    public static class DecisionTreeNode {
+        public String condition;
+        public boolean isLeaf;
+        public String classLabel;
+        public String stats;
+        public List<DecisionTreeNode> children = new ArrayList<>();
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("condition", condition);
+            map.put("isLeaf", isLeaf);
+            map.put("classLabel", classLabel);
+            map.put("stats", stats);
+            List<Map<String, Object>> childMaps = new ArrayList<>();
+            for (DecisionTreeNode child : children) {
+                childMaps.add(child.toMap());
+            }
+            map.put("children", childMaps);
+            return map;
+        }
+    }
+
+    public static List<Map<String, Object>> parseJ48Tree(String treeStr) {
+        List<DecisionTreeNode> roots = new ArrayList<>();
+        if (treeStr == null || treeStr.isBlank()) return new ArrayList<>();
+
+        String[] lines = treeStr.split("\n");
+        List<DecisionTreeNode> stack = new ArrayList<>();
+
+        for (String line : lines) {
+            String trimmedLine = line.trim();
+            if (trimmedLine.isEmpty() || 
+                trimmedLine.startsWith("J48") || 
+                trimmedLine.startsWith("Number of Leaves") || 
+                trimmedLine.startsWith("Size of the tree") ||
+                trimmedLine.startsWith("===") ||
+                trimmedLine.startsWith("-")) {
+                continue;
+            }
+
+            int depth = 0;
+            String temp = line;
+            while (temp.startsWith("|   ")) {
+                depth++;
+                temp = temp.substring(4);
+            }
+            while (temp.startsWith("|\t")) {
+                depth++;
+                temp = temp.substring(2);
+            }
+            temp = temp.trim();
+            if (temp.isEmpty()) continue;
+
+            DecisionTreeNode node = new DecisionTreeNode();
+            if (temp.contains(":")) {
+                node.isLeaf = true;
+                String[] parts = temp.split(":", 2);
+                node.condition = parts[0].trim();
+                String right = parts[1].trim();
+
+                if (right.contains("(")) {
+                    int parenIdx = right.indexOf("(");
+                    node.classLabel = right.substring(0, parenIdx).trim();
+                    node.stats = right.substring(parenIdx).trim();
+                } else {
+                    node.classLabel = right;
+                    node.stats = "";
+                }
+            } else {
+                node.isLeaf = false;
+                node.condition = temp;
+            }
+
+            if (depth == 0) {
+                stack.clear();
+                roots.add(node);
+                stack.add(node);
+            } else {
+                while (stack.size() > depth) {
+                    stack.remove(stack.size() - 1);
+                }
+                if (!stack.isEmpty()) {
+                    DecisionTreeNode parent = stack.get(stack.size() - 1);
+                    parent.children.add(node);
+                } else {
+                    roots.add(node);
+                }
+                stack.add(node);
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (DecisionTreeNode root : roots) {
+            result.add(root.toMap());
+        }
+        return result;
     }
 }
 
