@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+            <!-- Page Title -->
+            <div class="mb-8 fade-in-up">
+                <h1 class="text-2xl font-bold text-surface-900 tracking-tight">Configuración</h1>
+                <p class="text-surface-500 text-sm mt-1">Personaliza tu experiencia en Furent</p>
+            </div>
+
+            <!-- Tabs Navigation (horizontal like the reference) -->
+            <div class="flex gap-6 border-b border-surface-200 mb-10 fade-in-up">
+                <button data-settings-tab="profile"
+                        class="settings-tab-btn pb-3 text-sm font-medium text-furent-500 border-b-2 border-furent-500 transition-all">
+                    Cuenta
+                </button>
+                <button data-settings-tab="personal"
+                        class="settings-tab-btn pb-3 text-sm font-medium text-surface-400 hover:text-surface-700 border-b-2 border-transparent transition-all">
+                    Personal
+                </button>
+                <button data-settings-tab="preferences"
+                        class="settings-tab-btn pb-3 text-sm font-medium text-surface-400 hover:text-surface-700 border-b-2 border-transparent transition-all">
+                    Preferencias
+                </button>
+                <button data-settings-tab="security"
+                        class="settings-tab-btn pb-3 text-sm font-medium text-surface-400 hover:text-surface-700 border-b-2 border-transparent transition-all">
+                    Seguridad
+                </button>
+            </div>
+
+            <!-- =============================== -->
+            <!-- ACCOUNT TAB (Cuenta) -->
+            <!-- =============================== -->
+            <div data-settings-panel="profile">
+
+                <!-- Success/Error messages -->
+                <div th:if="${success}" class="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span th:text="${success}"></span>
+                </div>
+
+                <!-- Personal Information Section -->
+                <div class="settings-section">
+                    <div class="settings-section-left">
+                        <h2 class="text-surface-900 font-semibold text-base">Información personal</h2>
+                        <p class="text-surface-500 text-sm mt-0.5">Usa una dirección permanente donde puedas recibir correos.</p>
+                    </div>
+                    <div class="settings-section-right">
+                        <!-- Avatar area -->
+                        <div class="flex items-center gap-5 mb-8">
+                            <div class="w-16 h-16 bg-gradient-to-br from-furent-400 to-furent-600 rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                                <span class="text-white font-bold text-xl" th:text="${currentUser != null ? #strings.substring(currentUser.nombre, 0, 1) + #strings.substring(currentUser.apellido, 0, 1) : 'U'}">U</span>
+                            </div>
+                            <div>
+                                <h3 class="text-surface-900 font-semibold text-sm" th:text="${currentUser != null ? currentUser.nombreCompleto : 'Usuario'}">Usuario</h3>
+                                <p class="text-surface-500 text-xs mt-0.5" th:text="${currentUser != null ? currentUser.email : ''}">email</p>
+                                <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-furent-50 text-furent-600 border border-furent-100"
+                                      th:text="${currentUser != null ? (currentUser.role == 'ADMIN' ? 'Administrador' : 'Cliente') : ''}">Rol</span>
+                            </div>
+                        </div>
+
+                        <!-- Profile form -->
+                        <form th:action="@{/configuracion/perfil}" method="post">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                                <div>
+                                    <label class="settings-label">Nombre</label>
+                                    <input type="text" name="nombre" th:value="${currentUser != null ? currentUser.nombre : ''}" required class="settings-input">
+                                </div>
+                                <div>
+                                    <label class="settings-label">Apellido</label>
+                                    <input type="text" name="apellido" th:value="${currentUser != null ? currentUser.apellido : ''}" required class="settings-input">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="settings-label">Correo electrónico</label>
+                                    <input type="email" th:value="${currentUser != null ? currentUser.email : ''}" disabled class="settings-input !bg-surface-100 !text-surface-400 cursor-not-allowed">
+                                    <p class="text-xs text-surface-400 mt-1.5">El email no se puede cambiar por seguridad.</p>
+                                </div>
+                                
+                            </div>
+                            <div class="mt-8 flex justify-end">
+                                <button type="submit" class="settings-btn-primary">
+                                    Guardar cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =============================== -->
+            <!-- PERSONAL TAB -->
+            <!-- =============================== -->
+            <div data-settings-panel="personal" class="hidden">
+                <!-- Success messages -->
+                <div th:if="${successPersonal}" class="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span th:text="${successPersonal}"></span>
+                </div>
+
+                <!-- Personal Advanced Information -->
+                <div class="settings-section">
+                    <div class="settings-section-left">
+                        <h2 class="text-surface-900 font-semibold text-base">Detalles Personales</h2>
+                        <p class="text-surface-500 text-sm mt-0.5">Completa este perfil para facilitar el proceso de alquileres.</p>
+                    </div>
+                    <div class="settings-section-right">
+                        <form th:action="@{/configuracion/personal}" method="post">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                                
+                                <!-- Document Type (AlpineJS Dropdown) -->
+                                <div>
+                                    <label class="settings-label">Tipo de Documento</label>
+                                    <div th:attr="x-data='{ open: false, selected: \'' + (${currentUser != null && currentUser.tipoDocumento != null ? currentUser.tipoDocumento : ''}) + '\' }'" class="relative">
+                                        <!-- Keep actual value hidden -->
+                                        <input type="hidden" name="tipoDocumento" x-model="selected">
+                                        <button @click="open = !open" type="button" @click.outside="open = false"
+                                                class="settings-input text-left flex justify-between items-center bg-white h-[42px] cursor-pointer"
+                                                :class="{ 'text-surface-500': selected === '', 'ring-1 ring-furent-500 border-furent-500': open }">
+                                            <div class="flex items-center gap-2" x-show="selected === ''">
+                                                <span>Seleccionar...</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 truncate text-surface-900 w-full" x-show="selected !== ''">
+                                                <svg x-show="selected === 'CC'" class="w-4 h-4 text-furent-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                                                <svg x-show="selected === 'CE'" class="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                <svg x-show="selected === 'NIT'" class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                                <svg x-show="selected === 'PASSPORT'" class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                                <span x-text="selected === 'CC' ? 'Cédula de Ciudadanía' : selected === 'CE' ? 'Cédula de Extranjería' : selected === 'NIT' ? 'NIT / RUT' : selected === 'PASSPORT' ? 'Pasaporte' : ''"></span>
+                                            </div>
+                                            <svg class="h-4 w-4 text-surface-400 transition-transform" :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </button>
+                                        
+                                        <!-- Dropdown items -->
+                                        <div x-show="open" x-transition.opacity.duration.150ms class="absolute z-10 mt-1 w-full bg-white shadow-lg border border-surface-200 rounded-xl py-1 text-base overflow-auto sm:text-sm" style="display: none;">
+                                            <div @click="selected = ''; open = false" class="cursor-pointer px-4 py-2.5 text-surface-600 hover:bg-surface-50 hover:text-surface-900 transition-colors">Seleccionar...</div>
+                                            <div @click="selected = 'CC'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'CC', 'text-surface-600': selected !== 'CC'}">
+                                                <svg class="w-4 h-4 text-furent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                                                Cédula de Ciudadanía
+                                            </div>
+                                            <div @click="selected = 'CE'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'CE', 'text-surface-600': selected !== 'CE'}">
+                                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                Cédula de Extranjería
+                                            </div>
+                                            <div @click="selected = 'NIT'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'NIT', 'text-surface-600': selected !== 'NIT'}">
+                                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                                NIT / RUT
+                                            </div>
+                                            <div @click="selected = 'PASSPORT'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'PASSPORT', 'text-surface-600': selected !== 'PASSPORT'}">
+                                                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                                                Pasaporte
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="settings-label">Número de Identificación</label>
+                                    <input type="text" name="documentoIdentidad" th:value="${currentUser != null ? currentUser.documentoIdentidad : ''}" class="settings-input">
+                                </div>
+                                
+                                <div>
+                                    <label class="settings-label">Fecha de Nacimiento</label>
+                                    <input type="date" name="fechaNacimiento" th:value="${currentUser != null && currentUser.fechaNacimiento != null ? currentUser.fechaNacimiento : ''}" class="settings-input text-surface-500">
+                                </div>
+                                <div>
+                                    <label class="settings-label">Teléfono / Celular</label>
+                                    <input type="tel" name="telefono" th:value="${currentUser != null ? currentUser.telefono : ''}" class="settings-input" placeholder="+57 300 000 0000">
+                                </div>
+                                
+                                <!-- Gender (AlpineJS Dropdown) -->
+                                <div>
+                                    <label class="settings-label">Género</label>
+                                    <div th:attr="x-data='{ open: false, selected: \'' + (${currentUser != null && currentUser.genero != null ? currentUser.genero : ''}) + '\' }'" class="relative">
+                                        <input type="hidden" name="genero" x-model="selected">
+                                        <button @click="open = !open" type="button" @click.outside="open = false"
+                                                class="settings-input text-left flex justify-between items-center bg-white h-[42px] cursor-pointer"
+                                                :class="{ 'text-surface-500': selected === '', 'ring-1 ring-furent-500 border-furent-500': open }">
+                                            <div class="flex items-center gap-2" x-show="selected === ''">
+                                                <span>Prefiero no decirlo</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 truncate text-surface-900 w-full" x-show="selected !== ''">
+                                                <svg x-show="selected === 'MASCULINO'" class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                                <svg x-show="selected === 'FEMENINO'" class="w-4 h-4 text-pink-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                                                <svg x-show="selected === 'OTRO'" class="w-4 h-4 text-yellow-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                                                <span x-text="selected === 'MASCULINO' ? 'Masculino' : selected === 'FEMENINO' ? 'Femenino' : selected === 'OTRO' ? 'Otro' : ''"></span>
+                                            </div>
+                                            <svg class="h-4 w-4 text-surface-400 transition-transform" :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </button>
+                                        
+                                        <!-- Dropdown items -->
+                                        <div x-show="open" x-transition.opacity.duration.150ms class="absolute z-10 mt-1 w-full bg-white shadow-lg border border-surface-200 rounded-xl py-1 text-base overflow-auto sm:text-sm" style="display: none;">
+                                            <div @click="selected = ''; open = false" class="cursor-pointer px-4 py-2.5 text-surface-600 hover:bg-surface-50 hover:text-surface-900 transition-colors">Prefiero no decirlo</div>
+                                            <div @click="selected = 'MASCULINO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'MASCULINO', 'text-surface-600': selected !== 'MASCULINO'}">
+                                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                                Masculino
+                                            </div>
+                                            <div @click="selected = 'FEMENINO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'FEMENINO', 'text-surface-600': selected !== 'FEMENINO'}">
+                                                <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+                                                Femenino
+                                            </div>
+                                            <div @click="selected = 'OTRO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'OTRO', 'text-surface-600': selected !== 'OTRO'}">
+                                                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                                                Otro
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Marital Status (AlpineJS) -->
+                                <div>
+                                    <label class="settings-label">Estado Civil</label>
+                                    <div th:attr="x-data='{ open: false, selected: \'' + (${currentUser != null && currentUser.estadoCivil != null ? currentUser.estadoCivil : ''}) + '\' }'" class="relative">
+                                        <input type="hidden" name="estadoCivil" x-model="selected">
+                                        <button @click="open = !open" type="button" @click.outside="open = false"
+                                                class="settings-input text-left flex justify-between items-center bg-white h-[42px] cursor-pointer"
+                                                :class="{ 'text-surface-500': selected === '', 'ring-1 ring-furent-500 border-furent-500': open }">
+                                            <div class="flex items-center gap-2" x-show="selected === ''">
+                                                <span>Seleccionar...</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 truncate text-surface-900 w-full" x-show="selected !== ''">
+                                                <svg x-show="selected === 'SOLTERO'" class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+                                                <svg x-show="selected === 'CASADO'" class="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                <svg x-show="selected === 'UNION_LIBRE'" class="w-4 h-4 text-sky-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                                <svg x-show="selected === 'DIVORCIADO'" class="w-4 h-4 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <svg x-show="selected === 'VIUDO'" class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                                <span x-text="selected === 'SOLTERO' ? 'Soltero/a' : selected === 'CASADO' ? 'Casado/a' : selected === 'UNION_LIBRE' ? 'Unión Libre' : selected === 'DIVORCIADO' ? 'Divorciado/a' : selected === 'VIUDO' ? 'Viudo/a' : ''"></span>
+                                            </div>
+                                            <svg class="h-4 w-4 text-surface-400 transition-transform" :class="{'rotate-180': open}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </button>
+                                        
+                                        <!-- Dropdown items -->
+                                        <div x-show="open" x-transition.opacity.duration.150ms class="absolute z-10 mt-1 w-full bg-white shadow-lg border border-surface-200 rounded-xl py-1 text-base overflow-auto sm:text-sm" style="display: none;">
+                                            <div @click="selected = ''; open = false" class="cursor-pointer px-4 py-2.5 text-surface-600 hover:bg-surface-50 hover:text-surface-900 transition-colors">Seleccionar...</div>
+                                            <div @click="selected = 'SOLTERO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'SOLTERO', 'text-surface-600': selected !== 'SOLTERO'}">
+                                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+                                                Soltero/a
+                                            </div>
+                                            <div @click="selected = 'CASADO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'CASADO', 'text-surface-600': selected !== 'CASADO'}">
+                                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                Casado/a
+                                            </div>
+                                            <div @click="selected = 'UNION_LIBRE'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'UNION_LIBRE', 'text-surface-600': selected !== 'UNION_LIBRE'}">
+                                                <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                                Unión Libre
+                                            </div>
+                                            <div @click="selected = 'DIVORCIADO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'DIVORCIADO', 'text-surface-600': selected !== 'DIVORCIADO'}">
+                                                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                Divorciado/a
+                                            </div>
+                                            <div @click="selected = 'VIUDO'; open = false" class="cursor-pointer px-4 py-2.5 flex items-center gap-2 hover:bg-surface-50 hover:text-surface-900 transition-colors" :class="{'bg-furent-50 text-furent-700': selected === 'VIUDO', 'text-surface-600': selected !== 'VIUDO'}">
+                                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                                Viudo/a
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="sm:col-span-2 border-t border-surface-200 mt-2 mb-1"></div>
+                                
+                                <!-- Corporate Info -->
+                                <div>
+                                    <label class="settings-label">Empresa / Negocio</label>
+                                    <input type="text" name="empresa" th:value="${currentUser != null ? currentUser.empresa : ''}" class="settings-input" placeholder="Nombre de la empresa (opcional)">
+                                </div>
+                                <div>
+                                    <label class="settings-label">Cargo</label>
+                                    <input type="text" name="cargo" th:value="${currentUser != null ? currentUser.cargo : ''}" class="settings-input" placeholder="Tu rol en la empresa">
+                                </div>
+                            </div>
+                            <div class="mt-8 flex justify-end">
+                                <button type="submit" class="settings-btn-primary">
+                                    Guardar cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Saved Addresses Section moved HERE -->
+                <div class="settings-section">
+                    <div class="settings-section-left">
+                        <h2 class="text-surface-900 font-semibold text-base">Mis direcciones</h2>
+                        <p class="text-surface-500 text-sm mt-0.5">Guarda múltiples direcciones para agilizar tus reservas de mobiliarios.</p>
+                    </div>
+                    <div class="settings-section-right">
+                        
+                        <!-- List of user's addresses -->
+                        <div th:if="${currentUser != null and currentUser.direcciones != null and not #lists.isEmpty(currentUser.direcciones)}" class="space-y-4 mb-6">
+                            <div th:each="addr : ${currentUser.direcciones}" class="flex items-start justify-between p-4 border rounded-xl bg-surface-50 transition-colors"
+                                 th:classappend="${addr.isPredeterminada() ? 'border-furent-500 ring-1 ring-furent-500' : 'border-surface-200 hover:border-surface-300'}">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-bold text-surface-900 text-sm" th:text="${addr.alias}">Casa</span>
+                                        <span th:if="${addr.isPredeterminada()}" class="bg-furent-100 text-furent-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Predeterminada</span>
+                                    </div>
+                                    <p class="text-surface-600 text-sm leading-relaxed" th:text="${addr.direccion}">Calle Falsa 123</p>
+                                    <p class="text-surface-500 text-xs mt-1" th:text="|${addr.ciudad != null ? addr.ciudad : ''}, ${addr.estadoProvincia != null ? addr.estadoProvincia : ''} - ${addr.pais != null ? addr.pais : ''}|">Bogotá, Cundinamarca - Colombia</p>
+                                    <p th:if="${addr.codigoPostal != null and addr.codigoPostal != ''}" class="text-surface-400 text-xs mt-0.5" th:text="|CP: ${addr.codigoPostal}|">CP: 110111</p>
+                                </div>
+                                <!-- Action to Delete -->
+                                <form th:action="@{/configuracion/direccion/eliminar/{id}(id=${addr.id})}" method="post">
+                                    <button type="submit" class="p-2 text-surface-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors tooltip-trigger" aria-label="Eliminar dirección">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Add new address form area -->
+                        <div x-data="{ addMode: false }" class="mt-4">
+                            <button x-show="!addMode" @click="addMode = true" type="button" class="w-full py-3 border-2 border-dashed border-surface-300 hover:border-furent-500 text-surface-500 hover:text-furent-600 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                Añadir nueva dirección
+                            </button>
+                            
+                            <form x-show="addMode" x-transition.opacity name="newAddressForm" th:action="@{/configuracion/direccion/guardar}" method="post" class="bg-surface-50 p-5 rounded-2xl border border-surface-200 shadow-sm relative overflow-hidden" style="display: none;">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-furent-400 to-furent-600"></div>
+                                <h3 class="text-surface-900 font-bold mb-4">Detalles de la dirección</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="sm:col-span-2">
+                                        <label class="settings-label">Alias (Ej: Casa, Trabajo, Bodega 1)</label>
+                                        <input type="text" name="alias" required placeholder="Ej: Trabajo" class="settings-input">
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="settings-label">Dirección completa</label>
+                                        <input type="text" name="direccion" required placeholder="Calle 123 # 45 - 67, Apto 8" class="settings-input">
+                                    </div>
+                                    <div>
+                                        <label class="settings-label">Ciudad</label>
+                                        <input type="text" name="ciudad" required placeholder="Ej: Bogotá" class="settings-input">
+                                    </div>
+                                    <div>
+                                        <label class="settings-label">Estado / Provincia</label>
+                                        <input type="text" name="estadoProvincia" required placeholder="Ej: Cundinamarca" class="settings-input">
+                                    </div>
+                                    <div>
+                                        <label class="settings-label">País</label>
+                                        <input type="text" name="pais" required value="Colombia" class="settings-input">
+                                    </div>
+                                    <div>
+                                        <label class="settings-label">Código Postal (Opcional)</label>
+                                        <input type="text" name="codigoPostal" placeholder="Ej: 110111" class="settings-input">
+                                    </div>
+                                    <div class="sm:col-span-2 mt-2">
+                                        <label class="flex items-center gap-3 cursor-pointer">
+                                            <input type="checkbox" name="isPredeterminada" value="true" class="w-4 h-4 text-furent-600 rounded border-surface-300 focus:ring-furent-500">
+                                            <span class="text-sm text-surface-700 font-medium">Establecer como dirección de entrega principal</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <button type="button" @click="addMode = false" class="px-4 py-2 text-surface-500 hover:bg-surface-200 bg-surface-100 rounded-lg text-sm font-semibold transition-colors">Cancelar</button>
+                                    <button type="submit" class="settings-btn-primary !py-2">Guardar dirección</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =============================== -->
+            <!-- PREFERENCES TAB -->
+            <!-- =============================== -->
+            <div data-settings-panel="preferences" class="hidden">
+                <form th:action="@{/configuracion/preferencias}" method="post">
+
+                    <!-- Language & Currency -->
+                    <div class="settings-section">
+                        <div class="settings-section-left">
+                            <h2 class="text-surface-900 font-semibold text-base">Idioma y moneda</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Selecciona tus preferencias regionales.</p>
+                        </div>
+                        <div class="settings-section-right">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                                <div>
+                                    <label class="settings-label">Idioma de la página</label>
+                                    <select name="idioma" class="settings-input cursor-pointer">
+                                        <option value="es" th:selected="${currentUser != null && currentUser.idioma == 'es'}">🇪🇸 Español</option>
+                                        <option value="en" th:selected="${currentUser != null && currentUser.idioma == 'en'}">🇺🇸 English</option>
+                                        <option value="pt" th:selected="${currentUser != null && currentUser.idioma == 'pt'}">🇧🇷 Português</option>
+                                        <option value="fr" th:selected="${currentUser != null && currentUser.idioma == 'fr'}">🇫🇷 Français</option>
+                                        <option value="de" th:selected="${currentUser != null && currentUser.idioma == 'de'}">🇩🇪 Deutsch</option>
+                                        <option value="it" th:selected="${currentUser != null && currentUser.idioma == 'it'}">🇮🇹 Italiano</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="settings-label">Moneda</label>
+                                    <select name="moneda" class="settings-input cursor-pointer">
+                                        <option value="COP" th:selected="${currentUser != null && currentUser.moneda == 'COP'}">🇨🇴 COP — Peso Colombiano</option>
+                                        <option value="USD" th:selected="${currentUser != null && currentUser.moneda == 'USD'}">🇺🇸 USD — Dólar Estadounidense</option>
+                                        <option value="EUR" th:selected="${currentUser != null && currentUser.moneda == 'EUR'}">🇪🇺 EUR — Euro</option>
+                                        <option value="MXN" th:selected="${currentUser != null && currentUser.moneda == 'MXN'}">🇲🇽 MXN — Peso Mexicano</option>
+                                        <option value="ARS" th:selected="${currentUser != null && currentUser.moneda == 'ARS'}">🇦🇷 ARS — Peso Argentino</option>
+                                        <option value="BRL" th:selected="${currentUser != null && currentUser.moneda == 'BRL'}">🇧🇷 BRL — Real Brasileño</option>
+                                        <option value="CLP" th:selected="${currentUser != null && currentUser.moneda == 'CLP'}">🇨🇱 CLP — Peso Chileno</option>
+                                        <option value="PEN" th:selected="${currentUser != null && currentUser.moneda == 'PEN'}">🇵🇪 PEN — Sol Peruano</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance -->
+                    <div class="settings-section">
+                        <div class="settings-section-left">
+                            <h2 class="text-surface-900 font-semibold text-base">Apariencia visual</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Personaliza los colores de Furent en todos tus dispositivos.</p>
+                        </div>
+                        <div class="settings-section-right">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Light -->
+                                <label class="relative flex cursor-pointer">
+                                    <input type="radio" name="apariencia" value="light" class="peer sr-only" th:checked="${currentUser == null || currentUser.apariencia == 'light'}">
+                                    <div class="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-surface-200 bg-surface-50 text-surface-600 peer-checked:border-furent-500 peer-checked:bg-furent-50/50 peer-checked:text-surface-900 hover:bg-surface-100 transition-all">
+                                        <div class="p-2.5 bg-white rounded-lg shadow-sm">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m0 13.5V21m8.966-8.966h-2.25M4.144 12h-2.25m15.81-8.19l-1.59 1.59m-11.354 11.354l-1.59 1.59m15.81 0l-1.59-1.59m-11.354-11.354l-1.59-1.59M12 7.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9z"/></svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-sm text-surface-900">Modo Claro</p>
+                                            <p class="text-xs text-surface-500 mt-0.5">Estilo brillante y limpio</p>
+                                        </div>
+                                    </div>
+                                    <div class="absolute top-1/2 -translate-y-1/2 right-4 w-4 h-4 border-2 border-surface-300 rounded-full flex items-center justify-center peer-checked:border-furent-500 transition-all">
+                                        <div class="w-2 h-2 bg-furent-500 rounded-full opacity-0 peer-checked:opacity-100 transition-all"></div>
+                                    </div>
+                                </label>
+                                <!-- Dark -->
+                                <label class="relative flex cursor-pointer">
+                                    <input type="radio" name="apariencia" value="dark" class="peer sr-only" th:checked="${currentUser != null && currentUser.apariencia == 'dark'}">
+                                    <div class="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-surface-200 bg-surface-50 text-surface-600 peer-checked:border-furent-500 peer-checked:bg-furent-50/50 peer-checked:text-surface-900 hover:bg-surface-100 transition-all">
+                                        <div class="p-2.5 bg-surface-800 rounded-lg shadow-sm border border-surface-600">
+                                            <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-sm text-surface-900">Modo Oscuro</p>
+                                            <p class="text-xs text-surface-500 mt-0.5">Ideal para poca luz</p>
+                                        </div>
+                                    </div>
+                                    <div class="absolute top-1/2 -translate-y-1/2 right-4 w-4 h-4 border-2 border-surface-300 rounded-full flex items-center justify-center peer-checked:border-furent-500 transition-all">
+                                        <div class="w-2 h-2 bg-furent-500 rounded-full opacity-0 peer-checked:opacity-100 transition-all"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="settings-section">
+                        <div class="settings-section-left">
+                            <h2 class="text-surface-900 font-semibold text-base">Notificaciones</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Gestiona tus preferencias de notificación.</p>
+                        </div>
+                        <div class="settings-section-right">
+                            <label class="flex items-center justify-between p-4 bg-surface-50 rounded-xl border border-surface-100 cursor-pointer hover:bg-surface-100/50 transition-colors">
+                                <div>
+                                    <p class="text-sm font-medium text-surface-900">Notificaciones por email</p>
+                                    <p class="text-xs text-surface-500 mt-0.5">Recibe actualizaciones de tus reservas</p>
+                                </div>
+                                <div class="relative">
+                                    <input type="checkbox" name="notificacionesEmail" th:checked="${currentUser == null || currentUser.notificacionesEmail}" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-furent-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-furent-500"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-4 pb-2">
+                        <button type="submit" class="settings-btn-primary">
+                            Guardar preferencias
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- =============================== -->
+            <!-- SECURITY TAB -->
+            <!-- =============================== -->
+            <div data-settings-panel="security" class="hidden">
+                <div>
+
+                    <!-- Messages security-specific -->
+                    <div th:if="${passwordError}" id="passwordErrorMsg" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008z"/></svg>
+                        <span th:text="${passwordError}"></span>
+                    </div>
+                    <div th:if="${sessionError}" id="sessionErrorMsg" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008z"/></svg>
+                        <span th:text="${sessionError}"></span>
+                    </div>
+                    <div th:if="${deleteError}" id="deleteErrorMsg" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008z"/></svg>
+                        <span th:text="${deleteError}"></span>
+                    </div>
+                    <div th:if="${totpDisableError}" id="totpDisableErrorMsg" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008z"/></svg>
+                        <span th:text="${totpDisableError}"></span>
+                    </div>
+
+                    <!-- Change Password -->
+                    <div class="settings-section">
+                        <div class="settings-section-left">
+                            <h2 class="text-surface-900 font-semibold text-base">Cambiar contraseña</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Actualiza la contraseña asociada con tu cuenta.</p>
+                        </div>
+                        <div class="settings-section-right">
+                            <form th:action="@{/configuracion/password}" method="post" id="changePassForm" class="space-y-4" novalidate>
+                                <div>
+                                    <label class="settings-label">Contraseña actual</label>
+                                    <input type="password" name="currentPassword" id="currentPassword" placeholder="••••••••" required class="settings-input">
+                                </div>
+                                <div>
+                                    <label class="settings-label">Nueva contraseña</label>
+                                    <input type="password" name="newPassword" id="newPassInput" placeholder="Mínimo 8 caracteres" required class="settings-input">
+                                    <!-- Strength bars -->
+                                    <div id="settingsPassStrength" class="mt-2 hidden">
+                                        <div class="flex gap-1 mb-1">
+                                            <div id="sb1" class="h-1 flex-1 rounded-full bg-surface-200 transition-colors duration-300"></div>
+                                            <div id="sb2" class="h-1 flex-1 rounded-full bg-surface-200 transition-colors duration-300"></div>
+                                            <div id="sb3" class="h-1 flex-1 rounded-full bg-surface-200 transition-colors duration-300"></div>
+                                            <div id="sb4" class="h-1 flex-1 rounded-full bg-surface-200 transition-colors duration-300"></div>
+                                        </div>
+                                        <p id="settingsPassLabel" class="text-[11px] font-semibold"></p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="settings-label">Confirmar nueva contraseña</label>
+                                    <input type="password" name="confirmPassword" id="confirmPassInput" placeholder="Repite la nueva contraseña" required class="settings-input">
+                                    <p id="settingsMatchErr" class="text-xs text-red-600 font-medium mt-1 hidden">Las contraseñas no coinciden</p>
+                                </div>
+                                <div class="pt-1">
+                                    <button type="submit" class="settings-btn-primary">Guardar contraseña</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 2FA Google Authenticator -->
+                    <div class="settings-section">
+                        <div class="settings-section-left">
+                            <h2 class="text-surface-900 font-semibold text-base">Autenticación en dos pasos (2FA)</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Añade una capa extra de seguridad usando Google Authenticator.</p>
+                        </div>
+                        <div class="settings-section-right">
+
+                            <!-- 2FA ENABLED state -->
+                            <div th:if="${currentUser != null and currentUser.totpEnabled}" class="space-y-4">
+                                <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                    <div class="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-green-800">2FA Activado</p>
+                                        <p class="text-xs text-green-600">Tu cuenta está protegida con Google Authenticator</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-surface-500">Para desactivar, ingresa el código actual de tu app:</p>
+                                <form th:action="@{/configuracion/2fa/disable}" method="post" class="flex gap-3">
+                                    <input type="text" name="code" placeholder="000000" maxlength="6"
+                                           class="settings-input font-mono text-center tracking-widest text-lg !py-2 flex-1">
+                                    <button type="submit" class="settings-btn-danger !px-4 whitespace-nowrap">Desactivar 2FA</button>
+                                </form>
+                            </div>
+
+                            <!-- 2FA DISABLED state -->
+                            <div th:if="${currentUser == null or !currentUser.totpEnabled}" class="space-y-4">
+                                <div class="flex items-center gap-3 p-4 bg-surface-50 border border-surface-200 rounded-xl">
+                                    <div class="w-9 h-9 bg-surface-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-surface-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-surface-700">2FA Desactivado</p>
+                                        <p class="text-xs text-surface-500">Tu cuenta no tiene protección adicional</p>
+                                    </div>
+                                </div>
+                                <a th:href="@{/configuracion/2fa/setup}"
+                                   class="settings-btn-primary inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>
+                                    Activar Google Authenticator
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Log out other sessions -->
+                    <div class="settings-section">
+                        <div class="settings-section-left">
+                            <h2 class="text-surface-900 font-semibold text-base">Cerrar otras sesiones</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Cierra sesión en todos los demás dispositivos donde hayas iniciado sesión.</p>
+                        </div>
+                        <div class="settings-section-right">
+                            <form th:action="@{/configuracion/cerrar-sesiones}" method="post" class="space-y-4">
+                                <div>
+                                    <label class="settings-label">Confirma tu contraseña</label>
+                                    <input type="password" name="password" placeholder="••••••••" required class="settings-input">
+                                </div>
+                                <button type="submit" class="settings-btn-primary">
+                                    Cerrar otras sesiones
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Delete Account (Danger Zone) -->
+                    <div class="settings-section !border-b-0">
+                        <div class="settings-section-left">
+                            <h2 class="text-red-700 font-semibold text-base">Eliminar cuenta</h2>
+                            <p class="text-surface-500 text-sm mt-0.5">Esta acción es permanente e irreversible. Toda tu información será eliminada.</p>
+                        </div>
+                        <div class="settings-section-right">
+                            <!-- Trigger button -->
+                            <button command="show-modal" commandfor="deleteAccountDialog"
+                                    class="settings-btn-danger">
+                                Eliminar mi cuenta
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ====== DELETE ACCOUNT DIALOG (TailwindPlus el-dialog) ====== -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
+    <el-dialog>
+        <dialog id="deleteAccountDialog"
+                aria-labelledby="dialog-delete-title"
+                class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent">
+
+            <!-- Backdrop -->
+            <el-dialog-backdrop
+                class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity
+                       data-closed:opacity-0
+                       data-enter:duration-300 data-enter:ease-out
+                       data-leave:duration-200 data-leave:ease-in">
+            </el-dialog-backdrop>
+
+            <!-- Panel -->
+            <div tabindex="0"
+                 class="flex min-h-full items-center justify-center p-4 text-center">
+                <el-dialog-panel
+                    class="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-8 text-left shadow-xl
+                           transition-all
+                           data-closed:opacity-0 data-closed:scale-95
+                           data-enter:duration-300 data-enter:ease-out
+                           data-leave:duration-200 data-leave:ease-in">
+
+                    <!-- Icon -->
+                    <div class="flex items-center justify-center w-14 h-14 rounded-full bg-red-50 border-2 border-red-100 mx-auto mb-5">
+                        <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 id="dialog-delete-title"
+                        class="text-center text-xl font-bold text-surface-900 mb-2">
+                        ¿Eliminar tu cuenta?
+                    </h3>
+                    <p class="text-center text-sm text-surface-500 mb-6 leading-relaxed">
+                        Esta acción es <strong class="text-surface-700">permanente e irreversible</strong>.
+                        Toda tu información, reservas e historial serán eliminados.
+                    </p>
+
+                    <!-- Form -->
+                    <form id="deleteAccountForm" th:action="@{/configuracion/eliminar-cuenta}" method="post" class="space-y-4" novalidate>
+                        <div>
+                            <label class="settings-label">Ingresa tu contraseña para confirmar</label>
+                            <input type="password" name="password" id="deleteDialogPassword"
+                                   placeholder="••••••••"
+                                   class="settings-input">
+                            <p id="deletePassError" class="hidden text-xs text-red-600 font-medium mt-1.5">
+                                Por favor ingresa tu contraseña para continuar.
+                            </p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-3 pt-1">
+                            <button type="button"
+                                    command="close"
+                                    commandfor="deleteAccountDialog"
+                                    class="flex-1 py-2.5 rounded-xl border border-surface-200 bg-surface-50 text-sm font-semibold text-surface-600 hover:bg-surface-100 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="button" onclick="submitDeleteAccount()"
+                                    class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-bold transition-all shadow-sm">
+                                Eliminar cuenta
+                            </button>
+                        </div>
+                    </form>
+
+                </el-dialog-panel>
+            </div>
+        </dialog>
+    </el-dialog>
+
+    <style>
+        /* ============================== */
+        /* SETTINGS PAGE LAYOUT          */
+        /* ============================== */
+
+        /* Section: two-column layout (description left, content right) like reference */
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid #EEEEEE;
+        }
+        .settings-section:first-child {
+            padding-top: 0;
+        }
+
+        .settings-section-left {
+            flex-shrink: 0;
+        }
+
+        .settings-section-right {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* At larger screens, side-by-side layout like the reference */
+        @media (min-width: 768px) {
+            .settings-section {
+                flex-direction: row;
+                gap: 3rem;
+            }
+            .settings-section-left {
+                width: 280px;
+                flex-shrink: 0;
+            }
+        }
+
+        /* Labels */
+        .settings-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #212121;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Inputs */
+        .settings-input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            background-color: #FAFAFA;
+            border: 1px solid #EEEEEE;
+            border-radius: 0.625rem;
+            font-size: 0.875rem;
+            color: #424242;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .settings-input:focus {
+            border-color: rgba(224, 122, 58, 0.5);
+            box-shadow: 0 0 0 3px rgba(224, 122, 58, 0.1);
+            background-color: #fff;
+        }
+        .settings-input::placeholder {
+            color: #BDBDBD;
+        }
+
+        /* Primary button */
+        .settings-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, #E07A3A, #C2630F);
+            color: white;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            border-radius: 0.625rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(224, 122, 58, 0.2);
+        }
+        .settings-btn-primary:hover {
+            background: linear-gradient(135deg, #C2630F, #9A4F0E);
+            box-shadow: 0 6px 20px rgba(224, 122, 58, 0.3);
+            transform: translateY(-1px);
+        }
+        .settings-btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Danger button */
+        .settings-btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            border-radius: 0.625rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+        }
+        .settings-btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Tab active styles */
+        .settings-tab-btn.active {
+            color: #E07A3A !important;
+            border-bottom-color: #E07A3A !important;
+        }
+
+        /* Smooth entrance for tab panels */
+        @keyframes settingsFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        [data-settings-panel]:not(.hidden) {
+            animation: settingsFadeIn 0.35s ease-out forwards;
+        }
+    </style>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('darkModeToggle');
+            if (toggle && document.documentElement.classList.contains('dark')) {
+                toggle.checked = true;
+            }
+
+            // Tab switching
+            const tabBtns = document.querySelectorAll('[data-settings-tab]');
+            const tabPanels = document.querySelectorAll('[data-settings-panel]');
+
+            // Set initial active state
+            tabBtns[0]?.classList.add('active');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.dataset.settingsTab;
+
+                    // Update tabs
+                    tabBtns.forEach(b => {
+                        b.classList.remove('active', 'text-furent-500', 'border-furent-500');
+                        b.classList.add('text-surface-400', 'border-transparent');
+                    });
+                    btn.classList.add('active', 'text-furent-500', 'border-furent-500');
+                    btn.classList.remove('text-surface-400', 'border-transparent');
+
+                    // Update panels
+                    tabPanels.forEach(p => {
+                        p.classList.toggle('hidden', p.dataset.settingsPanel !== target);
+                    });
+                });
+            });
+
+            // Auto-open security tab if there's a security-related message
+            const securityIndicators = ['passwordErrorMsg','sessionErrorMsg','deleteErrorMsg','totpDisableErrorMsg'];
+            const hasSecurityMsg = securityIndicators.some(id => document.getElementById(id));
+            if (hasSecurityMsg) {
+                document.querySelector('[data-settings-tab="security"]')?.click();
+            }
+
+            // Password strength meter
+            const newPassInput = document.getElementById('newPassInput');
+            const confirmPassInput = document.getElementById('confirmPassInput');
+            const strengthBox = document.getElementById('settingsPassStrength');
+            const strengthLabel = document.getElementById('settingsPassLabel');
+            const sBars = [document.getElementById('sb1'),document.getElementById('sb2'),document.getElementById('sb3'),document.getElementById('sb4')];
+            const matchErr = document.getElementById('settingsMatchErr');
+
+            if (newPassInput) {
+                newPassInput.addEventListener('input', function() {
+                    const p = this.value;
+                    if (!p) { strengthBox.classList.add('hidden'); return; }
+                    strengthBox.classList.remove('hidden');
+                    let score = 0;
+                    if (p.length >= 8) score++;
+                    if (/[A-Z]/.test(p)) score++;
+                    if (/[a-z]/.test(p)) score++;
+                    if (/[0-9]/.test(p)) score++;
+                    if (/[^A-Za-z0-9]/.test(p)) score++;
+                    const colors = ['','bg-red-500','bg-amber-500','bg-blue-500','bg-green-500'];
+                    const labels = ['','Muy débil','Débil','Buena','Excelente'];
+                    const textColors = ['','text-red-600','text-amber-600','text-blue-600','text-green-600'];
+                    const lvl = score <= 1 ? 1 : score <= 2 ? 2 : score <= 3 ? 3 : 4;
+                    sBars.forEach((b,i) => { b.className = 'h-1 flex-1 rounded-full transition-colors duration-300 ' + (i < lvl ? colors[lvl] : 'bg-surface-200'); });
+                    strengthLabel.textContent = labels[lvl];
+                    strengthLabel.className = 'text-[11px] font-semibold ' + textColors[lvl];
+                    checkMatch();
+                });
+                confirmPassInput.addEventListener('input', checkMatch);
+            }
+
+            function checkMatch() {
+                if (!confirmPassInput || !newPassInput) return;
+                const mismatch = confirmPassInput.value && newPassInput.value !== confirmPassInput.value;
+                matchErr.classList.toggle('hidden', !mismatch);
+            }
+        });
+
+        function submitDeleteAccount() {
+            const passInput = document.getElementById('deleteDialogPassword');
+            const errMsg = document.getElementById('deletePassError');
+            if (!passInput.value.trim()) {
+                errMsg.classList.remove('hidden');
+                passInput.focus();
+                return;
+            }
+            errMsg.classList.add('hidden');
+            document.getElementById('deleteAccountForm').submit();
+        }
+
+        // Clear password field & error when dialog is closed
+        document.addEventListener('DOMContentLoaded', () => {
+            const dialog = document.getElementById('deleteAccountDialog');
+            if (dialog) {
+                dialog.addEventListener('close', () => {
+                    const passInput = document.getElementById('deleteDialogPassword');
+                    const errMsg   = document.getElementById('deletePassError');
+                    if (passInput) passInput.value = '';
+                    if (errMsg)   errMsg.classList.add('hidden');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/admin-layout :: layout(~{::title}, ~{::main}, 'mobiliarios')}">
+<head>
+    <title>Mobiliarios — Furent Admin</title>
+</head>
+<body>
+    <main>
+        <div class="px-10 py-8 max-w-[90rem] mx-auto relative">
+            
+            <!-- Header section -->
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-surface-900">Catálogo de Mobiliarios</h1>
+                    <p class="text-sm font-medium text-surface-500 mt-1">Gestiona tu inventario, precios y stock disponible.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- View Toggle Switch -->
+                    <div class="inline-flex items-center rounded-xl border border-surface-200 bg-white p-1 shadow-sm">
+                        <button id="compactViewBtn" type="button" onclick="setViewMode('compact')" class="view-toggle-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h15"/></svg>
+                            Compacta
+                        </button>
+                        <button id="expandedViewBtn" type="button" onclick="setViewMode('expanded')" class="view-toggle-btn px-3.5 py-2 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                            Amplia
+                        </button>
+                    </div>
+                    <button onclick="openModal()" class="flex items-center gap-2 px-6 py-3 bg-surface-900 text-white text-sm font-bold rounded-xl hover:bg-black transition-all shadow-sm" aria-label="Añadir nuevo mobiliario">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Añadir Mueble
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div th:if="${success}" id="successAlert" class="mb-6 p-4 glass-panel bg-green-50/80 border-green-200 text-green-800 rounded-2xl text-sm font-semibold flex items-center justify-between shadow-soft animate-[fade-in-down_0.5s_ease-out]">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <span th:text="${success}"></span>
+                </div>
+                <button onclick="document.getElementById('successAlert').style.display='none'" class="text-green-600 hover:text-green-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Error Message -->
+            <div th:if="${error}" id="errorAlert" class="mb-6 p-4 glass-panel bg-red-50/80 border-red-200 text-red-800 rounded-2xl text-sm font-semibold flex items-center justify-between shadow-soft animate-[fade-in-down_0.5s_ease-out]">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <span th:text="${error}"></span>
+                </div>
+                <button onclick="document.getElementById('errorAlert').style.display='none'" class="text-red-600 hover:text-red-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- ADMIN TABS -->
+            <div class="mb-6 border-b border-surface-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button class="admin-tab-btn active w-1/2 md:w-auto py-4 px-1 text-center border-b-2 font-bold text-sm whitespace-nowrap transition-colors border-furent-500 text-furent-600 focus:outline-none flex items-center gap-2 justify-center" data-target="adminProductosSection">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z"/></svg>
+                        Mobiliario Individual
+                        <span class="bg-furent-50 text-furent-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-furent-100" th:text="${#lists.size(productos)}">0</span>
+                    </button>
+                    <button class="admin-tab-btn w-1/2 md:w-auto py-4 px-1 text-center border-b-2 font-medium text-sm whitespace-nowrap transition-colors border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300 focus:outline-none flex items-center gap-2 justify-center" data-target="adminCombosSection">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                        Combos
+                        <span class="bg-furent-50 text-furent-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-furent-100" th:text="${combos != null ? #lists.size(combos) : 0}">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- TAB 1: PRODUCTOS GENERALES -->
+            <div id="adminProductosSection" class="block transition-all duration-300">
+                <!-- Search Bar + Filters -->
+                <div class="flex flex-col md:flex-row items-center gap-3 mb-6">
+                <!-- Search -->
+                <div class="relative w-full md:max-w-md">
+                    <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                    <input type="text" id="searchInput" placeholder="Buscar por nombre, categoría o material..." class="w-full pl-12 pr-4 py-3 bg-white border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 transition-all shadow-sm">
+                </div>
+
+                <!-- Status Filter Dropdown -->
+                <div class="relative" id="mobStatusParent">
+                    <button type="button" onclick="toggleMobStatusFilter()"
+                            class="flex items-center gap-2 pl-4 pr-3 py-3 bg-white border border-surface-200 rounded-xl text-sm font-bold text-surface-700 hover:border-surface-300 transition-all shadow-sm whitespace-nowrap">
+                        <span id="mobStatusLabel" class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-surface-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                            Todos
+                        </span>
+                        <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" id="mobStatusChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div id="mobStatusMenu" class="hidden absolute left-0 mt-2 w-60 bg-white border border-surface-200 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+                        <!-- Todos -->
+                        <button onclick="selectMobStatus('all', '<svg class=\'w-4 h-4 text-surface-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z\'/></svg>Todos')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-surface-700 hover:bg-surface-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                            <span>Todos los estados</span>
+                        </button>
+                        <div class="my-1 border-t border-surface-100"></div>
+                        <!-- Disponible -->
+                        <button onclick="selectMobStatus('available', '<svg class=\'w-4 h-4 text-green-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Disponibles')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-green-700 hover:bg-green-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Disponibles</span>
+                        </button>
+                        <!-- Agotado -->
+                        <button onclick="selectMobStatus('unavailable', '<svg class=\'w-4 h-4 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Agotados')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Agotados</span>
+                        </button>
+                        <!-- Mantenimiento -->
+                        <button onclick="selectMobStatus('maintenance', '<svg class=\'w-4 h-4 text-amber-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z\'/></svg>En Mantenimiento')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+                            <span>En Mantenimiento</span>
+                        </button>
+                        <!-- Fuera de Servicio -->
+                        <button onclick="selectMobStatus('out_of_service', '<svg class=\'w-4 h-4 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636\'/></svg>Fuera de Servicio')"
+                                class="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
+                            <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            <span>Fuera de Servicio</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="mobStatusFilter" value="all">
+                </div>
+
+                <span class="text-sm font-semibold text-surface-500 px-4 whitespace-nowrap ml-auto" id="itemCount"><span th:text="${#lists.size(productos)}">0</span> muebles registrados</span>
+            </div>
+
+            <!-- ═══════════════ COMPACT VIEW (Table) ═══════════════ -->
+            <div id="compactView" class="relative overflow-x-auto bg-white shadow-sm rounded-2xl border border-surface-200">
+                <table class="w-full text-sm text-left text-surface-600" id="productTable">
+                    <thead class="text-sm text-surface-500 bg-surface-50 border-b border-surface-200">
+                        <tr>
+                            <th scope="col" class="px-6 py-4">
+                                <span class="sr-only">Imagen</span>
+                            </th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Producto</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Categoría</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Stock</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Precio</th>
+                            <th scope="col" class="px-6 py-4 font-semibold">Estado</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${productos}" class="product-row bg-white border-b border-surface-100 hover:bg-surface-50/60 transition-colors"
+                            th:data-search="${#strings.toLowerCase(p.nombre + ' ' + p.categoriaNombre + ' ' + p.material + ' ' + p.id)}"
+                            th:data-avail="${p.disponible ? 'available' : 'unavailable'}"
+                            th:data-maint="${p.estadoMantenimiento}">
+                            <td class="p-4">
+                                <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-surface-100 flex items-center justify-center shrink-0">
+                                    <img th:if="${p.imagenUrl != null and !p.imagenUrl.isEmpty()}" th:src="${p.imagenUrl}" th:alt="${p.nombre}" class="w-full h-full object-cover">
+                                    <div th:unless="${p.imagenUrl != null and !p.imagenUrl.isEmpty()}" class="w-full h-full flex items-center justify-center bg-surface-100">
+                                        <svg class="w-7 h-7 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="font-bold text-surface-900" th:text="${p.nombre}">Nombre</p>
+                                <p class="text-xs text-surface-400 mt-0.5" th:text="${p.descripcionCorta != null and !p.descripcionCorta.isEmpty() ? p.descripcionCorta : p.material}">Descripción</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 bg-surface-100 rounded-lg text-xs font-bold text-surface-600" th:text="${p.categoriaNombre}">Categoría</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-sm font-bold text-surface-900" th:text="${p.stock}">0</span>
+                                    <span class="text-xs text-surface-400">und</span>
+                                </div>
+                                <span class="text-[10px] font-medium mt-0.5 block" th:classappend="${p.stock <= p.stockMinimo} ? 'text-red-500' : 'text-surface-400'" th:text="'Mín: ' + ${p.stockMinimo}">Mín: 0</span>
+                            </td>
+                            <td class="px-6 py-4 font-bold text-surface-900" th:text="'$' + ${#numbers.formatDecimal(p.precioPorDia, 1, 'COMMA', 0, 'POINT')}">$60,000</td>
+                            <td class="px-6 py-4">
+                                <!-- En Mantenimiento (prioridad sobre disponible) -->
+                                <span th:if="${p.estadoMantenimiento == 'EN_MANTENIMIENTO'}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">
+                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Mantenimiento
+                                </span>
+                                <!-- Fuera de Servicio -->
+                                <span th:if="${p.estadoMantenimiento == 'FUERA_DE_SERVICIO'}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-lg text-xs font-bold">
+                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>Fuera de Servicio
+                                </span>
+                                <!-- Disponible -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and p.disponible}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-lg text-xs font-bold">
+                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Disponible
+                                </span>
+                                <!-- Agotado -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and !p.disponible}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-bold">
+                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>Agotado
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button th:data-id="${p.id}" th:data-nombre="${p.nombre}" th:data-descripcion="${p.descripcion}" th:data-descripcion-corta="${p.descripcionCorta}" th:data-precio="${p.precioPorDia}" th:data-categoria="${p.categoriaNombre}" th:data-material="${p.material}" th:data-dimensiones="${p.dimensiones}" th:data-color="${p.color}" th:data-min="${p.cantidadMinima}" th:data-max="${p.cantidadMaxima}" th:data-stock="${p.stock}" th:data-stock-min="${p.stockMinimo}" th:data-mantenimiento="${p.estadoMantenimiento}" th:data-notas="${p.notasMantenimiento}"
+                                            onclick="editProduct(this)" class="p-2 text-surface-400 hover:text-furent-600 hover:bg-furent-50 rounded-lg transition-all" title="Editar">
+                                        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.686-10.686z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487"/></svg>
+                                    </button>
+                                    <button th:data-id="${p.id}" data-tipo="Mobiliario" onclick="confirmDelete(this.getAttribute('data-id'), this.getAttribute('data-tipo'))" class="p-2 text-surface-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
+                                        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                    </button>
+                                </div>
+                                <form th:id="'del-' + ${p.id}" th:action="@{/admin/mobiliarios/eliminar/{id}(id=${p.id})}" method="post" class="hidden"></form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ═══════════════ EXPANDED VIEW (Cards Grid) ═══════════════ -->
+            <div id="expandedView" class="hidden">
+                <div id="expandedGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div th:each="p : ${productos}" class="product-card group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-surface-100 transition-all duration-300 flex flex-col relative overflow-hidden"
+                         th:data-search="${#strings.toLowerCase(p.nombre + ' ' + p.categoriaNombre + ' ' + p.material + ' ' + p.id)}"
+                         th:data-avail="${p.disponible ? 'available' : 'unavailable'}"
+                         th:data-maint="${p.estadoMantenimiento}">
+                        
+                        <!-- Card Image -->
+                        <div class="w-full aspect-[4/3] overflow-hidden bg-surface-100 relative">
+                            <img th:if="${p.imagenUrl != null and !p.imagenUrl.isEmpty()}" th:src="${p.imagenUrl}" th:alt="${p.nombre}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <div th:unless="${p.imagenUrl != null and !p.imagenUrl.isEmpty()}" class="w-full h-full flex items-center justify-center bg-surface-100">
+                                <svg class="w-12 h-12 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                            </div>
+                            <!-- Status Badge -->
+                            <div class="absolute top-3 left-3">
+                                <!-- En Mantenimiento (prioridad) -->
+                                <span th:if="${p.estadoMantenimiento == 'EN_MANTENIMIENTO'}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Mantenimiento
+                                </span>
+                                <!-- Fuera de Servicio (prioridad) -->
+                                <span th:if="${p.estadoMantenimiento == 'FUERA_DE_SERVICIO'}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-600/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Fuera de Servicio
+                                </span>
+                                <!-- Disponible -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and p.disponible}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>Disponible
+                                </span>
+                                <!-- Agotado -->
+                                <span th:if="${p.estadoMantenimiento != 'EN_MANTENIMIENTO' and p.estadoMantenimiento != 'FUERA_DE_SERVICIO' and !p.disponible}" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/90 backdrop-blur text-white rounded-full text-[10px] font-bold uppercase shadow-lg">
+                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Agotado
+                                </span>
+                            </div>
+                            <!-- Category Badge top right -->
+                            <div class="absolute top-3 right-3">
+                                <span class="px-2.5 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-bold text-surface-700 shadow-sm" th:text="${p.categoriaNombre}">Cat</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-5 flex-1 flex flex-col">
+                            <h3 class="font-extrabold text-base text-surface-900 line-clamp-1 mb-1" th:text="${p.nombre}">Nombre</h3>
+                            <p class="text-xs text-surface-400 mb-3 line-clamp-2" th:text="${p.descripcionCorta != null and !p.descripcionCorta.isEmpty() ? p.descripcionCorta : p.material + ' · ' + p.color}">Desc</p>
+                            
+                            <!-- Stats Row -->
+                            <div class="grid grid-cols-3 gap-2 mb-4">
+                                <div class="bg-surface-50 rounded-lg p-2 text-center">
+                                    <p class="text-[9px] font-bold text-surface-400 uppercase">Stock</p>
+                                    <p class="text-sm font-black text-surface-900" th:text="${p.stock}">0</p>
+                                </div>
+                                <div class="bg-surface-50 rounded-lg p-2 text-center">
+                                    <p class="text-[9px] font-bold text-surface-400 uppercase">Precio</p>
+                                    <p class="text-sm font-black text-surface-900" th:text="'$' + ${#numbers.formatDecimal(p.precioPorDia, 1, 'COMMA', 0, 'POINT')}">$0</p>
+                                </div>
+                                <div class="bg-surface-50 rounded-lg p-2 text-center">
+                                    <p class="text-[9px] font-bold text-surface-400 uppercase">Material</p>
+                                    <p class="text-xs font-bold text-surface-700 truncate" th:text="${p.material}">—</p>
+                                </div>
+                            </div>
+
+                            <!-- Inventory bar -->
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between text-[10px] font-bold mb-1">
+                                    <span class="text-surface-400 uppercase">Inventario</span>
+                                    <span th:classappend="${p.stock <= p.stockMinimo} ? 'text-red-500' : 'text-surface-600'" th:text="${p.stock} + ' und'">0 und</span>
+                                </div>
+                                <div class="w-full bg-surface-200 rounded-full h-1.5 overflow-hidden">
+                                    <div th:classappend="${p.stock <= p.stockMinimo} ? 'bg-red-500' : 'bg-furent-500'" class="h-full rounded-full transition-all duration-1000" th:style="'width: ' + ${p.stock > 100 ? 100 : (p.stock * 100 / (p.stock + 20))} + '%'"></div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons - always visible -->
+                            <div class="flex items-center gap-2 mt-auto pt-3 border-t border-surface-100">
+                                <button th:data-id="${p.id}" th:data-nombre="${p.nombre}" th:data-descripcion="${p.descripcion}" th:data-descripcion-corta="${p.descripcionCorta}" th:data-precio="${p.precioPorDia}" th:data-categoria="${p.categoriaNombre}" th:data-material="${p.material}" th:data-dimensiones="${p.dimensiones}" th:data-color="${p.color}" th:data-min="${p.cantidadMinima}" th:data-max="${p.cantidadMaxima}" th:data-stock="${p.stock}" th:data-stock-min="${p.stockMinimo}" th:data-mantenimiento="${p.estadoMantenimiento}" th:data-notas="${p.notasMantenimiento}"
+                                        onclick="editProduct(this)" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-surface-600 hover:text-furent-600 bg-surface-50 hover:bg-furent-50 rounded-lg transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.89l10.686-10.686z"/></svg>
+                                    Editar
+                                </button>
+                                <button th:data-id="${p.id}" data-tipo="Mobiliario" onclick="confirmDelete(this.getAttribute('data-id'), this.getAttribute('data-tipo'))" class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-surface-400 hover:text-red-500 bg-surface-50 hover:bg-red-50 rounded-lg transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <form th:id="'del-expanded-' + ${p.id}" th:action="@{/admin/mobiliarios/eliminar/{id}(id=${p.id})}" method="post" class="hidden"></form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State (shared) -->
+            <div id="emptyState" th:classappend="${#lists.isEmpty(productos)} ? 'flex' : 'hidden'" class="flex-col items-center justify-center text-center py-20 bg-white rounded-2xl border border-surface-200 mt-6">
+                <div class="w-20 h-20 bg-surface-50 shadow-sm rounded-2xl flex items-center justify-center mx-auto mb-5 text-surface-300">
+                    <svg class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+                </div>
+                <h3 class="text-xl font-extrabold text-surface-900 mb-2">Inventario Vacío</h3>
+                <p class="text-sm font-medium text-surface-500 max-w-sm mx-auto">Aún no has registrado mobiliarios o no hay resultados para tu búsqueda.</p>
+            </div>
+
+            <!-- Pagination Bar (always visible) -->
+            <div id="paginationBar" class="mt-6 bg-surface-900 rounded-2xl px-6 py-3.5 flex items-center justify-between">
+                <p class="text-sm text-surface-300">
+                    Mostrando <span class="font-bold text-white" id="pagStart">1</span>-<span class="font-bold text-white" id="pagEnd">10</span> de <span class="font-bold text-white" id="pagTotal">0</span>
+                </p>
+                <div class="flex items-center gap-1" id="pagButtons"></div>
+            </div>
+            </div> <!-- End of adminProductosSection -->
+
+            <!-- TAB 2: COMBOS DE EVENTO (Admin) -->
+            <div class="mb-8 hidden" id="adminCombosSection">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-furent-500 to-furent-600 rounded-xl flex items-center justify-center shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-extrabold text-surface-900 tracking-tight">Combos de Evento</h2>
+                            <p class="text-xs text-surface-400 font-medium">Paquetes de mobiliario con precio especial para el catálogo</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openComboModal()" class="flex items-center gap-2 px-5 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        Nuevo Combo
+                    </button>
+                </div>
+
+                <!-- Combo List -->
+                <div th:if="${combos != null and !combos.isEmpty()}" class="space-y-3">
+                    <div th:each="combo : ${combos}" class="bg-white rounded-2xl border border-surface-100 shadow-soft p-5 flex items-center gap-5 hover:shadow-hover transition-shadow">
+                        <!-- Combo Image -->
+                        <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-100">
+                            <img th:if="${combo.imagenUrl != null}" th:src="${combo.imagenUrl}" class="w-full h-full object-cover">
+                            <div th:unless="${combo.imagenUrl != null}" class="w-full h-full flex items-center justify-center">
+                                <svg class="w-7 h-7 text-surface-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21"/></svg>
+                            </div>
+                        </div>
+                        <!-- Combo Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h3 class="text-sm font-extrabold text-surface-900 truncate" th:text="${combo.nombre}">Kit Boda Premium</h3>
+                                <span th:if="${combo.activo}" class="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Activo</span>
+                                <span th:unless="${combo.activo}" class="text-[10px] font-bold text-surface-400 bg-surface-50 px-2 py-0.5 rounded-full border border-surface-200">Inactivo</span>
+                            </div>
+                            <p class="text-xs text-surface-400">
+                                <span th:text="${#lists.size(combo.items)}">3</span> productos · 
+                                Precio: <span class="font-bold text-furent-600" th:text="'$' + ${#numbers.formatInteger(combo.precioCombo, 1, 'POINT')}">$2.800.000</span>
+                                <span class="text-surface-300 mx-1">|</span>
+                                Original: <span class="line-through" th:text="'$' + ${#numbers.formatInteger(combo.precioOriginal, 1, 'POINT')}">$3.500.000</span>
+                                <span th:if="${combo.porcentajeDescuento > 0}" class="text-red-500 font-bold" th:text="'(-' + ${#numbers.formatInteger(combo.porcentajeDescuento, 1, 'POINT')} + '%)'">(-20%)</span>
+                            </p>
+                        </div>
+                        <!-- Actions -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="editCombo(this)"
+                                    th:data-id="${combo.id}"
+                                    th:data-nombre="${combo.nombre}"
+                                    th:data-descripcion="${combo.descripcion}"
+                                    th:data-precio="${combo.precioCombo}"
+                                    th:data-activo="${combo.activo}"
+                                    th:data-imagen="${combo.imagenUrl}"
+                                    class="w-9 h-9 rounded-xl bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900 flex items-center justify-center transition-all"
+                                    title="Editar combo">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+                            </button>
+                            <form th:action="@{/admin/combos/eliminar/{id}(id=${combo.id})}" method="post"
+                                  onsubmit="return confirm('¿Eliminar este combo?')">
+                                <button type="submit"
+                                        class="w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-all"
+                                        title="Eliminar combo">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:unless="${combos != null and !combos.isEmpty()}" class="flex flex-col items-center justify-center text-center py-16 bg-white rounded-2xl border border-surface-200">
+                    <div class="w-16 h-16 bg-surface-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-surface-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21"/></svg>
+                    </div>
+                    <h3 class="text-lg font-extrabold text-surface-900 mb-1">Sin Combos</h3>
+                    <p class="text-sm text-surface-400 max-w-xs">Crea tu primer combo de evento para ofrecer paquetes con descuento a tus clientes.</p>
+                </div>
+            </div>
+
+            <!-- Combo Modal -->
+            <div id="comboModal" class="fixed inset-0 bg-surface-900/60 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none" style="display:none;">
+                <div class="bg-white rounded-[2rem] w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border border-surface-100 flex flex-col transform scale-95 transition-all duration-300">
+                    <div class="flex items-center justify-between px-8 py-5 border-b border-surface-50 bg-surface-50/30">
+                        <div>
+                            <h2 id="comboModalTitle" class="text-xl font-black text-surface-900 tracking-tight">Nuevo Combo</h2>
+                            <p class="text-[10px] uppercase tracking-widest font-bold text-surface-400">Paquete de Evento</p>
+                        </div>
+                        <button onclick="closeComboModal()" class="w-8 h-8 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-500 hover:text-surface-900 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="px-8 py-6 overflow-y-auto flex-1">
+                        <form id="comboForm" th:action="@{/admin/combos/guardar}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" id="comboId" name="comboId">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                <!-- Nombre -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Nombre del Combo</label>
+                                    <input type="text" id="comboNombre" name="comboNombre" required
+                                           class="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent outline-none"
+                                           placeholder="Kit Boda Premium">
+                                </div>
+                                <!-- Precio -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Precio Combo (por día)</label>
+                                    <input type="number" id="comboPrice" name="comboPrice" required step="0.01" min="0"
+                                           class="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent outline-none"
+                                           placeholder="2800000">
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="mb-6">
+                                <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Descripción</label>
+                                <textarea id="comboDescripcion" name="comboDescripcion" rows="2"
+                                          class="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 focus:border-transparent outline-none resize-none"
+                                          placeholder="Incluye 50 sillas doradas, 5 mesas imperiales y mantelería..."></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                <!-- Imagen -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Imagen del Combo</label>
+                                    <label class="flex items-center gap-2 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
+                                        <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>
+                                        <span id="comboFileName" class="text-sm text-surface-500">Subir imagen</span>
+                                        <input type="file" name="comboImagen" accept="image/*" class="hidden" onchange="document.getElementById('comboFileName').textContent = this.files[0]?.name || 'Subir imagen'">
+                                    </label>
+                                </div>
+                                <!-- Activo -->
+                                <div>
+                                    <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-1.5">Estado</label>
+                                    <label class="flex items-center gap-3 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl cursor-pointer hover:bg-surface-100 transition-colors">
+                                        <input type="checkbox" id="comboActivo" name="comboActivo" value="true" checked
+                                               class="w-4 h-4 text-furent-500 rounded focus:ring-furent-500">
+                                        <span id="comboActivoLabel" class="text-sm font-medium text-surface-700">Activo (visible en catálogo)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Product Selector -->
+                            <div class="mb-6">
+                                <label class="block text-[10px] uppercase tracking-widest font-bold text-surface-400 mb-2">Productos del Combo</label>
+                                <div class="flex gap-2 mb-3">
+                                    <select id="comboProductSelect" class="flex-1 px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 focus:ring-2 focus:ring-furent-500 outline-none">
+                                        <option value="">Seleccionar producto...</option>
+                                        <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}" th:data-price="${p.precioPorDia}" th:data-image="${p.imagenUrl}"></option>
+                                    </select>
+                                    <input type="number" id="comboProductQty" min="1" value="1" class="w-20 px-3 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-medium text-center" placeholder="Cant.">
+                                    <button type="button" onclick="addComboProduct()" class="px-4 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-bold rounded-xl transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Selected Products List -->
+                                <div id="comboProductsList" class="space-y-2 max-h-48 overflow-y-auto"></div>
+                                <p id="comboProductsEmpty" class="text-xs text-surface-400 italic text-center py-4">No se han agregado productos al combo.</p>
+                            </div>
+
+                            <!-- Hidden inputs for product IDs and quantities (populated by JS) -->
+                            <div id="comboHiddenInputs"></div>
+
+                            <!-- Footer -->
+                            <div class="flex items-center justify-end gap-3 pt-4 border-t border-surface-100">
+                                <button type="button" onclick="closeComboModal()" class="px-5 py-2.5 bg-surface-100 hover:bg-surface-200 text-surface-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
+                                <button type="submit" class="px-6 py-2.5 bg-furent-500 hover:bg-furent-600 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg">
+                                    <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    Guardar Combo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal (Tailwind) -->
+            <div id="deleteModal" class="fixed inset-0 z-[200] hidden">
+                <div id="deleteModalBackdrop" class="fixed inset-0 bg-surface-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeDeleteModal()"></div>
+                <div class="fixed inset-0 flex items-center justify-center p-4">
+                    <div id="deleteModalPanel" class="relative bg-white rounded-[2rem] w-full max-w-md shadow-2xl border border-surface-100 overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
+                        <div class="px-8 pt-8 pb-4">
+                            <div class="flex flex-col items-center text-center">
+                                <div class="w-16 h-16 rounded-full border-2 border-furent-400 flex items-center justify-center mb-5">
+                                    <svg class="w-8 h-8 text-furent-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-extrabold text-surface-900 mb-2">¿Estás seguro?</h3>
+                                <p id="deleteModalText" class="text-sm font-medium text-surface-500">Estás a punto de eliminar este mobiliario. Esta acción no se puede deshacer.</p>
+                            </div>
+                        </div>
+                        <div class="px-8 pb-8 pt-4 flex items-center justify-center gap-3">
+                            <button id="deleteModalConfirm" type="button" class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm">Sí, eliminar</button>
+                            <button type="button" onclick="closeDeleteModal()" class="px-6 py-3 bg-surface-100 hover:bg-surface-200 text-surface-700 text-sm font-bold rounded-xl transition-colors">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Compact White Modal Overlay - Spanish & Project Style -->
+        <div id="productModal" class="fixed inset-0 bg-surface-900/60 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none" style="display:none;">
+            <div class="bg-white rounded-[2rem] w-full max-w-6xl max-h-[95vh] overflow-hidden shadow-2xl border border-surface-100 flex flex-col transform scale-95 transition-all duration-300">
+                
+                <!-- Compact Header -->
+                <div class="flex items-center justify-between px-8 py-5 border-b border-surface-50 bg-surface-50/30">
+                    <div>
+                        <h2 id="modalTitle" class="text-xl font-black text-surface-900 tracking-tight">Nuevo Mobiliario</h2>
+                        <p class="text-[10px] uppercase tracking-widest font-bold text-surface-400">Gestión de Catálogo</p>
+                    </div>
+                    <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white border border-surface-200 shadow-sm flex items-center justify-center text-surface-500 hover:text-surface-900 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="px-10 py-8 flex flex-col h-full overflow-hidden">
+                    <form th:action="@{/admin/mobiliarios/guardar}" method="post" enctype="multipart/form-data" class="flex flex-col h-full">
+                        <input type="hidden" id="productId" name="id">
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 items-start overflow-hidden">
+                            
+                            <!-- Left Column -->
+                            <div class="space-y-5 overflow-y-auto pr-2 custom-scrollbar">
+                                
+                                <!-- Title Field -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-surface-500">Título</label>
+                                    <input type="text" name="nombre" id="f_nombre" required placeholder="Nombre del mueble..." 
+                                           class="w-full px-5 py-3 bg-surface-50 border border-surface-100 rounded-xl text-base font-bold text-surface-900 focus:outline-none focus:border-furent-500 transition-all">
+                                </div>
+
+                                <!-- Renta Limits -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-surface-500">Seleccionar límites de renta</label>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex-1 relative">
+                                            <input type="number" name="cantidadMinima" id="f_cantidadMinima" required min="1" placeholder="Mínimo" 
+                                                   class="w-full pl-10 pr-4 py-3 bg-surface-50 border border-surface-100 rounded-xl text-sm font-bold text-surface-900 focus:outline-none focus:border-furent-500">
+                                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+                                        </div>
+                                        <span class="text-surface-300 font-bold text-sm">a</span>
+                                        <div class="flex-1 relative">
+                                            <input type="number" name="cantidadMaxima" id="f_cantidadMaxima" required min="1" placeholder="Máximo" 
+                                                   class="w-full pl-10 pr-4 py-3 bg-surface-50 border border-surface-100 rounded-xl text-sm font-bold text-surface-900 focus:outline-none focus:border-furent-500">
+                                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tag Color -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-surface-500">Color / Etiqueta</label>
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <input type="text" name="color" id="f_color" required placeholder="#Hex" class="w-20 px-3 py-2 border border-surface-200 rounded-lg text-xs font-bold text-surface-900 focus:outline-none focus:border-furent-500">
+                                        <div class="flex flex-wrap gap-2 p-1.5 bg-surface-50 rounded-xl border border-surface-100">
+                                            <button type="button" onclick="setColor('#9333ea')" class="w-6 h-6 rounded-md bg-purple-600 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#2563eb')" class="w-6 h-6 rounded-md bg-blue-600 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#3f3f46')" class="w-6 h-6 rounded-md bg-zinc-700 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#ec4899')" class="w-6 h-6 rounded-md bg-pink-500 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#14b8a6')" class="w-6 h-6 rounded-md bg-teal-500 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#22c55e')" class="w-6 h-6 rounded-md bg-green-500 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#eab308')" class="w-6 h-6 rounded-md bg-yellow-500 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#f97316')" class="w-6 h-6 rounded-md bg-orange-500 hover:scale-110 transition-transform"></button>
+                                            <button type="button" onclick="setColor('#ef4444')" class="w-6 h-6 rounded-md bg-red-600 hover:scale-110 transition-transform"></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Description Editor -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-surface-500">Descripción</label>
+                                    <div class="border border-surface-100 rounded-2xl overflow-hidden focus-within:border-furent-500 transition-all bg-surface-50/30">
+                                        <div class="px-5 py-3 border-b border-surface-100 flex items-center gap-5 text-surface-300">
+                                            <svg class="w-4 h-4 cursor-pointer hover:text-surface-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+                                            <svg class="w-4 h-4 cursor-pointer hover:text-surface-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z"/></svg>
+                                            <svg class="w-4 h-4 cursor-pointer hover:text-surface-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                            <svg class="w-4 h-4 cursor-pointer hover:text-surface-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+                                        </div>
+                                        <textarea name="descripcion" id="f_descripcion" rows="4" required placeholder="Añadir descripción aquí..." 
+                                                  class="w-full px-6 py-4 text-sm font-medium text-surface-600 bg-transparent focus:outline-none resize-none"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Frase Destacada — proper field, not hidden -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-surface-500">Frase destacada</label>
+                                    <input type="text" name="descripcionCorta" id="f_descripcionCorta" required placeholder="Ej: Minimalista y elegante..." 
+                                           class="w-full px-5 py-3 bg-surface-50 border border-surface-100 rounded-xl text-sm font-medium text-surface-700 focus:outline-none focus:border-furent-500 transition-all">
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="pt-2">
+                                    <button type="submit" class="bg-surface-900 hover:bg-black text-white px-10 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-[0.98]">
+                                        Guardar Mobiliario
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Right Column ( Sidebar ) -->
+                            <div class="space-y-6 border-l border-surface-100 pl-10 overflow-y-auto custom-scrollbar">
+                                
+                                <!-- Pricing -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-black uppercase tracking-tight text-surface-800">Tarifa de Alquiler</label>
+                                    <div class="relative flex items-center group">
+                                        <input type="number" name="precioPorDia" id="f_precioPorDia" required min="0" placeholder="Añadir tarifa..." 
+                                               class="w-full pl-4 pr-20 py-3 bg-surface-50 border border-surface-100 rounded-xl text-sm font-bold text-surface-900 focus:outline-none focus:border-furent-500">
+                                        <button type="button" class="absolute right-1.5 px-4 py-1.5 bg-surface-900 text-white text-[10px] font-black rounded-lg uppercase tracking-tighter">+ Add</button>
+                                    </div>
+                                </div>
+
+                                <!-- Category & Specs -->
+                                <div class="space-y-4 pt-1">
+                                    <div class="flex items-center gap-3 relative" id="f_catParent">
+                                        <div class="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 font-bold text-xs shrink-0">C</div>
+                                        <div class="flex-1">
+                                            <p class="text-[10px] font-black uppercase text-surface-400 tracking-wide">Categoría</p>
+                                            <button type="button" onclick="toggleF_CatDropdown()" class="w-full flex items-center justify-between text-sm font-bold text-surface-800 bg-transparent focus:outline-none mt-0.5 border-none p-0 focus:ring-0">
+                                                <span id="f_catLabel">Seleccionar</span>
+                                                <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" id="f_catChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                            </button>
+                                            <div id="f_catMenu" class="hidden absolute left-0 right-0 mt-2 bg-white border border-surface-100 rounded-xl shadow-xl z-[110] py-1.5 max-h-48 overflow-y-auto">
+                                                <button th:each="cat : ${categorias}" type="button"
+                                                        th:attr="data-cat=${cat.nombre}"
+                                                        onclick="selectF_Cat(this.getAttribute('data-cat'))"
+                                                        class="w-full text-left px-4 py-2 text-xs font-bold text-surface-700 hover:bg-surface-50 transition-colors"
+                                                        th:text="${cat.nombre}">
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="categoriaNombre" id="f_categoriaNombre" required>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-md bg-surface-100 flex items-center justify-center text-surface-500 font-black text-sm shrink-0">+</div>
+                                        <div class="flex-1">
+                                            <p class="text-[10px] font-black uppercase text-surface-400">Especificaciones</p>
+                                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                                <input type="text" name="material" id="f_material" required placeholder="Material" class="text-xs font-bold bg-surface-50 px-3 py-2 rounded-lg border border-surface-100 focus:outline-none focus:border-furent-500">
+                                                <input type="text" name="dimensiones" id="f_dimensiones" required placeholder="Dimensiones" class="text-xs font-bold bg-surface-50 px-3 py-2 rounded-lg border border-surface-100 focus:outline-none focus:border-furent-500">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Inventory & Status -->
+                                <div class="pt-4 space-y-4 border-t border-surface-100">
+                                    <h4 class="text-xs font-black uppercase tracking-widest text-surface-400">Inventario y Estado</h4>
+                                    <div class="space-y-4">
+                                        <div class="flex items-start gap-3">
+                                            <div class="mt-1 w-4 h-4 border-2 border-blue-400 rounded bg-blue-500 flex items-center justify-center shrink-0">
+                                                <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-xs font-bold text-surface-700">Stock operativo</p>
+                                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                                    <input type="number" name="stock" id="f_stock" required placeholder="Actual" class="text-xs font-bold bg-surface-50 p-2.5 rounded-lg border border-surface-100 focus:outline-none">
+                                                    <input type="number" name="stockMinimo" id="f_stockMinimo" required placeholder="Mínimo" class="text-xs font-bold bg-red-50 text-red-600 p-2.5 rounded-lg border border-red-100 focus:outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="relative" id="f_maintParent">
+                                            <p class="text-[10px] font-black uppercase text-surface-400 mb-2">Mantenimiento</p>
+                                            <button type="button" onclick="toggleF_MaintDropdown()"
+                                                    class="w-full flex items-center justify-between text-xs font-bold text-surface-700 bg-surface-50 px-3 py-2.5 rounded-xl mb-2 border border-surface-100 focus:outline-none">
+                                                <span id="f_maintLabel" class="flex items-center gap-2">
+                                                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    Operativo
+                                                </span>
+                                                <svg class="w-4 h-4 text-surface-400 transition-transform duration-200" id="f_maintChevron" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                            </button>
+                                            <div id="f_maintMenu" class="hidden absolute left-0 right-0 mt-[-4px] bg-white border border-surface-100 rounded-xl shadow-xl z-[110] py-1.5 overflow-hidden">
+                                                <button type="button" onclick="selectF_Maint('OPERATIVO', '<svg class=\'w-3.5 h-3.5 text-green-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z\'/></svg>Operativo')"
+                                                        class="w-full text-left px-4 py-2 text-[11px] font-bold text-green-700 hover:bg-green-50 flex items-center gap-2 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    Operativo
+                                                </button>
+                                                <button type="button" onclick="selectF_Maint('EN_MANTENIMIENTO', '<svg class=\'w-3.5 h-3.5 text-amber-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z\'/></svg>En Mantenimiento')"
+                                                        class="w-full text-left px-4 py-2 text-[11px] font-bold text-amber-700 hover:bg-amber-50 flex items-center gap-2 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
+                                                    En Mantenimiento
+                                                </button>
+                                                <button type="button" onclick="selectF_Maint('FUERA_DE_SERVICIO', '<svg class=\'w-3.5 h-3.5 text-red-500\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M6 18L18 6M6 6l12 12\'/></svg>Fuera de Servicio')"
+                                                        class="w-full text-left px-4 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    Fuera de Servicio
+                                                </button>
+                                            </div>
+                                            <input type="hidden" name="estadoMantenimiento" id="f_estadoMantenimiento" value="OPERATIVO">
+                                            <textarea name="notasMantenimiento" id="f_notasMantenimiento" rows="2" placeholder="Notas adicionales..." class="w-full text-xs font-medium bg-surface-50 px-3 py-2.5 rounded-xl border border-surface-100 focus:outline-none resize-none mt-2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Gallery -->
+                                <div class="pt-2 border-t border-surface-100">
+                                    <div class="relative group cursor-pointer">
+                                        <input type="file" name="galeriaArchivos" id="f_galeriaArchivos" accept="image/*" multiple 
+                                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="updateFileName(this)">
+                                        <div class="px-4 py-4 bg-surface-50 border-2 border-dashed border-surface-200 rounded-xl text-center group-hover:bg-furent-50 group-hover:border-furent-400 transition-all">
+                                            <span id="file-name" class="text-xs font-bold text-surface-400 uppercase tracking-widest">📷 Subir galería de fotos</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <style>
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; border: 2px solid #f8fafc; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    /* View Toggle */
+    .view-toggle-btn { color: #71717a; }
+    .view-toggle-btn:hover { color: #18181b; }
+    .view-toggle-btn.active { background: #18181b; color: #fff; box-shadow: 0 2px 8px rgba(24,24,27,0.18); }
+    /* Fade transition for views */
+    .view-fade-enter { animation: viewFadeIn .3s ease forwards; }
+    @keyframes viewFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+    <script>
+    const VIEW_KEY = 'furent_mob_view';
+    const ITEMS_PER_PAGE = 10;
+    let currentPage = 1;
+    let currentMode = 'compact';
+
+    function setViewMode(mode) {
+        const compact = document.getElementById('compactView');
+        const expanded = document.getElementById('expandedView');
+        const compactBtn = document.getElementById('compactViewBtn');
+        const expandedBtn = document.getElementById('expandedViewBtn');
+        if (!compact || !expanded) return;
+        currentMode = mode;
+
+        if (mode === 'expanded') {
+            compact.classList.add('hidden');
+            expanded.classList.remove('hidden');
+            expanded.classList.add('view-fade-enter');
+            setTimeout(() => expanded.classList.remove('view-fade-enter'), 310);
+            compactBtn.classList.remove('active');
+            expandedBtn.classList.add('active');
+        } else {
+            expanded.classList.add('hidden');
+            compact.classList.remove('hidden');
+            compact.classList.add('view-fade-enter');
+            setTimeout(() => compact.classList.remove('view-fade-enter'), 310);
+            expandedBtn.classList.remove('active');
+            compactBtn.classList.add('active');
+        }
+        try { sessionStorage.setItem(VIEW_KEY, mode); } catch(e){}
+        currentPage = 1;
+        runProductFilters();
+    }
+
+    let mobStatusFilterValue = 'all';
+
+    function toggleMobStatusFilter() {
+        const menu = document.getElementById('mobStatusMenu');
+        const chevron = document.getElementById('mobStatusChevron');
+        const isOpen = !menu.classList.contains('hidden');
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+    }
+
+    function selectMobStatus(value, iconAndLabel) {
+        mobStatusFilterValue = value;
+        document.getElementById('mobStatusFilter').value = value;
+        const labelEl = document.getElementById('mobStatusLabel');
+        labelEl.className = 'flex items-center gap-2';
+        labelEl.innerHTML = iconAndLabel;
+        document.getElementById('mobStatusMenu').classList.add('hidden');
+        document.getElementById('mobStatusChevron').classList.remove('rotate-180');
+        currentPage = 1;
+        runProductFilters();
+    }
+
+    // Close mob dropdown on click outside
+    document.addEventListener('click', function(e) {
+        const parent = document.getElementById('mobStatusParent');
+        if (parent && !parent.contains(e.target)) {
+            document.getElementById('mobStatusMenu')?.classList.add('hidden');
+            document.getElementById('mobStatusChevron')?.classList.remove('rotate-180');
+        }
+    });
+
+    // removed getFilteredCards
+
+    function renderPagination(filteredCount) {
+        const pagBar = document.getElementById('paginationBar');
+        const pagStart = document.getElementById('pagStart');
+        const pagEnd = document.getElementById('pagEnd');
+        const pagTotal = document.getElementById('pagTotal');
+        const pagButtons = document.getElementById('pagButtons');
+        if (!pagBar || !pagButtons) return;
+
+        const totalPages = Math.max(1, Math.ceil(filteredCount / ITEMS_PER_PAGE));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+        const end = Math.min(currentPage * ITEMS_PER_PAGE, filteredCount);
+
+        if (pagStart) pagStart.textContent = filteredCount > 0 ? start : 0;
+        if (pagEnd) pagEnd.textContent = end;
+        if (pagTotal) pagTotal.textContent = filteredCount;
+
+        // Build page buttons
+        let html = '';
+        const btnBase = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ';
+        const btnInactive = btnBase + 'text-surface-300 hover:text-white bg-surface-800 hover:bg-surface-700';
+        const btnActive = btnBase + 'text-white bg-furent-500';
+        const btnDisabled = btnBase + 'text-surface-600 bg-surface-800 cursor-default';
+
+        // Anterior
+        if (currentPage > 1) {
+            html += `<button class="${btnInactive}" onclick="goToPage(${currentPage - 1})">Anterior</button>`;
+        } else {
+            html += `<button class="${btnDisabled}">Anterior</button>`;
+        }
+
+        // Page numbers
+        const maxVisible = 5;
+        let pages = [];
+        if (totalPages <= maxVisible + 2) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            let rangeStart = Math.max(2, currentPage - 1);
+            let rangeEnd = Math.min(totalPages - 1, currentPage + 1);
+            if (currentPage <= 3) { rangeStart = 2; rangeEnd = Math.min(totalPages - 1, 4); }
+            if (currentPage >= totalPages - 2) { rangeStart = Math.max(2, totalPages - 3); rangeEnd = totalPages - 1; }
+            if (rangeStart > 2) pages.push('...');
+            for (let i = rangeStart; i <= rangeEnd; i++) pages.push(i);
+            if (rangeEnd < totalPages - 1) pages.push('...');
+            pages.push(totalPages);
+        }
+
+        pages.forEach(p => {
+            if (p === '...') {
+                html += `<span class="px-2 text-surface-500 text-xs">…</span>`;
+            } else if (p === currentPage) {
+                html += `<button class="${btnActive}">${p}</button>`;
+            } else {
+                html += `<button class="${btnInactive}" onclick="goToPage(${p})">${p}</button>`;
+            }
+        });
+
+        // Siguiente
+        if (currentPage < totalPages) {
+            html += `<button class="${btnInactive}" onclick="goToPage(${currentPage + 1})">Siguiente</button>`;
+        } else {
+            html += `<button class="${btnDisabled}">Siguiente</button>`;
+        }
+
+        pagButtons.innerHTML = html;
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        runProductFilters();
+    }
+
+    function runProductFilters() {
+        const searchInput = document.getElementById('searchInput');
+        const term = searchInput ? searchInput.value.toLowerCase() : '';
+        const isExpanded = currentMode === 'expanded';
+        
+        // Determinar qué selectores usar según el modo de vista actual
+        const activeSelectors = isExpanded ? '.product-card' : '.product-row';
+        const inactiveSelectors = isExpanded ? '.product-row' : '.product-card';
+        
+        // Ocultar todos los elementos de la vista inactiva para que no interfieran
+        document.querySelectorAll(inactiveSelectors).forEach(el => el.style.display = 'none');
+        
+        const elements = Array.from(document.querySelectorAll(activeSelectors));
+        let filtered = [];
+        
+        // Filtrar elementos de la vista activa basándose en estatus y búsqueda
+        elements.forEach(el => {
+            const d = el.getAttribute('data-search');
+            const avail = el.getAttribute('data-avail');
+            const maint = (el.getAttribute('data-maint') || '').toUpperCase();
+            const matchesSearch = d && d.includes(term);
+            const isMaint = maint === 'EN_MANTENIMIENTO';
+            const isOos = maint === 'FUERA_DE_SERVICIO';
+            let matchesStatus = true;
+            if (mobStatusFilterValue === 'available') matchesStatus = avail === 'available' && !isMaint && !isOos;
+            else if (mobStatusFilterValue === 'unavailable') matchesStatus = avail === 'unavailable' && !isMaint && !isOos;
+            else if (mobStatusFilterValue === 'maintenance') matchesStatus = isMaint;
+            else if (mobStatusFilterValue === 'out_of_service') matchesStatus = isOos;
+            
+            if (matchesSearch && matchesStatus) {
+                filtered.push(el);
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        const totalFiltered = filtered.length;
+        
+        // Paginar elementos filtrados
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        
+        filtered.forEach((el, i) => {
+            el.style.display = (i >= start && i < end) ? '' : 'none';
+        });
+
+        // Actualizar contadores y estado de inventario vacío
+        const itemCount = document.querySelector('#itemCount span');
+        if (itemCount) itemCount.textContent = totalFiltered;
+        
+        const emptyState = document.getElementById('emptyState');
+        if (emptyState) {
+            if (totalFiltered === 0 && Array.from(document.querySelectorAll('.product-row')).length > 0) {
+                emptyState.classList.remove('hidden'); emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden'); emptyState.classList.remove('flex');
+            }
+        }
+
+        renderPagination(totalFiltered);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        let saved = 'compact';
+        try { const s = sessionStorage.getItem(VIEW_KEY); if (s === 'compact' || s === 'expanded') saved = s; } catch(e){}
+        setViewMode(saved);
+        runProductFilters();
+        if (searchInput) searchInput.addEventListener('input', function() {
+            currentPage = 1;
+            runProductFilters();
+        });
+    });
+
+    function confirmDelete(id, tipo) {
+        const modal = document.getElementById('deleteModal');
+        const backdrop = document.getElementById('deleteModalBackdrop');
+        const panel = document.getElementById('deleteModalPanel');
+        const txt = document.getElementById('deleteModalText');
+        const confirmBtn = document.getElementById('deleteModalConfirm');
+        if (!modal) return;
+
+        txt.textContent = 'Estás a punto de eliminar este ' + tipo.toLowerCase() + '. Esta acción no se puede deshacer.';
+
+        // Show modal
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            panel.classList.remove('scale-95', 'opacity-0');
+            panel.classList.add('scale-100', 'opacity-100');
+        });
+
+        // Wire confirm button
+        const handler = () => {
+            const form = document.getElementById('del-' + id) || document.getElementById('del-expanded-' + id);
+            if (form) form.submit();
+            confirmBtn.removeEventListener('click', handler);
+        };
+        // Remove old handlers by cloning
+        const newBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+        newBtn.addEventListener('click', handler);
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        const backdrop = document.getElementById('deleteModalBackdrop');
+        const panel = document.getElementById('deleteModalPanel');
+        if (!modal) return;
+
+        backdrop.classList.add('opacity-0');
+        panel.classList.add('scale-95', 'opacity-0');
+        panel.classList.remove('scale-100', 'opacity-100');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    const modal = document.getElementById('productModal');
+    const modalContent = modal.querySelector('div');
+
+    function editProduct(btn) {
+        document.getElementById('productId').value = btn.dataset.id;
+        document.getElementById('f_nombre').value = btn.dataset.nombre;
+        document.getElementById('f_descripcion').value = btn.dataset.descripcion;
+        document.getElementById('f_descripcionCorta').value = btn.dataset.descripcionCorta;
+        document.getElementById('f_precioPorDia').value = btn.dataset.precio;
+        
+        const catValue = btn.dataset.categoria;
+        document.getElementById('f_categoriaNombre').value = catValue;
+        document.getElementById('f_catLabel').textContent = catValue || 'Seleccionar';
+        
+        document.getElementById('f_material').value = btn.dataset.material;
+        document.getElementById('f_dimensiones').value = btn.dataset.dimensiones;
+        
+        const colorInp = document.getElementById('f_color');
+        colorInp.value = btn.dataset.color;
+        // visual color hint
+        
+        document.getElementById('f_cantidadMinima').value = btn.dataset.min;
+        document.getElementById('f_cantidadMaxima').value = btn.dataset.max;
+        document.getElementById('f_stock').value = btn.dataset.stock;
+        
+        // New intelligence fields
+        document.getElementById('f_stockMinimo').value = btn.dataset.stockMin || 2;
+        
+        const maintValue = btn.dataset.mantenimiento || 'OPERATIVO';
+        document.getElementById('f_estadoMantenimiento').value = maintValue;
+        
+        let maintHtml = '';
+        if (maintValue === 'OPERATIVO') {
+            maintHtml = '<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Operativo';
+        } else if (maintValue === 'EN_MANTENIMIENTO') {
+            maintHtml = '<svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>En Mantenimiento';
+        } else {
+            maintHtml = '<svg class="w-3.5 h-3.5 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>Fuera de Servicio';
+        }
+        document.getElementById('f_maintLabel').innerHTML = maintHtml;
+        
+        document.getElementById('f_notasMantenimiento').value = btn.dataset.notas || '';
+        
+        openModal('Editar Mobiliario');
+    }
+
+    function openModal(titleText = 'Nuevo Mobiliario') {
+        document.getElementById('modalTitle').textContent = titleText;
+        modal.style.display = 'flex';
+        // Timeout for animation flow
+        setTimeout(() => {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeModal() {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modalContent.classList.add('scale-95');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.getElementById('productId').value = '';
+            document.querySelectorAll('#productModal input, #productModal textarea, #productModal select').forEach(el => { 
+                if (el.type !== 'hidden') el.value = ''; 
+            });
+            document.getElementById('file-name').textContent = "Subir fotos";
+            document.getElementById('f_cantidadMinima').value = 1;
+            document.getElementById('f_cantidadMaxima').value = 100;
+            document.getElementById('f_stockMinimo').value = 2; // Default
+            
+            document.getElementById('f_categoriaNombre').value = '';
+            document.getElementById('f_catLabel').textContent = 'Seleccionar';
+            
+            document.getElementById('f_estadoMantenimiento').value = 'OPERATIVO';
+            document.getElementById('f_maintLabel').innerHTML = '<svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Operativo';
+            
+            document.getElementById('f_color').value = '';
+        }, 300);
+    }
+    
+    function setColor(color) {
+        const inp = document.getElementById('f_color');
+        inp.value = color;
+    }
+
+    function updateFileName(input) {
+        const fn = document.getElementById('file-name');
+        if(input.files && input.files.length > 0) {
+            if (input.files.length > 5) {
+                Swal.fire({
+                    title: 'Atención',
+                    text: 'Solo puedes subir hasta 5 imágenes',
+                    icon: 'warning',
+                    confirmButtonColor: '#18181b'
+                });
+                input.value = ''; // clean
+                fn.textContent = "Subir fotos";
+                return;
+            }
+            if (input.files.length === 1) {
+                fn.textContent = input.files[0].name;
+            } else {
+                fn.textContent = input.files.length + " fotos elegidas";
+            }
+            fn.classList.add('text-furent-600');
+        } else {
+            fn.textContent = "Subir fotos";
+            fn.classList.remove('text-furent-600');
+        }
+    }
+
+    // Dropdown Form Handlers
+    function toggleF_CatDropdown() {
+        const menu = document.getElementById('f_catMenu');
+        const chevron = document.getElementById('f_catChevron');
+        const isOpen = !menu.classList.contains('hidden');
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+    }
+    function selectF_Cat(val) {
+        document.getElementById('f_categoriaNombre').value = val;
+        document.getElementById('f_catLabel').textContent = val;
+        document.getElementById('f_catMenu').classList.add('hidden');
+        document.getElementById('f_catChevron').classList.remove('rotate-180');
+    }
+
+    function toggleF_MaintDropdown() {
+        const menu = document.getElementById('f_maintMenu');
+        const chevron = document.getElementById('f_maintChevron');
+        const isOpen = !menu.classList.contains('hidden');
+        if (isOpen) {
+            menu.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        } else {
+            menu.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        }
+    }
+    function selectF_Maint(val, html) {
+        document.getElementById('f_estadoMantenimiento').value = val;
+        document.getElementById('f_maintLabel').innerHTML = html;
+        document.getElementById('f_maintMenu').classList.add('hidden');
+        document.getElementById('f_maintChevron').classList.remove('rotate-180');
+    }
+
+    // Close on click outside generic
+    document.addEventListener('click', (e) => {
+        if(e.target === modal) closeModal();
+        
+        const catParent = document.getElementById('f_catParent');
+        if (catParent && !catParent.contains(e.target)) {
+            document.getElementById('f_catMenu')?.classList.add('hidden');
+            document.getElementById('f_catChevron')?.classList.remove('rotate-180');
+        }
+        const maintParent = document.getElementById('f_maintParent');
+        if (maintParent && !maintParent.contains(e.target)) {
+            document.getElementById('f_maintMenu')?.classList.add('hidden');
+            document.getElementById('f_maintChevron')?.classList.remove('rotate-180');
+        }
+    });
+
+    // ═══════════════ COMBO MODAL FUNCTIONS ═══════════════
+    const comboModal = document.getElementById('comboModal');
+    const comboModalContent = comboModal?.querySelector('div');
+    let comboProducts = []; // {id, name, qty, price, image}
+
+    function openComboModal(titleText = 'Nuevo Combo') {
+        document.getElementById('comboModalTitle').textContent = titleText;
+        comboModal.style.display = 'flex';
+        setTimeout(() => {
+            comboModal.classList.remove('opacity-0', 'pointer-events-none');
+            if (comboModalContent) comboModalContent.classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeComboModal() {
+        comboModal.classList.add('opacity-0', 'pointer-events-none');
+        if (comboModalContent) comboModalContent.classList.add('scale-95');
+        setTimeout(() => {
+            comboModal.style.display = 'none';
+            document.getElementById('comboId').value = '';
+            document.getElementById('comboNombre').value = '';
+            document.getElementById('comboDescripcion').value = '';
+            document.getElementById('comboPrice').value = '';
+            document.getElementById('comboActivo').checked = true;
+            document.getElementById('comboFileName').textContent = 'Subir imagen';
+            comboProducts = [];
+            renderComboProducts();
+        }, 300);
+    }
+
+    function editCombo(btn) {
+        document.getElementById('comboId').value = btn.dataset.id;
+        document.getElementById('comboNombre').value = btn.dataset.nombre || '';
+        document.getElementById('comboDescripcion').value = btn.dataset.descripcion || '';
+        document.getElementById('comboPrice').value = btn.dataset.precio || '';
+        document.getElementById('comboActivo').checked = btn.dataset.activo === 'true';
+        comboProducts = [];
+        renderComboProducts();
+        openComboModal('Editar Combo');
+    }
+
+    function addComboProduct() {
+        const select = document.getElementById('comboProductSelect');
+        const qtyInput = document.getElementById('comboProductQty');
+        const id = select.value;
+        if (!id) return;
+        
+        const option = select.options[select.selectedIndex];
+        const name = option.text;
+        const price = option.dataset.price || '0';
+        const image = option.dataset.image || '';
+        const qty = parseInt(qtyInput.value) || 1;
+
+        // Check if already added
+        const existing = comboProducts.find(p => p.id === id);
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            comboProducts.push({ id, name, qty, price: parseFloat(price), image });
+        }
+
+        select.value = '';
+        qtyInput.value = 1;
+        renderComboProducts();
+    }
+
+    function removeComboProduct(id) {
+        comboProducts = comboProducts.filter(p => p.id !== id);
+        renderComboProducts();
+    }
+
+    function renderComboProducts() {
+        const list = document.getElementById('comboProductsList');
+        const empty = document.getElementById('comboProductsEmpty');
+        const hiddenInputs = document.getElementById('comboHiddenInputs');
+
+        if (comboProducts.length === 0) {
+            list.innerHTML = '';
+            empty.style.display = '';
+            hiddenInputs.innerHTML = '';
+            return;
+        }
+
+        empty.style.display = 'none';
+        list.innerHTML = comboProducts.map(p => `
+            <div class="flex items-center gap-3 p-2.5 bg-surface-50 rounded-xl border border-surface-100">
+                ${p.image ? `<img src="${p.image}" class="w-9 h-9 rounded-lg object-cover shrink-0">` : '<div class="w-9 h-9 rounded-lg bg-surface-200 shrink-0"></div>'}
+                <span class="text-sm font-medium text-surface-800 flex-1 truncate">${p.name}</span>
+                <span class="text-xs text-surface-400 font-bold bg-white px-2 py-0.5 rounded border border-surface-200">×${p.qty}</span>
+                <span class="text-xs font-bold text-surface-500">$${Math.round(p.price * p.qty).toLocaleString()}</span>
+                <button type="button" onclick="removeComboProduct('${p.id}')" class="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 flex items-center justify-center transition-colors shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        `).join('');
+
+        // Populate hidden inputs
+        hiddenInputs.innerHTML = comboProducts.map(p => `
+            <input type="hidden" name="comboProductoIds" value="${p.id}">
+            <input type="hidden" name="comboCantidades" value="${p.qty}">
+        `).join('');
+    }
+
+    // Close combo modal on outside click
+    if (comboModal) {
+        document.addEventListener('click', (e) => {
+            if (e.target === comboModal) closeComboModal();
+        });
+    }
+    
+    // ===== ADMIN TABS =====
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabs = document.querySelectorAll('.admin-tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active styling
+                tabs.forEach(t => {
+                    t.classList.remove('active', 'border-furent-500', 'text-furent-600', 'font-bold');
+                    t.classList.add('border-transparent', 'text-surface-500', 'font-medium', 'hover:text-surface-700', 'hover:border-surface-300');
+                });
+                
+                // Add active styling
+                tab.classList.remove('border-transparent', 'text-surface-500', 'font-medium', 'hover:text-surface-700', 'hover:border-surface-300');
+                tab.classList.add('active', 'border-furent-500', 'text-furent-600', 'font-bold');
+                
+                // Hide all sections
+                document.getElementById('adminProductosSection')?.classList.add('hidden');
+                document.getElementById('adminCombosSection')?.classList.add('hidden');
+                
+                // Show target
+                const target = tab.dataset.target;
+                document.getElementById(target)?.classList.remove('hidden');
+            });
+        });
+    });
+    </script>
+    </main>
+</body>
+</html>

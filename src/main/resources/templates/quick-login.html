@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body class="bg-surface-50 font-sans text-surface-800 min-h-screen flex flex-col">
+
+    <div th:replace="~{fragments/layout :: nav}"></div>
+
+    <main class="flex-1 pt-[68px]">
+        <div class="min-h-[calc(100vh-68px)] flex items-center justify-center px-4 py-12">
+            <div class="w-full max-w-md fade-in-up">
+                <div class="bg-white rounded-2xl p-8 shadow-card border border-surface-100">
+                    <!-- Header -->
+                    <div class="text-center mb-6">
+                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                            <img th:src="@{/images/furent-logo.png}" alt="Furent Logo" class="w-14 h-14 object-cover">
+                        </div>
+                        <h1 class="text-2xl font-bold text-surface-900 mb-1">Inicio rápido</h1>
+                        <p class="text-sm text-surface-500">Selecciona una cuenta guardada o inicia sesión</p>
+                    </div>
+
+                    <!-- Saved accounts list -->
+                    <div id="savedAccounts" class="space-y-2 mb-6">
+                        <!-- JS renders saved accounts here -->
+                    </div>
+                    <div id="noAccounts" class="hidden text-center py-6 mb-4">
+                        <svg class="w-12 h-12 text-surface-200 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                        <p class="text-sm text-surface-400">No hay cuentas guardadas</p>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex-1 h-px bg-surface-200"></div>
+                        <span class="text-xs text-surface-400">o inicia sesión manualmente</span>
+                        <div class="flex-1 h-px bg-surface-200"></div>
+                    </div>
+
+                    <!-- Quick login form -->
+                    <form th:action="@{/login}" method="post" class="space-y-4">
+                        <div class="relative">
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                            <input id="quickEmail" type="email" name="email" placeholder="tu@email.com" required class="w-full pl-11 pr-4 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                        </div>
+                        <div class="relative">
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                            <input id="quickPass" type="password" name="password" placeholder="••••••••" required class="w-full pl-11 pr-11 py-3 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500 input-glow transition-all">
+                            <button type="button" onclick="togglePass('quickPass',this)" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 transition-colors" tabindex="-1">
+                                <svg class="eye-open w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <svg class="eye-closed w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+                            </button>
+                        </div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="saveAccount" id="saveAccountCheck" checked class="w-4 h-4 rounded border-surface-300 text-furent-500 focus:ring-furent-500">
+                            <span class="text-xs text-surface-500">Guardar cuenta para inicio rápido</span>
+                        </label>
+                        <input type="hidden" name="remember-me" value="on">
+                        <button type="submit" class="w-full py-3 bg-surface-900 text-white font-semibold rounded-xl hover:bg-surface-800 transition-colors">
+                            Iniciar sesión
+                        </button>
+                    </form>
+
+                    <p class="text-center text-sm text-surface-500 mt-6">
+                        <a th:href="@{/login(manual=true)}" class="text-furent-500 hover:text-furent-600 font-medium transition-colors">← Volver al login normal</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+    function togglePass(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.querySelector('.eye-open').classList.toggle('hidden', !isPassword);
+        btn.querySelector('.eye-closed').classList.toggle('hidden', isPassword);
+    }
+
+    function getSavedAccounts() {
+        try { return JSON.parse(localStorage.getItem('furent_accounts') || '[]'); } catch(e) { return []; }
+    }
+
+    function renderAccounts() {
+        const accounts = getSavedAccounts();
+        const container = document.getElementById('savedAccounts');
+        const noAccounts = document.getElementById('noAccounts');
+        if (!accounts.length) { container.classList.add('hidden'); noAccounts.classList.remove('hidden'); return; }
+        noAccounts.classList.add('hidden'); container.classList.remove('hidden');
+        container.innerHTML = accounts.map((acc, i) => `
+            <div class="flex items-center gap-3 p-3 rounded-xl border border-surface-100 hover:bg-surface-50 transition-colors cursor-pointer group" onclick="quickLogin('${acc.email}')">
+                <div class="w-10 h-10 bg-gradient-to-br from-furent-400 to-furent-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span class="text-white font-bold text-sm">${acc.initials}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-surface-900 truncate">${acc.name}</p>
+                    <p class="text-xs text-surface-400 truncate">${acc.email}</p>
+                </div>
+                <button onclick="event.stopPropagation();removeAccount(${i})" class="opacity-0 group-hover:opacity-100 p-1.5 text-surface-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all" title="Eliminar">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function quickLogin(email) {
+        document.getElementById('quickEmail').value = email;
+        document.getElementById('quickPass').focus();
+    }
+
+    function removeAccount(index) {
+        const accounts = getSavedAccounts();
+        accounts.splice(index, 1);
+        localStorage.setItem('furent_accounts', JSON.stringify(accounts));
+        renderAccounts();
+    }
+
+    // Save account on form submit
+    document.querySelector('form').addEventListener('submit', function() {
+        if (document.getElementById('saveAccountCheck').checked) {
+            const email = document.getElementById('quickEmail').value;
+            if (!email) return;
+            const accounts = getSavedAccounts();
+            if (!accounts.find(a => a.email === email)) {
+                const name = email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+                const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+                accounts.push({ email, name, initials });
+                localStorage.setItem('furent_accounts', JSON.stringify(accounts));
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', renderAccounts);
+    </script>
+</body>
+</html>

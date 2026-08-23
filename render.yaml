@@ -1,0 +1,57 @@
+# ═══════════════════════════════════════════════════════
+# FURENT - Render Blueprint
+# Servicios: Backend (Docker) + Redis (Key Value)
+# MongoDB: aprovisionar aparte en MongoDB Atlas y pegar
+#          la URI en MONGODB_URI al crear el Blueprint
+# ═══════════════════════════════════════════════════════
+
+services:
+  # ─── Backend Spring Boot (Docker) ────────────────────
+  - type: web
+    name: furent-app
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # Pega aquí tu URI de MongoDB Atlas (usuario/clave/IP permitida)
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_HOST
+        fromService:
+          type: keyvalue
+          name: furent-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: keyvalue
+          name: furent-redis
+          property: port
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: PAYU_API_KEY
+        sync: false
+      - key: PAYU_MERCHANT_ID
+        sync: false
+      - key: PAYU_ACCOUNT_ID
+        sync: false
+
+  # ─── Redis 7 (Cache) ─────────────────────────────────
+  - type: keyvalue
+    name: furent-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

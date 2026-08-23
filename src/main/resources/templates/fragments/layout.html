@@ -1,0 +1,667 @@
+<!-- Fragments: head, nav, footer -->
+<head th:fragment="head" xmlns:th="http://www.thymeleaf.org">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' | Furent' : 'Furent — Alquiler de Mobiliario para Eventos'}">Furent</title>
+    <meta name="description" content="Plataforma profesional de alquiler de mobiliario para eventos. Sillas, mesas, carpas y decoración de alta calidad.">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        furent: {
+                            50:  '#FFF7F0',
+                            100: '#FFEDD5',
+                            200: '#FED7AA',
+                            300: '#FDBA74',
+                            400: '#FB923C',
+                            500: '#E07A3A',
+                            600: '#C2630F',
+                            700: '#9A4F0E',
+                            800: '#7C3F0D',
+                            900: '#65340E',
+                        },
+                        surface: {
+                            50:  '#FAFAFA',
+                            100: '#F5F5F5',
+                            200: '#EEEEEE',
+                            300: '#E0E0E0',
+                            400: '#BDBDBD',
+                            500: '#9E9E9E',
+                            600: '#757575',
+                            700: '#616161',
+                            800: '#424242',
+                            900: '#212121',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        cursive: ['Dancing Script', 'cursive'],
+                    },
+                    borderRadius: {
+                        'xl': '16px',
+                        '2xl': '20px',
+                        '3xl': '24px',
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'card': '0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.06)',
+                        'hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+                        'nav': '0 1px 3px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Inter & Dancing Script -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Dancing+Script:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+
+    <!-- Heroicons (optional inline SVGs are used instead) -->
+    <!-- AOS (Animate on Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+        /* Dark Mode Support */
+        .dark { color-scheme: dark; }
+        .dark body { background-color: #121212; color: #e5e5e5; }
+        .dark .bg-white { background-color: #1e1e1e !important; }
+        .dark .bg-surface-50 { background-color: #121212 !important; }
+        .dark .text-surface-900 { color: #f8fafc !important; }
+        .dark .text-surface-600 { color: #cbd5e1 !important; }
+        .dark .text-surface-500 { color: #94a3b8 !important; }
+        .dark .border-surface-100 { border-color: rgba(255,255,255,0.05) !important; }
+        .dark .border-surface-200 { border-color: rgba(255,255,255,0.1) !important; }
+        .dark .box-shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .dark .nav-solid { background: rgba(30,30,30,0.8) !important; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+        .slide-in-left { animation: slideInLeft 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        .stagger-1 { animation-delay: 0.1s; } .stagger-2 { animation-delay: 0.2s; } .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; } .stagger-5 { animation-delay: 0.5s; } .stagger-6 { animation-delay: 0.6s; }
+        .card-hover { transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s cubic-bezier(.4,0,.2,1); }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.10); }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* Navbar scroll effect */
+        .nav-transparent { background: transparent; border-color: transparent; box-shadow: none; }
+        .nav-solid { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border-bottom: 1px solid rgba(224,122,58,0.1); box-shadow: 0 1px 40px rgba(0,0,0,0.06); }
+        .dark .nav-solid { background: rgba(30,30,30,0.85) !important; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-link { position: relative; }
+        .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 50%; width: 0; height: 2px; background: linear-gradient(90deg, #E07A3A, #FB923C); border-radius: 1px; transition: width 0.3s cubic-bezier(.4,0,.2,1), left 0.3s cubic-bezier(.4,0,.2,1); }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; left: 0; }
+        .nav-link.active { color: #E07A3A !important; }
+
+        /* Navbar hide/show on scroll */
+        #mainNav {
+            transition: transform 0.4s cubic-bezier(.4,0,.2,1), background 0.5s ease-out, border-color 0.5s ease-out, box-shadow 0.5s ease-out;
+        }
+        #mainNav.nav-hidden {
+            transform: translateY(-100%);
+        }
+        #mainNav.nav-visible {
+            transform: translateY(0);
+        }
+
+        /* Badges */
+        .badge-active { background-color: #DCFCE7; color: #166534; }
+        .badge-pending { background-color: #FEF3C7; color: #92400E; }
+        .badge-completed { background-color: #DBEAFE; color: #1E40AF; }
+        .badge-cancelled { background-color: #FEE2E2; color: #991B1B; }
+
+        /* FAQ accordion */
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(.4,0,.2,1), padding 0.35s ease; }
+        .faq-answer.open { max-height: 300px; }
+        .faq-chevron { transition: transform 0.3s ease; }
+        .faq-chevron.open { transform: rotate(180deg); }
+
+        /* Input focus glow */
+        .input-glow:focus { box-shadow: 0 0 0 3px rgba(224,122,58,0.15); }
+
+        /* Chat bubble */
+        .chat-btn { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(224,122,58,0.4); } 70% { box-shadow: 0 0 0 15px rgba(224,122,58,0); } 100% { box-shadow: 0 0 0 0 rgba(224,122,58,0); } }
+
+        /* Fix SVG icons sizing */
+        .icon-sm { width: 18px; height: 18px; flex-shrink: 0; }
+        .icon-md { width: 24px; height: 24px; flex-shrink: 0; }
+    </style>
+    <script th:inline="javascript">
+        // Check theme on load
+        var serverTheme = /*[[${currentUser != null ? currentUser.apariencia : null}]]*/ null;
+        if (serverTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else if (serverTheme === 'light') {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => { AOS.init({ duration: 800, once: true }); });
+    </script>
+</head>
+
+<!-- Skip to content (Accessibility) -->
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-furent-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">Saltar al contenido</a>
+
+<!-- NAVBAR FRAGMENT (Redesigned — Professional, minimal, fluid) -->
+<nav th:fragment="nav" xmlns:th="http://www.thymeleaf.org" id="mainNav"
+     class="fixed top-0 left-0 right-0 z-50 nav-solid nav-visible" role="navigation" aria-label="Navegación principal">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-[68px]">
+            <!-- Logo -->
+            <a th:href="@{/}" class="flex items-center space-x-2.5 group">
+                <img th:src="@{/images/favicon.png}" alt="Furent Logo" class="w-10 h-10 object-contain transition-transform duration-300 group-hover:scale-110">
+                <span class="text-lg font-bold text-surface-900 tracking-tight">Furent</span>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <div class="flex items-center space-x-1">
+                <a th:href="@{/}" class="nav-link px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">Inicio</a>
+                <a th:href="@{/catalogo}" class="nav-link px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">Catálogo</a>
+                <a th:href="@{/inspiracion}" class="nav-link px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">Inspiración</a>
+                <a th:href="@{/nosotros}" class="nav-link px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">Nosotros</a>
+                <a th:href="@{/contacto}" class="nav-link px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">Contacto</a>
+                <a th:href="@{/faq}" class="nav-link px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">FAQ</a>
+            </div>
+
+            <!-- Right side -->
+            <div class="flex items-center space-x-2" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                <!-- When user is NOT authenticated -->
+                <div sec:authorize="!isAuthenticated()" class="flex items-center space-x-2">
+                    <a th:href="@{/login}" class="inline-flex items-center px-4 py-2 text-[13px] font-medium text-surface-600 hover:text-surface-900 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                        Acceder
+                    </a>
+                    <a th:href="@{/catalogo}" class="inline-flex items-center px-5 py-2.5 bg-surface-900 text-white text-[13px] font-semibold rounded-lg hover:bg-surface-800 transition-all duration-200 shadow-sm">
+                        Reservar
+                        <svg class="w-3.5 h-3.5 ml-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                    </a>
+                </div>
+
+                <!-- When user IS authenticated -->
+                <div sec:authorize="isAuthenticated()" class="flex items-center space-x-2">
+                    <!-- Notification bell -->
+                    <a th:href="@{/panel#notificaciones}" class="relative p-2 rounded-lg hover:bg-surface-100 transition-colors duration-200" title="Notificaciones">
+                        <svg class="w-5 h-5 text-surface-500" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+                        <span th:if="${unreadNotifications != null and unreadNotifications > 0}"
+                              class="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 min-w-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none"
+                              th:text="${unreadNotifications > 99 ? '99+' : unreadNotifications}">0</span>
+                    </a>
+                    <!-- Removed dark mode toggle -->
+                    <!-- User dropdown -->
+                    <div class="relative" id="userMenuWrapper">
+                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-surface-100 transition-colors duration-200">
+                            <div class="w-8 h-8 bg-gradient-to-br from-furent-400 to-furent-600 rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold text-xs" th:text="${currentUser != null and currentUser.nombre != null and currentUser.nombre.length() > 0 ? #strings.substring(currentUser.nombre, 0, 1) : 'U'}">U</span>
+                            </div>
+                            <span class="text-[13px] font-medium text-surface-700 hidden sm:inline" th:text="${currentUser != null ? currentUser.nombre : 'Usuario'}">Usuario</span>
+                            <svg class="w-3.5 h-3.5 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div id="userDropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-hover border border-surface-100 py-2 z-50">
+                            <div class="px-4 py-2 border-b border-surface-100 mb-1">
+                                <p class="text-sm font-semibold text-surface-900" th:text="${currentUser != null ? currentUser.nombreCompleto : 'Usuario'}">Usuario</p>
+                                <p class="text-xs text-surface-400" th:text="${currentUser != null ? currentUser.email : ''}">email</p>
+                            </div>
+                            <a th:href="@{/panel}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-surface-600 hover:bg-surface-50 hover:text-surface-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
+                                Mi Panel
+                            </a>
+                            <a th:href="@{/configuracion}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-surface-600 hover:bg-surface-50 hover:text-surface-900 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Configuración
+                            </a>
+                            <!-- Admin link - only for ADMIN role -->
+                            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-furent-600 hover:bg-furent-50 hover:text-furent-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                                Panel Admin
+                            </a>
+                            <div class="border-t border-surface-100 my-1"></div>
+                            <form th:action="@{/logout}" method="post" class="m-0">
+                                <button type="submit" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors w-full text-left">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                                    Cerrar sesión
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <a th:href="@{/catalogo}" class="inline-flex items-center px-5 py-2.5 bg-surface-900 text-white text-[13px] font-semibold rounded-lg hover:bg-surface-800 transition-all duration-200 shadow-sm">
+                        Reservar
+                        <svg class="w-3.5 h-3.5 ml-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+                    </a>
+                </div>
+                </div>
+        </div>
+    </div>
+</nav>
+<script>
+// Close user dropdown on click outside
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('userMenuWrapper');
+    const dropdown = document.getElementById('userDropdown');
+    if (wrapper && dropdown && !wrapper.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+</script>
+
+<!-- FOOTER FRAGMENT -->
+<footer th:fragment="footer" xmlns:th="http://www.thymeleaf.org" x-data="{ openLegal: false, legalTab: 'terminos' }"
+        class="bg-white border-t border-surface-200/60 mt-auto" role="contentinfo" aria-label="Pie de página">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <div class="md:col-span-2">
+                <div class="flex items-center space-x-2.5 mb-4">
+                    <img th:src="@{/images/furent-logo.png}" alt="Furent Logo" class="w-10 h-10 rounded-lg object-cover">
+                    <span class="text-lg font-bold text-surface-900">Furent</span>
+                </div>
+                <p class="text-sm text-surface-500 leading-relaxed max-w-xs mb-5">Plataforma profesional de alquiler de mobiliario para eventos. Calidad, elegancia y servicio excepcional.</p>
+                <div class="flex space-x-3">
+                    <a href="https://www.instagram.com/jose.valdes28/?hl=es" target="_blank" rel="noopener noreferrer" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="Instagram">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </a>
+                    <a href="https://www.facebook.com/josedaniel.valdeslastres" target="_blank" rel="noopener noreferrer" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="Facebook">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385h-3.047v-3.47h3.047v-2.642c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.738-.9 10.126-5.864 10.126-11.854z"/></svg>
+                    </a>
+                    <a href="https://wa.me/573105782442" target="_blank" rel="noopener noreferrer" class="w-9 h-9 flex items-center justify-center rounded-lg bg-surface-50 text-surface-400 hover:text-furent-500 hover:bg-furent-50 transition-all duration-200" aria-label="WhatsApp">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-4">Explorar</h4>
+                <ul class="space-y-2.5">
+                    <li><a th:href="@{/catalogo}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Catálogo</a></li>
+                    <li><a th:href="@{/catalogo(categoria='Sillas')}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Sillas</a></li>
+                    <li><a th:href="@{/catalogo(categoria='Mesas')}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Mesas</a></li>
+                    <li><a th:href="@{/catalogo(categoria='Carpas')}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Carpas</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-4">Empresa</h4>
+                <ul class="space-y-2.5">
+                    <li><a th:href="@{/nosotros}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Sobre nosotros</a></li>
+                    <li><a th:href="@{/contacto}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Contacto</a></li>
+                    <li><a th:href="@{/faq}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">FAQ</a></li>
+                    <li><a th:href="@{/panel}" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Mi Panel</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs font-semibold text-surface-900 uppercase tracking-wider mb-4">Legal</h4>
+                <ul class="space-y-2.5">
+                    <li><a href="javascript:void(0)" @click.prevent="openLegal = true; legalTab = 'terminos'" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Términos</a></li>
+                    <li><a href="javascript:void(0)" @click.prevent="openLegal = true; legalTab = 'privacidad'" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Privacidad</a></li>
+                    <li><a href="javascript:void(0)" @click.prevent="openLegal = true; legalTab = 'cancelacion'" class="text-sm text-surface-500 hover:text-furent-500 transition-colors">Cancelación</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-surface-100 mt-10 pt-8">
+            <!-- Newsletter -->
+            <div class="flex flex-col md:flex-row items-center gap-4 justify-between mb-8">
+                <p class="text-surface-500 text-sm">Recibe ofertas exclusivas y novedades</p>
+                <form class="flex gap-2 w-full md:w-auto" onsubmit="event.preventDefault(); showToast('¡Gracias por suscribirte al newsletter!', 'success'); this.reset();">
+                    <input type="email" required placeholder="tu@email.com" class="flex-1 md:w-64 px-4 py-2.5 rounded-xl border border-surface-200 text-sm focus:outline-none focus:ring-2 focus:ring-furent-500/30 focus:border-furent-500">
+                    <button type="submit" class="px-5 py-2.5 rounded-xl font-semibold text-sm text-white" style="background: linear-gradient(135deg, #E07A3A, #C2630F);">Suscribirse</button>
+                </form>
+            </div>
+            <!-- Copyright -->
+            <div class="flex flex-col sm:flex-row items-center justify-between">
+                <p class="text-xs text-surface-400">&copy; 2026 Furent. Todos los derechos reservados.</p>
+                <p class="text-xs text-surface-400 mt-2 sm:mt-0">Hecho con cuidado en Colombia</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chat Button (Repositioned to left corner) -->
+    <div class="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-3 group">
+        <!-- Redesigned Tooltip / Notification -->
+        <div id="waTooltip" class="bg-white/95 dark:bg-surface-800/95 backdrop-blur-md text-surface-900 dark:text-white px-5 py-3 rounded-full shadow-2xl border border-surface-100 dark:border-surface-700 text-[13px] font-semibold opacity-0 translate-y-3 transition-all duration-500 pointer-events-none whitespace-nowrap flex items-center gap-2.5 relative">
+            <div class="p-1 bg-furent-50 dark:bg-furent-900/30 rounded-full">
+                <svg class="w-3.5 h-3.5 text-furent-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
+            </div>
+            <span>¿Necesitas ayuda con tu evento?</span>
+            <!-- Speech Bubble Arrow -->
+            <div class="absolute -bottom-1.5 left-6 w-3 h-3 bg-white/95 dark:bg-surface-800/95 border-l border-b border-surface-100 dark:border-surface-700 rotate-45"></div>
+        </div>
+        <a href="https://wa.me/573105782442" target="_blank" class="w-14 h-14 bg-[#25D366] text-white rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 chat-btn" title="Chatear con nosotros">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </a>
+    </div>
+
+
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-5 z-[200] flex flex-col gap-4 pointer-events-none w-full max-w-sm"></div>
+
+    <!-- Global Modal Dialog (Tailwind Plus) -->
+    <el-dialog>
+      <dialog id="global-dialog" aria-labelledby="modal-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent focus:outline-none">
+        <el-dialog-backdrop class="fixed inset-0 bg-surface-950/40 backdrop-blur-md transition-opacity data-closed:opacity-0 data-enter:duration-500 data-enter:ease-out data-leave:duration-300 data-leave:ease-in"></el-dialog-backdrop>
+    
+        <div class="flex min-h-full items-center justify-center p-6 text-center focus:outline-none">
+          <el-dialog-panel class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] transition-all data-closed:scale-95 data-closed:opacity-0 data-enter:duration-500 data-enter:ease-out data-leave:duration-300 data-leave:ease-in sm:w-full sm:max-w-md data-closed:sm:translate-y-4 border border-surface-100 dark:border-surface-700/50">
+            <div class="bg-white px-8 pt-12 pb-8 sm:px-12 sm:pt-14 sm:pb-10">
+              <div class="text-center">
+                <!-- Icon box -->
+                <div id="modal-icon-box" class="mx-auto flex size-20 items-center justify-center rounded-full bg-furent-50 border-4 border-white shadow-lg shadow-furent-500/10 mb-6">
+                  <svg id="modal-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="size-8 text-furent-500">
+                    <!-- Icon path injected via JS -->
+                  </svg>
+                </div>
+                
+                <h3 id="modal-title" class="text-2xl font-black tracking-tight text-surface-950">Título del modal</h3>
+                
+                <div class="mt-4">
+                  <p id="modal-message" class="text-[13px] font-medium text-surface-500 leading-relaxed text-pretty">Mensaje informativo del modal.</p>
+                </div>
+                
+                <!-- Items list -->
+                <div id="modal-list" class="mt-8 space-y-2.5 max-h-48 overflow-y-auto pr-1 py-1 hidden"></div>
+                
+                <!-- Footer note -->
+                <p id="modal-footer" class="mt-8 text-[11px] font-bold text-surface-400 italic flex items-center justify-center gap-2 hidden"></p>
+              </div>
+            </div>
+            
+            <div class="bg-surface-50/50 px-8 py-8 sm:px-12 flex flex-col gap-3">
+              <button type="button" id="modal-confirm-btn" class="w-full inline-flex justify-center rounded-2xl bg-furent-500 px-6 py-4 text-sm font-black text-white shadow-xl shadow-furent-500/30 hover:bg-furent-600 active:scale-[0.98] transition-all duration-200">
+                Entendido
+              </button>
+            </div>
+          </el-dialog-panel>
+        </div>
+      </dialog>
+    </el-dialog>
+
+    <script th:inline="javascript">
+        /**
+         * Dynamic Toast System (Flowbite Style)
+         * Supports: 
+         *  - showToast({ message, title, type, duration })
+         *  - showToast(message, type, duration)
+         */
+        function showToast(optionsOrMessage, typeOverride = 'success', durationOverride = 5000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            let config = {
+                message: '',
+                title: '',
+                type: typeOverride,
+                duration: durationOverride
+            };
+
+            if (typeof optionsOrMessage === 'object' && optionsOrMessage !== null) {
+                config = { ...config, ...optionsOrMessage };
+            } else {
+                config.message = optionsOrMessage;
+            }
+
+            // Safe conversion & scoping
+            const message = String(config.message || '');
+            const title = String(config.title || '');
+            const type = config.type || 'success';
+            const duration = config.duration || 5000;
+            const id = 'toast-' + Math.random().toString(36).substr(2, 9);
+            
+            // Type-specific mappings
+            let iconBoxClass = 'text-green-600 bg-green-50';
+            let iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+
+            if (type === 'error' || type === 'danger') {
+                iconBoxClass = 'text-red-600 bg-red-50';
+                iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
+            } else if (type === 'warning') {
+                iconBoxClass = 'text-amber-600 bg-amber-50';
+                iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+            } else if (type === 'info') {
+                iconBoxClass = 'text-blue-600 bg-blue-50';
+                iconSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+            }
+
+            const toastHtml = `
+                <div id="${id}" class="pointer-events-auto flex items-center w-full max-w-sm p-4 text-surface-600 bg-white/95 dark:bg-surface-800/95 backdrop-blur-md rounded-xl shadow-2xl border border-surface-200 dark:border-surface-700 animate__animated animate__fadeInRight animate__faster" role="alert">
+                    <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 ${iconBoxClass} rounded-lg">
+                        ${iconSvg}
+                    </div>
+                    <div class="ms-3 text-sm font-bold text-surface-900 dark:text-white">
+                        ${title ? `<span class="opacity-50 font-medium block text-[10px] tracking-widest uppercase mb-0.5">${title}</span>` : ''}
+                        ${message}
+                    </div>
+                    <button type="button" onclick="closeToast('${id}')" class="ms-auto -mx-1.5 -my-1.5 bg-transparent text-surface-400 hover:text-surface-900 dark:hover:text-white rounded-lg p-1.5 hover:bg-surface-100 dark:hover:bg-surface-700 inline-flex items-center justify-center h-8 w-8 transition-colors">
+                        <span class="sr-only">Cerrar</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+
+            // Auto Close
+            setTimeout(() => closeToast(id), duration);
+        }
+
+        function closeToast(id) {
+            const toast = document.getElementById(id);
+            if (toast) {
+                toast.classList.replace('animate__fadeInRight', 'animate__fadeOutRight');
+                setTimeout(() => toast.remove(), 400);
+            }
+        }
+
+        /**
+         * Global Modal Dialog System
+         */
+        function showModal(config) {
+            const dialog = document.getElementById('global-dialog');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const iconBox = document.getElementById('modal-icon-box');
+            const iconSvg = document.getElementById('modal-icon-svg');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            const modalList = document.getElementById('modal-list');
+            const modalFooter = document.getElementById('modal-footer');
+
+            if (!dialog || !titleEl || !messageEl || !confirmBtn) return;
+
+            // Type Styling
+            if (config.type === 'error') {
+                iconBox.className = "mx-auto flex size-20 items-center justify-center rounded-full bg-red-50 border-4 border-white shadow-lg shadow-red-500/10 mb-6";
+                iconSvg.className = "size-8 text-red-500";
+                iconSvg.innerHTML = '<path d="M6 18L18 6M6 6l12 12" />';
+            } else if (config.type === 'warning') {
+                iconBox.className = "mx-auto flex size-20 items-center justify-center rounded-full bg-amber-50 border-4 border-white shadow-lg shadow-amber-500/10 mb-6";
+                iconSvg.className = "size-8 text-amber-500";
+                iconSvg.innerHTML = '<path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />';
+            } else {
+                iconBox.className = "mx-auto flex size-20 items-center justify-center rounded-full bg-furent-50 border-4 border-white shadow-lg shadow-furent-500/10 mb-6";
+                iconSvg.className = "size-8 text-furent-500";
+                iconSvg.innerHTML = '<path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />';
+            }
+
+            titleEl.textContent = config.title || 'Aviso';
+            messageEl.textContent = config.message || '';
+            confirmBtn.textContent = config.confirmText || 'Entendido';
+
+            // Optional List
+            if (config.items && config.items.length > 0) {
+                modalList.innerHTML = config.items.map(item => `<div class="p-3 bg-surface-50 rounded-xl border border-surface-100 text-[12px] font-bold text-surface-700">${item}</div>`).join('');
+                modalList.classList.remove('hidden');
+            } else {
+                modalList.classList.add('hidden');
+            }
+
+            // Optional Footer
+            if (config.footerNote) {
+                modalFooter.innerHTML = config.footerNote;
+                modalFooter.classList.remove('hidden');
+            } else {
+                modalFooter.classList.add('hidden');
+            }
+
+            // Show Dialog
+            dialog.showModal();
+
+            // Set Action
+            confirmBtn.onclick = () => {
+                dialog.close();
+                if (config.onConfirm) config.onConfirm();
+            };
+        }
+
+        function openLiveChat() {
+            const msg = "Hola Furent, necesito asesoría para mi evento.";
+            window.open(`https://wa.me/573105782442?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        // WhatsApp Tooltip Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const tooltip = document.getElementById('waTooltip');
+            if (tooltip) {
+                const showTooltip = () => {
+                    tooltip.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+                    tooltip.classList.add('opacity-100', 'translate-y-0');
+                    setTimeout(() => {
+                        tooltip.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+                        tooltip.classList.remove('opacity-100', 'translate-y-0');
+                    }, 5000); // Show for 5 seconds
+                };
+                
+                setTimeout(showTooltip, 3000);
+                setInterval(showTooltip, 60000);
+            }
+        });
+    </script>
+    
+    <!-- Legal Modal Dialog AlpineJS Powered -->
+    <div x-show="openLegal" style="display: none;" class="relative z-[250]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div x-show="openLegal"
+             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-surface-950/40 backdrop-blur-md transition-opacity"></div>
+             
+        <!-- Dialog -->
+        <div class="fixed inset-0 z-[250] w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div x-show="openLegal" @click.away="openLegal = false"
+                     x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     class="relative transform overflow-hidden rounded-[2rem] bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-surface-100 flex flex-col max-h-[85vh]">
+                    
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-5 border-b border-surface-100 bg-surface-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-furent-50 rounded-xl text-furent-500 border border-furent-100/50">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-black tracking-tight text-surface-900" id="legal-modal-title">Información Legal</h3>
+                        </div>
+                        <button type="button" @click="openLegal = false" class="text-surface-400 hover:text-surface-600 bg-white border border-surface-200 hover:bg-surface-50 rounded-xl p-2 transition-colors focus:ring-2 focus:outline-none focus:ring-furent-500/20 shadow-sm">
+                            <span class="sr-only">Cerrar</span>
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex border-b border-surface-100 overflow-x-auto bg-surface-50/20 px-4 pt-2">
+                        <button @click="legalTab = 'terminos'" :class="{'border-furent-500 text-furent-600 font-bold': legalTab === 'terminos', 'border-transparent text-surface-500 hover:text-surface-800 font-medium': legalTab !== 'terminos'}" class="whitespace-nowrap pb-3 pt-2 px-4 border-b-2 text-[14px] transition-colors">Términos de Servicio</button>
+                        <button @click="legalTab = 'privacidad'" :class="{'border-furent-500 text-furent-600 font-bold': legalTab === 'privacidad', 'border-transparent text-surface-500 hover:text-surface-800 font-medium': legalTab !== 'privacidad'}" class="whitespace-nowrap pb-3 pt-2 px-4 border-b-2 text-[14px] transition-colors mx-2">Política de Privacidad</button>
+                        <button @click="legalTab = 'cancelacion'" :class="{'border-furent-500 text-furent-600 font-bold': legalTab === 'cancelacion', 'border-transparent text-surface-500 hover:text-surface-800 font-medium': legalTab !== 'cancelacion'}" class="whitespace-nowrap pb-3 pt-2 px-4 border-b-2 text-[14px] transition-colors">Política de Cancelación</button>
+                    </div>
+
+                    <!-- Content Body -->
+                    <div class="p-6 overflow-y-auto flex-1 bg-white custom-scrollbar">
+                        
+                        <!-- Términos -->
+                        <div x-show="legalTab === 'terminos'" class="space-y-5 text-surface-600 text-[14px] leading-relaxed">
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1">1. Aceptación de los Términos</h4>
+                            <p>Al acceder y utilizar los servicios de Furent, usted acepta estar sujeto a estos términos y condiciones. Si no está de acuerdo con alguna parte, no podrá utilizar nuestra plataforma de alquiler de mobiliario.</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">2. Uso del Servicio</h4>
+                            <p>Furent proporciona una plataforma tecnológica integral para descubrir, cotizar y alquilar mobiliario de alta calidad para sus eventos sociales o corporativos. Como usuario, se compromete a proveer información real y actualizada sobre usted y su evento.</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">3. Responsabilidad sobre los bienes</h4>
+                            <p>El cliente, a partir de la firma del comprobante de entrega, asume la responsabilidad y resguardo absoluto sobre las sillas, mesas, carpas y decoraciones apartadas. Furent no se hace responsable por multas civiles relacionadas al acomodo de estos tras su entrega.</p>
+                        </div>
+                        
+                        <!-- Privacidad -->
+                        <div x-show="legalTab === 'privacidad'" style="display:none;" class="space-y-5 text-surface-600 text-[14px] leading-relaxed">
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1">Protección de sus datos 🔒</h4>
+                            <p>En Furent, el respeto por su privacidad y la seguridad de su data es algo que nos tomamos muy en serio. Estamos comprometidos con los estándares colombianos de tratamiento de la información (Habeas Data).</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">¿Qué recopilamos?</h4>
+                            <p>Solo solicitamos aquellos datos explícitamente requeridos para materializar su evento: Nombres, correos, ubicaciones de domicilios o fincas, números telefónicos y copias de recibos o depósitos interbancarios.</p>
+                            
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1 mt-6">Uso y seguridad interna</h4>
+                            <p>Usted puede estar tranquilo(a), nuestra base de datos viaja de forma encriptada entre el navegador y nuestros puertos. Sus datos no le serán vendidos en ningún punto ni circunstancia a agencias de marketing o servicios ajenos a Furent S.A.S.</p>
+                        </div>
+                        
+                        <!-- Cancelación -->
+                        <div x-show="legalTab === 'cancelacion'" style="display:none;" class="space-y-5 text-surface-600 text-[14px] leading-relaxed">
+                            <h4 class="text-[16px] font-bold text-surface-900 mb-1">Políticas de reembolso 💳</h4>
+                            <p>Nos enorgullece ser su socio ideal para sus eventos. Sabemos que las cosas a veces no salen de acuerdo al plan. Hemos diseñado una política de contingencia equitativa para resguardar nuestra disponibilidad y velar por sus recursos económicos:</p>
+                            
+                            <ul class="list-disc pl-5 mt-4 space-y-3 bg-furent-50/50 py-4 pr-4 rounded-xl border border-furent-100">
+                                <li class="text-furent-900"><strong class="font-bold">Anulación con 20 días de antelación:</strong> Le obsequiamos la reversión del 100% de cualquier pago o seña dada.</li>
+                                <li class="text-furent-900"><strong class="font-bold">Anulación entre 6 a 19 días de antelación:</strong> Solo habrá un reembolso pactado entre el 40% a 50%, a discreción administrativa.</li>
+                                <li class="text-red-700/80"><strong class="font-bold">Anulación exprés de última hora (< 5 días):</strong> Pierde su derecho al reembolso general por los sobrecostos causados en nuestro calendario.</li>
+                            </ul>
+                            
+                            <div class="p-5 bg-amber-50 text-amber-800 rounded-xl mt-6 border border-amber-200/60 shadow-sm">
+                                <p class="font-extrabold text-sm mb-1 uppercase tracking-wider text-amber-900">Nota Climática / Extrema</p>
+                                <p class="text-xs leading-relaxed font-medium">En reservaciones catalogadas "Al aire libre", Furent declina y no ejecutará devoluciones si el clima perjudica su uso tras la consolidación de nuestra entrega y recibo con el personal de logística.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="bg-surface-50/50 px-6 py-5 border-t border-surface-100 sm:flex sm:flex-row-reverse">
+                        <button type="button" @click="openLegal = false" class="inline-flex w-full justify-center items-center rounded-xl bg-surface-900 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-surface-900/10 hover:bg-surface-800 hover:scale-[1.02] active:scale-[0.98] transition-all sm:ml-3 sm:w-auto">Aceptar y Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

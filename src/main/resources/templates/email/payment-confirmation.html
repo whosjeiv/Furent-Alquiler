@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 0;">
+    <tr>
+        <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07);">
+                <tr>
+                    <td style="background:linear-gradient(135deg,#10b981,#059669);padding:32px;text-align:center;">
+                        <h1 style="color:#ffffff;margin:0;font-size:28px;">🏠 Furent</h1>
+                        <p style="color:#d1fae5;margin:8px 0 0;font-size:14px;">Alquiler de Mobiliarios</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:32px;">
+                        <h2 style="color:#1f2937;margin:0 0 16px;">Pago Confirmado 💳✅</h2>
+                        <p style="color:#4b5563;line-height:1.6;margin:0 0 16px;">
+                            ¡Excelente! Tu pago ha sido procesado correctamente.
+                        </p>
+                        <table width="100%" cellpadding="10" cellspacing="0" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;margin:0 0 24px;">
+                            <tr>
+                                <td style="text-align:center;">
+                                    <p style="color:#059669;font-size:32px;margin:0;">✓</p>
+                                    <p style="color:#065f46;font-weight:700;font-size:16px;margin:4px 0 0;">Pago Exitoso</p>
+                                    <p style="color:#6b7280;font-size:14px;margin:4px 0 0;" th:text="'Reserva #' + ${reservaId}">Reserva #ABC123</p>
+                                </td>
+                            </tr>
+                        </table>
+                        <p style="color:#4b5563;line-height:1.6;margin:0 0 24px;">
+                            Tu reserva ahora está confirmada. Recibirás actualizaciones sobre el estado
+                            de entrega y logística directamente en tu panel.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                            <tr>
+                                <td style="background:#10b981;border-radius:8px;padding:12px 32px;">
+                                    <a href="#" th:href="@{/panel}" style="color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;">
+                                        Ver Mi Panel
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9fafb;padding:24px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+                        <p style="color:#9ca3af;font-size:12px;margin:0;">© 2025 Furent — Alquiler de Mobiliarios. Todos los derechos reservados.</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

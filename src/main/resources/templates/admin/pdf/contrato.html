@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Times New Roman', serif; line-height: 1.6; margin: 40px; color: #000; font-size: 11px; }
+        .contract-header { text-align: center; margin-bottom: 30px; }
+        .contract-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        .section { margin-bottom: 20px; }
+        .section-title { font-weight: bold; border-bottom: 1px solid #000; margin-bottom: 10px; display: block; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
+        th { background: #f2f2f2; }
+        .totals { float: right; width: 250px; margin-top: 10px; }
+        .totals-table td { border: none !important; padding: 3px !important; }
+        .signature-area { margin-top: 60px; width: 100%; }
+        .sig-box { width: 45%; float: left; margin: 0 2%; border-top: 1px solid #000; text-align: center; padding-top: 5px; height: 100px; }
+        .sig-box-right { width: 45%; float: right; margin: 0 2%; border-top: 1px solid #000; text-align: center; padding-top: 5px; height: 100px; }
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 8px; color: #666; }
+        .legal-notice { font-size: 9px; text-align: justify; margin-top: 20px; color: #444; }
+    </style>
+</head>
+<body>
+    <div class="contract-header">
+        <div class="contract-title">Contrato de Alquiler de Mobiliarios</div>
+        <div th:text="'Referencia de Reserva: #' + ${r.id}"></div>
+        <div th:text="'Fecha de Emisión: ' + ${#temporals.format(fechaContrato, 'dd/MM/yyyy')}"></div>
+    </div>
+
+    <div class="section">
+        <span class="section-title">1. Partes del Contrato</span>
+        <p><strong>ARRENDADOR:</strong> Furent Mobiliarios S.A. | RUC: 20601234567 | Dirección: Av. Principal 123, Urb. Industrial</p>
+        <p><strong>ARRENDATARIO:</strong> <span th:text="${r.usuarioNombre}"></span> | Email: <span th:text="${r.usuarioEmail}"></span></p>
+    </div>
+
+    <div class="section">
+        <span class="section-title">2. Detalles del Alquiler</span>
+        <table>
+            <tr>
+                <th>Lugar del Evento</th>
+                <td th:text="${r.direccionEvento ?: 'No especificada'}"></td>
+            </tr>
+            <tr>
+                <th>Fecha de Entrega</th>
+                <td th:text="${#temporals.format(r.fechaInicio, 'dd/MM/yyyy')}"></td>
+            </tr>
+            <tr>
+                <th>Fecha de Retorno</th>
+                <td th:text="${#temporals.format(r.fechaFin, 'dd/MM/yyyy')}"></td>
+            </tr>
+            <tr>
+                <th>Días de Alquiler</th>
+                <td th:text="${r.diasAlquiler}"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <span class="section-title">3. Detalle de Mobiliario</span>
+        <table>
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th style="width: 80px;">Cantidad</th>
+                    <th style="width: 100px;">Unitario/Día</th>
+                    <th style="width: 100px;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${r.items}">
+                    <td th:text="${item.productoNombre}"></td>
+                    <td th:text="${item.cantidad}" style="text-align: center;"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(item.precioPorDia, 1, 'POINT', 2, 'COMMA')}"></td>
+                    <td th:text="'$' + ${#numbers.formatDecimal(item.subtotal * r.diasAlquiler, 1, 'POINT', 2, 'COMMA')}"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="totals">
+            <table class="totals-table">
+                <tr>
+                    <td><strong>SUBTOTAL:</strong></td>
+                    <td style="text-align: right;" th:text="'$' + ${#numbers.formatDecimal(r.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL GENERAL:</strong></td>
+                    <td style="text-align: right; font-size: 14px; font-weight: bold;" th:text="'$' + ${#numbers.formatDecimal(r.total, 1, 'POINT', 2, 'COMMA')}"></td>
+                </tr>
+            </table>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="section legal-notice">
+        <span class="section-title">4. Términos y Condiciones</span>
+        <p>1. El arrendatario se compromete a devolver el mobiliario en el mismo estado en que fue recibido. 
+        2. Cualquier daño, pérdida o destrucción del mobiliario será cobrado a valor de mercado actual.
+        3. El plazo de devolución es estricto. Retrasos no autorizados generarán un cargo adicional equivalente al 50% de la tarifa diaria.
+        4. Furent no se hace responsable por accidentes derivados del mal uso del mobiliario tras la instalación.</p>
+    </div>
+
+    <!-- QR Code de Verificación -->
+    <div class="section" style="text-align: center; margin-top: 30px; padding: 15px; border: 1px dashed #999;">
+        <p style="font-size: 10px; font-weight: bold; margin-bottom: 8px;">CÓDIGO QR DE VERIFICACIÓN</p>
+        <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=120x120&amp;data=FURENT-CONTRATO-' + ${r.id}" 
+             style="width: 120px; height: 120px; margin: 0 auto;" alt="QR Verificación"/>
+        <p style="font-size: 8px; color: #666; margin-top: 6px;">Escanea este código para verificar la autenticidad del contrato</p>
+        <p style="font-size: 8px; color: #999;" th:text="'REF: FURENT-' + ${r.id}"></p>
+    </div>
+
+    <div class="signature-area">
+        <div class="sig-box">Por Furent Mobiliarios (Sello y Firma)</div>
+        <div class="sig-box-right">Por el Arrendatario (Nombre y Firma)</div>
+    </div>
+
+    <div class="footer">
+        Furent Workspace Admin - Documento generado legalmente por sistema el <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.iml
+.idea/
+*.class
+*.log
+*.jar
+!target/*.jar
+uploads/
+.env
+*.bak
+node_modules/

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Acceso Denegado | Furent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-red-50 to-orange-50 min-h-screen flex items-center justify-center font-[Inter]">
+    <div class="text-center px-6 py-12">
+        <div class="text-9xl font-bold text-red-400 mb-4">403</div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Acceso Denegado</h1>
+        <p class="text-gray-600 mb-2" th:text="${error != null ? error : 'No tienes permiso para acceder a esta página.'}"></p>
+        <p class="text-gray-500 mb-8">Si crees que esto es un error, contacta al administrador.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/" class="px-8 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg hover:shadow-xl">
+                ← Volver al Inicio
+            </a>
+            <a href="/contacto" class="px-8 py-3 bg-white text-orange-500 border-2 border-orange-500 rounded-xl font-semibold hover:bg-orange-50 transition-all">
+                Contactar Soporte
+            </a>
+        </div>
+        <div class="mt-12 text-red-300">
+            <svg class="w-24 h-24 mx-auto opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 0;">
+    <tr>
+        <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07);">
+                <tr>
+                    <td style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:32px;text-align:center;">
+                        <h1 style="color:#ffffff;margin:0;font-size:28px;">🏠 Furent</h1>
+                        <p style="color:#fef3c7;margin:8px 0 0;font-size:14px;">Alquiler de Mobiliarios</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:32px;">
+                        <h2 style="color:#1f2937;margin:0 0 16px;">Cotización Recibida ✅</h2>
+                        <p style="color:#4b5563;line-height:1.6;margin:0 0 16px;">
+                            Tu cotización ha sido registrada exitosamente. A continuación los detalles:
+                        </p>
+                        <table width="100%" cellpadding="8" cellspacing="0" style="background:#f9fafb;border-radius:8px;margin:0 0 24px;">
+                            <tr>
+                                <td style="color:#6b7280;font-size:14px;border-bottom:1px solid #e5e7eb;">N° Cotización</td>
+                                <td style="color:#1f2937;font-weight:600;font-size:14px;border-bottom:1px solid #e5e7eb;text-align:right;" th:text="'#' + ${reservaId}">
+                                    #ABC123
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="color:#6b7280;font-size:14px;border-bottom:1px solid #e5e7eb;">Total</td>
+                                <td style="color:#f59e0b;font-weight:700;font-size:18px;border-bottom:1px solid #e5e7eb;text-align:right;" th:text="'$' + ${#numbers.formatDecimal(total,0,'COMMA',0,'POINT')}">
+                                    $150,000
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="color:#6b7280;font-size:14px;">Estado</td>
+                                <td style="color:#059669;font-weight:600;font-size:14px;text-align:right;">PENDIENTE</td>
+                            </tr>
+                        </table>
+                        <p style="color:#4b5563;line-height:1.6;margin:0 0 24px;">
+                            Nuestro equipo revisará tu solicitud y te contactará pronto para confirmar la disponibilidad.
+                        </p>
+                        <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                            <tr>
+                                <td style="background:#f59e0b;border-radius:8px;padding:12px 32px;">
+                                    <a href="#" th:href="@{/panel}" style="color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;">
+                                        Ver Mis Reservas
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background:#f9fafb;padding:24px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+                        <p style="color:#9ca3af;font-size:12px;margin:0;">
+                            © 2025 Furent — Alquiler de Mobiliarios. Todos los derechos reservados.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

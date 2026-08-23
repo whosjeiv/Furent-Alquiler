@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuenta Suspendida | Furent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-red-50 to-gray-50 min-h-screen flex items-center justify-center font-[Inter]">
+    <div class="max-w-lg mx-auto text-center px-6 py-12">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+            </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Cuenta Suspendida</h1>
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 text-left">
+            <div class="mb-4">
+                <span class="text-sm font-medium text-gray-500">Motivo:</span>
+                <p class="text-gray-800 font-medium" th:text="${reason != null ? reason : 'Incumplimiento de términos del sistema'}"></p>
+            </div>
+            <div class="mb-4">
+                <span class="text-sm font-medium text-gray-500">Duración:</span>
+                <p class="font-medium" th:classappend="${permanent ? 'text-red-600' : 'text-orange-600'}" th:text="${duration != null ? duration : 'Indefinida'}"></p>
+            </div>
+            <div th:if="${permanent}" class="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p class="text-sm text-red-700">Esta suspensión es permanente y no puede ser revertida automáticamente.</p>
+            </div>
+        </div>
+        <p class="text-gray-500 mb-6">Si crees que esto es un error, por favor contacta a nuestro equipo de soporte.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/contacto" class="px-8 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-all shadow-lg">
+                Contactar Soporte
+            </a>
+            <a href="/" class="px-8 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all">
+                Volver al Inicio
+            </a>
+        </div>
+    </div>
+</body>
+</html>
